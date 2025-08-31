@@ -13,6 +13,7 @@ from flask import Flask, request, jsonify
 import threading
 import configparser
 from pathlib import Path
+import math
 
 # ----------------------------
 # Load configuration
@@ -23,6 +24,7 @@ config = configparser.ConfigParser()
 config.read(BASE_DIR / "config.ini")
 
 DEVICE_NAME = config["device"]["name"]
+device_id = DEVICE_NAME.lower().replace(" ", "_")
 
 MQTT_BROKER = config["mqtt"]["broker"]
 MQTT_PORT = int(config["mqtt"]["port"])
@@ -33,14 +35,14 @@ API_PORT = int(config["api"]["port"])
 PUBLISH_INTERVAL = int(config["device"].get("interval", 30))  # seconds
 
 # Base MQTT topics
-base_topic = f"desktop/{DEVICE_NAME}"
+base_topic = f"desktop/{device_id}"
 discovery_prefix = "homeassistant"
 
 # ----------------------------
 # Device Definition
 # ----------------------------
 device_info = {
-    "identifiers": [DEVICE_NAME.lower().replace(" ", "_")],
+    "identifiers": [device_id],
     "name": DEVICE_NAME,
     "manufacturer": "Rigo Sotomayor",
     "model": "Desktop Agent",
@@ -50,67 +52,6 @@ device_info = {
 # ----------------------------
 # Get System Information
 # ----------------------------
-def get_cpu_model():
-    if sys.platform.startswith("linux"):
-        try:
-            with open("/proc/cpuinfo") as f:
-                for line in f:
-                    if "model name" in line:
-                        return line.strip().split(":")[1].strip()
-        except:
-            return "Unknown CPU"
-    elif sys.platform.startswith("win"):
-        try:
-            output = subprocess.check_output("wmic cpu get Name", shell=True).decode()
-            lines = [line.strip() for line in output.splitlines() if line.strip()]
-            if len(lines) >= 2:
-                return lines[1]
-        except:
-            return "Unknown CPU"
-    else:
-        return platform.processor() or "Unknown CPU"
-    
-def get_gpu_info_flat():
-    """
-    Returns GPU info as a flat dictionary for Home Assistant.
-    """
-    flat_gpus = {}
-    try:
-        gpus = GPUtil.getGPUs()
-        for i, gpu in enumerate(gpus):
-            prefix = f"gpu{i}_"
-            flat_gpus[f"{prefix}name"] = gpu.name
-            flat_gpus[f"{prefix}load_percent"] = round(gpu.load * 100, 2)
-            flat_gpus[f"{prefix}memory_total_gb"] = round(gpu.memoryTotal, 2)
-            flat_gpus[f"{prefix}memory_used_gb"] = round(gpu.memoryUsed, 2)
-            flat_gpus[f"{prefix}temperature_c"] = gpu.temperature
-        if not gpus:
-            flat_gpus["gpu0_name"] = "No GPU detected"
-            flat_gpus["gpu0_load_percent"] = 0
-            flat_gpus["gpu0_memory_total_gb"] = 0
-            flat_gpus["gpu0_memory_used_gb"] = 0
-            flat_gpus["gpu0_temperature_c"] = 0
-    except Exception:
-        # fallback if GPUtil fails
-        flat_gpus["gpu0_name"] = "GPU info unavailable"
-        flat_gpus["gpu0_load_percent"] = 0
-        flat_gpus["gpu0_memory_total_gb"] = 0
-        flat_gpus["gpu0_memory_used_gb"] = 0
-        flat_gpus["gpu0_temperature_c"] = 0
-    return flat_gpus
-
-def get_temperatures_flat():
-    temps = {}
-    if hasattr(psutil, "sensors_temperatures"):
-        raw_temps = psutil.sensors_temperatures()
-        for label, entries in raw_temps.items():
-            for entry in entries:
-                # Only include actual temperature readings
-                if entry.current is not None:
-                    key = f"{label}_{entry.label}" if entry.label else f"{label}"
-                    temps[key] = entry.current  # °C
-    return temps
-
 def get_system_info():
     cpu_freq = psutil.cpu_freq()
     virtual_mem = psutil.virtual_memory()
@@ -144,6 +85,65 @@ def get_system_info():
         **gpu_flat,
         **temps_flat
     }
+
+def get_cpu_model():
+    if sys.platform.startswith("linux"):
+        try:
+            with open("/proc/cpuinfo") as f:
+                for line in f:
+                    if "model name" in line:
+                        return line.strip().split(":")[1].strip()
+        except:
+            return "Unknown CPU"
+    elif sys.platform.startswith("win"):
+        try:
+            output = subprocess.check_output("wmic cpu get Name", shell=True).decode()
+            lines = [line.strip() for line in output.splitlines() if line.strip()]
+            if len(lines) >= 2:
+                return lines[1]
+        except:
+            return "Unknown CPU"
+    else:
+        return platform.processor() or "Unknown CPU"
+    
+def safe_number(val, default=0):
+    """Return a safe number (no NaN/None/inf)."""
+    if val is None:
+        return default
+    if isinstance(val, (int, float)):
+        if math.isnan(val) or math.isinf(val):
+            return default
+        return val
+    return default
+
+def get_gpu_info_flat():
+    """Flattened GPU info with safe numbers"""
+    gpus = GPUtil.getGPUs()
+    gpu_info = {}
+    for i, gpu in enumerate(gpus):
+        prefix = f"gpu{i}_"
+        gpu_info[prefix + "name"] = gpu.name or "Unknown"
+        gpu_info[prefix + "load_percent"] = safe_number(gpu.load * 100 if gpu.load is not None else None, 0)
+        gpu_info[prefix + "memory_total_gb"] = safe_number(gpu.memoryTotal, 0)
+        gpu_info[prefix + "memory_used_gb"] = safe_number(gpu.memoryUsed, 0)
+        gpu_info[prefix + "temperature_c"] = safe_number(gpu.temperature, 0)
+    return gpu_info
+
+def get_temperatures_flat():
+    temps = {}
+    if hasattr(psutil, "sensors_temperatures"):
+        raw_temps = psutil.sensors_temperatures()
+        for label, entries in raw_temps.items():
+            for entry in entries:
+                key = f"{label}_{entry.label}" if entry.label else f"{label}"
+                temps[key] = clean_value(entry.current)  # Use sanitizer
+    return temps
+
+
+def clean_value(val):
+    if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+        return None  # or 0 if you prefer
+    return val
 
 # ----------------------------
 # Commands
@@ -218,135 +218,135 @@ def publish_discovery():
     discovery_payloads = {
     # Host Info
     "hostname": {
-        "name": f"{DEVICE_NAME} Hostname",
+        "name": "Hostname",
         "state_topic": f"{base_topic}/status",
         "value_template": "{{ value_json.hostname }}",
         "icon": "mdi:information",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_hostname"
+        "unique_id": f"{device_id}_hostname"
     },
     "uptime_seconds": {
-        "name": f"{DEVICE_NAME} Uptime",
+        "name": "Uptime",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "s",
         "value_template": "{{ value_json.uptime_seconds }}",
         "icon": "mdi:clock-outline",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_uptime"
+        "unique_id": f"{device_id}_uptime"
     },
     "os": {
-        "name": f"{DEVICE_NAME} OS",
+        "name": "OS",
         "state_topic": f"{base_topic}/status",
         "value_template": "{{ value_json.os }}",
         "icon": "mdi:desktop-classic",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_os"
+        "unique_id": f"{device_id}_os"
     },
     "os_version": {
-        "name": f"{DEVICE_NAME} OS Version",
+        "name": "OS Version",
         "state_topic": f"{base_topic}/status",
         "value_template": "{{ value_json.os_version }}",
         "icon": "mdi:information",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_os_version"
+        "unique_id": f"{device_id}_os_version"
     },
 
     # CPU
     "cpu_model": {
-        "name": f"{DEVICE_NAME} CPU Model",
+        "name": "CPU Model",
         "state_topic": f"{base_topic}/status",
         "value_template": "{{ value_json.cpu_model }}",
         "icon": "mdi:cpu-64-bit",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_cpu_model"
+        "unique_id": f"{device_id}_cpu_model"
     },
     "cpu_usage": {
-        "name": f"{DEVICE_NAME} CPU Usage",
+        "name": "CPU Usage",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "%",
         "value_template": "{{ value_json.cpu_usage }}",
         "icon": "mdi:chip",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_cpu_usage"
+        "unique_id": f"{device_id}_cpu_usage"
     },
     "cpu_cores": {
-        "name": f"{DEVICE_NAME} CPU Cores",
+        "name": "CPU Cores",
         "state_topic": f"{base_topic}/status",
         "value_template": "{{ value_json.cpu_cores }}",
         "icon": "mdi:chip",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_cpu_cores"
+        "unique_id": f"{device_id}_cpu_cores"
     },
     "cpu_frequency_mhz": {
-        "name": f"{DEVICE_NAME} CPU Frequency",
+        "name": "CPU Frequency",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "MHz",
         "value_template": "{{ value_json.cpu_frequency_mhz }}",
         "icon": "mdi:chip",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_cpu_frequency"
+        "unique_id": f"{device_id}_cpu_frequency"
     },
 
     # Memory
     "memory_usage": {
-        "name": f"{DEVICE_NAME} Memory Usage",
+        "name": "Memory Usage",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "%",
         "value_template": "{{ value_json.memory_usage }}",
         "icon": "mdi:memory",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_memory_usage"
+        "unique_id": f"{device_id}_memory_usage"
     },
     "memory_total_gb": {
-        "name": f"{DEVICE_NAME} Memory Total",
+        "name": "Memory Total",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "GB",
         "value_template": "{{ value_json.memory_total_gb }}",
         "icon": "mdi:memory",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_memory_total"
+        "unique_id": f"{device_id}_memory_total"
     },
     "memory_used_gb": {
-        "name": f"{DEVICE_NAME} Memory Used",
+        "name": "Memory Used",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "GB",
         "value_template": "{{ value_json.memory_used_gb }}",
         "icon": "mdi:memory",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_memory_used"
+        "unique_id": f"{device_id}_memory_used"
     },
 
     # Disk
     "disk_usage": {
-        "name": f"{DEVICE_NAME} Disk Usage",
+        "name": "Disk Usage",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "%",
         "value_template": "{{ value_json.disk_usage }}",
         "icon": "mdi:harddisk",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_disk_usage"
+        "unique_id": f"{device_id}_disk_usage"
     },
     "disk_total_gb": {
-        "name": f"{DEVICE_NAME} Disk Total",
+        "name": "Disk Total",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "GB",
         "value_template": "{{ value_json.disk_total_gb }}",
         "icon": "mdi:harddisk",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_disk_total",
+        "unique_id": f"{device_id}_disk_total",
     },
     "disk_used_gb": {
-        "name": f"{DEVICE_NAME} Disk Used",
+        "name": "Disk Used",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "GB",
         "value_template": "{{ value_json.disk_used_gb }}",
         "icon": "mdi:harddisk",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_disk_used"
+        "unique_id": f"{device_id}_disk_used"
     },
 
     # Network
     "network_sent_bytes": {
-        "name": f"{DEVICE_NAME} Network Sent",
+        "name": "Network Sent",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "B",
         "value_template": "{{ value_json.network_sent_bytes }}",
         "icon": "mdi:upload-network",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_network_sent"
+        "unique_id": f"{device_id}_network_sent"
     },
     "network_recv_bytes": {
-        "name": f"{DEVICE_NAME} Network Received",
+        "name": "Network Received",
         "state_topic": f"{base_topic}/status",
         "unit_of_measurement": "B",
         "value_template": "{{ value_json.network_recv_bytes }}",
         "icon": "mdi:download-network",
-        "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_network_received"
+        "unique_id": f"{device_id}_network_received"
     }
     }
     
@@ -354,39 +354,42 @@ def publish_discovery():
     for key in get_system_info().keys():
         if key in get_temperatures_flat().keys():  # only temperature sensors
             discovery_payloads[key] = {
-                "name": f"{DEVICE_NAME} {key.replace('_', ' ').title()}",
+                "name": f"{key.replace('_', ' ').title()}",
                 "state_topic": f"{base_topic}/status",
                 "unit_of_measurement": "°C",
                 "value_template": f"{{{{ value_json.{key} }}}}",
                 "icon": "mdi:thermometer",
-                "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_{key.lower()}"
+                "unique_id": f"{device_id}_{key.lower()}"
             }
             
     # Dynamically add all gpu sensors
     for key in get_system_info().keys():
         if key.startswith("gpu"):
             discovery_payloads[key] = {
-                "name": f"{DEVICE_NAME} {key.replace('_', ' ').title()}",
+                "name": f"{key.replace('_', ' ').title()}",
                 "state_topic": f"{base_topic}/status",
                 "unit_of_measurement": "°C" if "temperature" in key else "%" if "load" in key else "GB" if "memory" in key else None,
                 "value_template": f"{{{{ value_json.{key} }}}}",
                 "icon": "mdi:expansion-card",
-                "unique_id": f"{DEVICE_NAME.lower().replace(' ', '_')}_{key.lower()}"
+                "unique_id": f"{device_id}_{key.lower()}"
             }
 
     for sensor, payload in discovery_payloads.items():
         payload["device"] = device_info
-        topic = f"{discovery_prefix}/sensor/{DEVICE_NAME}/{sensor}/config"
+        topic = f"{discovery_prefix}/sensor/{device_id}/{sensor}/config"
         client.publish(topic, json.dumps(payload), retain=True)
         print(f"Published discovery for {sensor}")
 
 def publish_status():
     """Publish system status periodically"""
     while True:
-        status_payload = json.dumps(get_system_info())
-        client.publish(f"{base_topic}/status", status_payload)
+        raw_info = get_system_info()
+        cleaned = {k: clean_value(v) for k, v in raw_info.items()}
+        status_payload = json.dumps(cleaned)
+        client.publish(f"{base_topic}/status", status_payload, retain=True)
         print("Published status:", status_payload)
         time.sleep(PUBLISH_INTERVAL)
+
 
 def on_mqtt_message(client, userdata, msg):
     try:
