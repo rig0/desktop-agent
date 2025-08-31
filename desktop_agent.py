@@ -385,6 +385,27 @@ def publish_status():
         client.publish(f"{base_topic}/status", status_payload)
         print("Published status:", status_payload)
         time.sleep(PUBLISH_INTERVAL)
+        
+def on_mqtt_message(client, userdata, msg):
+    try:
+        payload = json.loads(msg.payload.decode())
+        command_key = payload.get("command")
+        if not command_key:
+            print("[MQTT] No command provided")
+            return
+
+        result = run_predefined_command(command_key)
+        print(f"[MQTT] Ran command '{command_key}': {result}")
+
+        # Optional: publish a result topic
+        client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
+
+    except Exception as e:
+        print(f"[MQTT] Error handling run command: {e}")
+
+# subscribe to the run command topic
+mqtt_client.subscribe(f"{base_topic}/run")
+mqtt_client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
 # ----------------------------
 # Main
