@@ -24,7 +24,6 @@ config = configparser.ConfigParser()
 config.read(BASE_DIR / "config.ini")
 
 DEVICE_NAME = config["device"]["name"]
-device_id = DEVICE_NAME.lower().replace(" ", "_")
 
 MQTT_BROKER = config["mqtt"]["broker"]
 MQTT_PORT = int(config["mqtt"]["port"])
@@ -37,6 +36,9 @@ PUBLISH_INTERVAL = int(config["device"].get("interval", 30))  # seconds
 # Base MQTT topics
 base_topic = f"desktop/{device_id}"
 discovery_prefix = "homeassistant"
+
+# Sanitize device-id
+device_id = DEVICE_NAME.lower().replace(" ", "_")
 
 # ----------------------------
 # Device Definition
@@ -107,7 +109,7 @@ def get_cpu_model():
         return platform.processor() or "Unknown CPU"
     
 def safe_number(val, default=0):
-    """Return a safe number (no NaN/None/inf)."""
+    #Return a safe number (no NaN/None/inf)
     if val is None:
         return default
     if isinstance(val, (int, float)):
@@ -116,8 +118,12 @@ def safe_number(val, default=0):
         return val
     return default
 
+def clean_value(val):
+    if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+        return None  # or 0 if you prefer
+    return val
+
 def get_gpu_info_flat():
-    """Flattened GPU info with safe numbers"""
     gpus = GPUtil.getGPUs()
     gpu_info = {}
     for i, gpu in enumerate(gpus):
@@ -138,12 +144,6 @@ def get_temperatures_flat():
                 key = f"{label}_{entry.label}" if entry.label else f"{label}"
                 temps[key] = clean_value(entry.current)  # Use sanitizer
     return temps
-
-
-def clean_value(val):
-    if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
-        return None  # or 0 if you prefer
-    return val
 
 # ----------------------------
 # Commands
@@ -214,7 +214,7 @@ def on_connect(client, userdata, flags, rc):
     publish_discovery()
 
 def publish_discovery():
-    """Publish Home Assistant MQTT discovery configs with icons"""
+    # Publish Home Assistant MQTT discovery configs with icons
     discovery_payloads = {
     # Host Info
     "hostname": {
@@ -381,7 +381,7 @@ def publish_discovery():
         print(f"Published discovery for {sensor}")
 
 def publish_status():
-    """Publish system status periodically"""
+    # Publish system status periodically
     while True:
         raw_info = get_system_info()
         cleaned = {k: clean_value(v) for k, v in raw_info.items()}
