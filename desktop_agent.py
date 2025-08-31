@@ -17,10 +17,10 @@ from pathlib import Path
 # ----------------------------
 # Load configuration
 # ----------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = Path(__file__).parent
 
 config = configparser.ConfigParser()
-config.read(os.path.join(BASE_DIR, "config.ini"))
+config.read(BASE_DIR / "config.ini")
 
 DEVICE_NAME = config["device"]["name"]
 
@@ -149,7 +149,7 @@ def get_system_info():
 # Commands
 # ----------------------------
 def load_commands(config_path="commands.json"):
-    config_file = BASE_DIR / config_path
+    config_file = BASE_DIR / Path(config_path)
     if not config_file.exists():
         raise FileNotFoundError(f"{config_file} not found.")
     with open(config_file, "r") as f:
