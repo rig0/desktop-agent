@@ -385,7 +385,7 @@ def publish_status():
         client.publish(f"{base_topic}/status", status_payload)
         print("Published status:", status_payload)
         time.sleep(PUBLISH_INTERVAL)
-        
+
 def on_mqtt_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode())
@@ -404,8 +404,8 @@ def on_mqtt_message(client, userdata, msg):
         print(f"[MQTT] Error handling run command: {e}")
 
 # subscribe to the run command topic
-mqtt_client.subscribe(f"{base_topic}/run")
-mqtt_client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
+client.subscribe(f"{base_topic}/run")
+client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
 # ----------------------------
 # Main
