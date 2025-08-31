@@ -149,10 +149,10 @@ def get_system_info():
 # Commands
 # ----------------------------
 def load_commands(config_path="commands.json"):
-    config_file = Path(config_path)
+    config_file = BASE_DIR / config_path
     if not config_file.exists():
-        raise FileNotFoundError(f"{config_path} not found.")
-    with open(config_file) as f:
+        raise FileNotFoundError(f"{config_file} not found.")
+    with open(config_file, "r") as f:
         return json.load(f)
 
 ALLOWED_COMMANDS = load_commands()
