@@ -403,16 +403,16 @@ def on_mqtt_message(client, userdata, msg):
     except Exception as e:
         print(f"[MQTT] Error handling run command: {e}")
 
-# subscribe to the run command topic
-client.subscribe(f"{base_topic}/run")
-client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
-
 # ----------------------------
 # Main
 # ----------------------------
 client.username_pw_set(MQTT_USER, MQTT_PASS)
 client.on_connect = on_connect
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
+
+# subscribe to the run command topic
+client.subscribe(f"{base_topic}/run")
+client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
 # Start MQTT loop
 threading.Thread(target=client.loop_forever, daemon=True).start()
