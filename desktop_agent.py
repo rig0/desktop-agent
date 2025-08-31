@@ -17,8 +17,10 @@ from pathlib import Path
 # ----------------------------
 # Load configuration
 # ----------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read(os.path.join(BASE_DIR, "config.ini"))
 
 DEVICE_NAME = config["device"]["name"]
 
