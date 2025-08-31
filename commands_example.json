@@ -1,3 +1,6 @@
 {
-    "plexamp": "C:\\Users\\Rambo\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe"
+    "plexamp": {
+      "cmd": "C:\\Users\\Rambo\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
+      "wait": false
+    }
 }

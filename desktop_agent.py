@@ -159,18 +159,28 @@ def run_predefined_command(command_key: str) -> dict:
     if command_key not in ALLOWED_COMMANDS:
         return {"success": False, "output": f"Command '{command_key}' not allowed."}
 
-    cmd = ALLOWED_COMMANDS[command_key]
+    # Support both simple and advanced command definitions
+    entry = ALLOWED_COMMANDS[command_key]
+    if isinstance(entry, dict):
+        cmd = entry.get("cmd")
+        wait = entry.get("wait", True)
+    else:
+        cmd = entry
+        wait = True
 
     try:
-        result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True
-        )
-        return {
-            "success": result.returncode == 0,
-            "output": result.stdout.strip() if result.stdout else result.stderr.strip()
-        }
+        if wait:
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            return {
+                "success": result.returncode == 0,
+                "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+            }
+        else:
+            subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return {"success": True, "output": f"Command '{command_key}' started."}
     except Exception as e:
         return {"success": False, "output": str(e)}
+
 
 # ----------------------------
 # Flask API
@@ -183,25 +193,14 @@ def status():
 
 @app.route("/run", methods=["POST"])
 def run_command():
-    data = request.get_json()
+    data = request.json
     command_key = data.get("command")
 
-    result = run_predefined_command(command_key)
-    return jsonify(result)
+    if not command_key:
+        return jsonify({"success": False, "output": "No command provided."}), 400
 
-""" @app.route("/run", methods=["POST"])
-def run_command():
-    ""\"Run a system command via REST""\"
-    data = request.json
-    if not data or "command" not in data:
-        return jsonify({"error": "No command provided"}), 400
-    
-    command = data["command"]
-    try:
-        os.system(command + " &")  # non-blocking
-        return jsonify({"status": f"Command '{command}' executed"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500 """
+    result = run_predefined_command(command_key)
+    return jsonify(result), 200 if result["success"] else 400
 
 # ----------------------------
 # MQTT Setup
