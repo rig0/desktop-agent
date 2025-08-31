@@ -31,7 +31,7 @@ API_PORT = int(config["api"]["port"])
 PUBLISH_INTERVAL = int(config["device"].get("interval", 30))  # seconds
 
 # Base MQTT topics
-base_topic = f"home/desktop/{DEVICE_NAME}"
+base_topic = f"desktop/{DEVICE_NAME}"
 discovery_prefix = "homeassistant"
 
 # ----------------------------
