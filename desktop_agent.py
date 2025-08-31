@@ -70,7 +70,6 @@ def get_cpu_model():
 def get_gpu_info_flat():
     """
     Returns GPU info as a flat dictionary for Home Assistant.
-    Keys are like: gpu0_name, gpu0_load_percent, gpu0_memory_used_gb, gpu0_temperature_c
     """
     flat_gpus = {}
     try:
@@ -152,9 +151,9 @@ app = Flask(__name__)
 def status():
     return jsonify(get_system_info())
 
-@app.route("/run", methods=["POST"])
+""" @app.route("/run", methods=["POST"])
 def run_command():
-    """Run a system command via REST"""
+    ""\"Run a system command via REST""\"
     data = request.json
     if not data or "command" not in data:
         return jsonify({"error": "No command provided"}), 400
@@ -164,7 +163,7 @@ def run_command():
         os.system(command + " &")  # non-blocking
         return jsonify({"status": f"Command '{command}' executed"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500 """
 
 # ----------------------------
 # MQTT Setup
