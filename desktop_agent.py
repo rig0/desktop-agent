@@ -141,7 +141,36 @@ def get_system_info():
         **gpu_flat,
         **temps_flat
     }
-    
+
+# ----------------------------
+# Commands
+# ----------------------------
+def load_commands(config_path="commands.json"):
+    config_file = Path(config_path)
+    if not config_file.exists():
+        raise FileNotFoundError(f"{config_path} not found.")
+    with open(config_file) as f:
+        return json.load(f)
+
+ALLOWED_COMMANDS = load_commands()
+
+def run_predefined_command(command_key: str) -> dict:
+    if command_key not in ALLOWED_COMMANDS:
+        return {"success": False, "output": f"Command '{command_key}' not allowed."}
+
+    cmd = ALLOWED_COMMANDS[command_key]
+
+    try:
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True
+        )
+        return {
+            "success": result.returncode == 0,
+            "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+        }
+    except Exception as e:
+        return {"success": False, "output": str(e)}
+
 # ----------------------------
 # Flask API
 # ----------------------------
@@ -150,6 +179,14 @@ app = Flask(__name__)
 @app.route("/status")
 def status():
     return jsonify(get_system_info())
+
+@app.route("/run", methods=["POST"])
+def run_command():
+    data = request.get_json()
+    command_key = data.get("command")
+
+    result = run_predefined_command(command_key)
+    return jsonify(result)
 
 """ @app.route("/run", methods=["POST"])
 def run_command():
