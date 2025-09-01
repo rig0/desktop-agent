@@ -33,12 +33,12 @@ MQTT_PASS = config["mqtt"]["password"]
 API_PORT = int(config["api"]["port"])
 PUBLISH_INTERVAL = int(config["device"].get("interval", 30))  # seconds
 
+# Sanitize device-id
+device_id = DEVICE_NAME.lower().replace(" ", "_")
+
 # Base MQTT topics
 base_topic = f"desktop/{device_id}"
 discovery_prefix = "homeassistant"
-
-# Sanitize device-id
-device_id = DEVICE_NAME.lower().replace(" ", "_")
 
 # ----------------------------
 # Device Definition
