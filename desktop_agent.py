@@ -82,8 +82,8 @@ def get_system_info():
         "disk_usage": round(disk.percent),
         "disk_total_gb": round(disk.total / (1024 ** 3), 1),
         "disk_used_gb": round(disk.used / (1024 ** 3), 1),
-        "network_sent_bytes": net_io.bytes_sent,
-        "network_recv_bytes": net_io.bytes_recv,
+        "network_sent_bytes": bytes_to_human(net_io.bytes_sent),
+        "network_recv_bytes": bytes_to_human(net_io.bytes_recv),
         **gpu_flat,
         **temps_flat
     }
@@ -144,6 +144,16 @@ def get_temperatures_flat():
                 key = f"{label}_{entry.label}" if entry.label else f"{label}"
                 temps[key] = clean_value(entry.current)  # Use sanitizer
     return temps
+
+def bytes_to_human(n: int) -> str:
+    """Convert bytes to a human-readable string (KB, MB, GB, TB)."""
+    units = ["B", "KB", "MB", "GB", "TB", "PB"]
+    step = 1024.0
+    i = 0
+    while n >= step and i < len(units) - 1:
+        n /= step
+        i += 1
+    return f"{n:.2f} {units[i]}"
 
 # ----------------------------
 # Commands
@@ -335,7 +345,7 @@ def publish_discovery():
     "network_sent_bytes": {
         "name": "Network Sent",
         "state_topic": f"{base_topic}/status",
-        "unit_of_measurement": "B",
+        "unit_of_measurement": "",
         "value_template": "{{ value_json.network_sent_bytes }}",
         "icon": "mdi:upload-network",
         "unique_id": f"{device_id}_network_sent"
@@ -343,7 +353,7 @@ def publish_discovery():
     "network_recv_bytes": {
         "name": "Network Received",
         "state_topic": f"{base_topic}/status",
-        "unit_of_measurement": "B",
+        "unit_of_measurement": "",
         "value_template": "{{ value_json.network_recv_bytes }}",
         "icon": "mdi:download-network",
         "unique_id": f"{device_id}_network_received"
