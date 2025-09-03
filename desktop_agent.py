@@ -378,7 +378,7 @@ def publish_discovery():
             discovery_payloads[key] = {
                 "name": f"{key.replace('_', ' ').title()}",
                 "state_topic": f"{base_topic}/status",
-                "unit_of_measurement": "°C" if "temperature" in key else "%" if "load" in key else "GB" if "memory" in key else None,
+                "unit_of_measurement": "°C" if "temperature" in key else "%" if "load" in key else "MB" if "memory" in key else None,
                 "value_template": f"{{{{ value_json.{key} }}}}",
                 "icon": "mdi:expansion-card",
                 "unique_id": f"{device_id}_{key.lower()}"
