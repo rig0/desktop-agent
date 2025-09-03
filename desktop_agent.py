@@ -73,15 +73,15 @@ def get_system_info():
         "os": platform.system(),
         "os_version": platform.version(),
         "cpu_model": get_cpu_model(),
-        "cpu_usage": psutil.cpu_percent(interval=0.5),
+        "cpu_usage": round(psutil.cpu_percent(interval=0.5)),
         "cpu_cores": psutil.cpu_count(logical=True),
-        "cpu_frequency_mhz": round(cpu_freq.current, 2) if cpu_freq else None,
-        "memory_usage": virtual_mem.percent,
-        "memory_total_gb": round(virtual_mem.total / (1024 ** 3), 2),
-        "memory_used_gb": round(virtual_mem.used / (1024 ** 3), 2),
-        "disk_usage": disk.percent,
-        "disk_total_gb": round(disk.total / (1024 ** 3), 2),
-        "disk_used_gb": round(disk.used / (1024 ** 3), 2),
+        "cpu_frequency_mhz": round(cpu_freq.current) if cpu_freq else None,
+        "memory_usage": round(virtual_mem.percent),
+        "memory_total_gb": round(virtual_mem.total / (1024 ** 3), 1),
+        "memory_used_gb": round(virtual_mem.used / (1024 ** 3), 1),
+        "disk_usage": round(disk.percent),
+        "disk_total_gb": round(disk.total / (1024 ** 3), 1),
+        "disk_used_gb": round(disk.used / (1024 ** 3), 1),
         "network_sent_bytes": net_io.bytes_sent,
         "network_recv_bytes": net_io.bytes_recv,
         **gpu_flat,
@@ -129,10 +129,10 @@ def get_gpu_info_flat():
     for i, gpu in enumerate(gpus):
         prefix = f"gpu{i}_"
         gpu_info[prefix + "name"] = gpu.name or "Unknown"
-        gpu_info[prefix + "load_percent"] = safe_number(gpu.load * 100 if gpu.load is not None else None, 0)
-        gpu_info[prefix + "memory_total_gb"] = safe_number(gpu.memoryTotal, 0)
-        gpu_info[prefix + "memory_used_gb"] = safe_number(gpu.memoryUsed, 0)
-        gpu_info[prefix + "temperature_c"] = safe_number(gpu.temperature, 0)
+        gpu_info[prefix + "load_percent"] = round(safe_number(gpu.load * 100 if gpu.load is not None else None, 0))
+        gpu_info[prefix + "memory_total_gb"] = round(safe_number(gpu.memoryTotal, 0))
+        gpu_info[prefix + "memory_used_gb"] = round(safe_number(gpu.memoryUsed, 0))
+        gpu_info[prefix + "temperature_c"] = round(safe_number(gpu.temperature, 0))
     return gpu_info
 
 def get_temperatures_flat():
