@@ -14,6 +14,11 @@ import threading
 import configparser
 from pathlib import Path
 import math
+import asyncio
+from winsdk.windows.media.control import (
+    GlobalSystemMediaTransportControlsSessionManager as MediaManager
+)
+from winsdk.windows.storage.streams import DataReader
 
 # ----------------------------
 # Load configuration
@@ -52,7 +57,7 @@ device_info = {
 }
 
 # ----------------------------
-# Get System Information
+# System Info Helpers
 # ----------------------------
 def get_system_info():
     cpu_freq = psutil.cpu_freq()
@@ -60,10 +65,7 @@ def get_system_info():
     disk = psutil.disk_usage("/")
     net_io = psutil.net_io_counters()
     
-    # Flatten GPU info
     gpu_flat = get_gpu_info_flat()
-    
-    # Flatten temp info
     temps_flat = get_temperatures_flat()
     
     return {
@@ -109,7 +111,6 @@ def get_cpu_model():
         return platform.processor() or "Unknown CPU"
     
 def safe_number(val, default=0):
-    #Return a safe number (no NaN/None/inf)
     if val is None:
         return default
     if isinstance(val, (int, float)):
@@ -120,7 +121,7 @@ def safe_number(val, default=0):
 
 def clean_value(val):
     if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
-        return None  # or 0 if you prefer
+        return None
     return val
 
 def get_gpu_info_flat():
@@ -142,11 +143,10 @@ def get_temperatures_flat():
         for label, entries in raw_temps.items():
             for entry in entries:
                 key = f"{label}_{entry.label}" if entry.label else f"{label}"
-                temps[key] = clean_value(entry.current)  # Use sanitizer
+                temps[key] = clean_value(entry.current)
     return temps
 
 def bytes_to_human(n: int) -> str:
-    """Convert bytes to a human-readable string (KB, MB, GB, TB)."""
     units = ["B", "KB", "MB", "GB", "TB", "PB"]
     step = 1024.0
     i = 0
@@ -156,7 +156,111 @@ def bytes_to_human(n: int) -> str:
     return f"{n:.2f} {units[i]}"
 
 # ----------------------------
-# Commands
+# Media (SMTC) helpers
+# ----------------------------
+async def _get_media_info_async():
+    sessions = await MediaManager.request_async()
+    current = sessions.get_current_session()
+    if not current:
+        return None
+
+    props = await current.try_get_media_properties_async()
+    title = getattr(props, "title", "") or ""
+    artist = getattr(props, "artist", "") or ""
+    album = getattr(props, "album_title", "") or ""
+
+    # Get thumbnail bytes if available
+    thumbnail_bytes = None
+    if getattr(props, "thumbnail", None) is not None:
+        try:
+            stream = await props.thumbnail.open_read_async()
+            size = int(stream.size or 0)
+            if size > 0:
+                input_stream = stream.get_input_stream_at(0)
+                from winsdk.windows.storage.streams import DataReader
+                reader = DataReader(input_stream)
+                await reader.load_async(size)
+                buffer = reader.read_buffer(size)
+                byte_array = bytearray(size)
+                DataReader.from_buffer(buffer).read_bytes(byte_array)
+                thumbnail_bytes = bytes(byte_array)
+        except Exception as e:
+            print("Failed to read thumbnail:", e)
+
+    playback = current.get_playback_info()
+    status = int(playback.playback_status)
+    is_playing = status == 4
+
+    return {
+        "title": title,
+        "artist": artist,
+        "album": album,
+        "is_playing": is_playing,
+        "playback_status": status,
+        "thumbnail_bytes": thumbnail_bytes
+    }
+
+
+def get_media_info():
+    try:
+        return asyncio.run(_get_media_info_async())
+    except Exception as e:
+        print("Error getting media info:", e)
+        return None
+
+def media_poller():
+    last_attrs = None
+    last_image = None  # cache last image bytes
+    placeholder_path = os.path.join(os.path.dirname(__file__), "placeholder.png")
+
+    while True:
+        try:
+            info = get_media_info()
+            if info:
+                # Map playback state
+                if info["is_playing"]:
+                    state = "playing"
+                elif info["playback_status"] == 5:
+                    state = "paused"
+                else:
+                    state = "idle"
+
+                attrs = {
+                    "title": info["title"],
+                    "artist": info["artist"],
+                    "album": info["album"],
+                    "status": state
+                }
+                
+                client.publish(f"{base_topic}/media/state", state, retain=True)
+                
+                if attrs != last_attrs:
+                    client.publish(f"{base_topic}/media/attrs", json.dumps(attrs), retain=True)
+                    last_attrs = attrs
+
+                # Thumbnail or placeholder
+                thumbnail_bytes = info.get("thumbnail_bytes")
+
+                if not thumbnail_bytes:
+                    try:
+                        with open(placeholder_path, "rb") as f:
+                            thumbnail_bytes = f.read()
+                    except Exception as e:
+                        print("Failed to load placeholder:", e)
+                        thumbnail_bytes = None
+
+                # Only publish if image changed
+                if thumbnail_bytes and thumbnail_bytes != last_image:
+                    client.publish(f"{base_topic}/media/thumbnail", thumbnail_bytes, retain=True)
+                    last_image = thumbnail_bytes
+
+        except Exception as e:
+            print("Media poller error:", e)
+
+        time.sleep(5)
+
+# ----------------------------
+# Flask API and system commands
 # ----------------------------
 def load_commands(config_path="commands.json"):
     config_file = BASE_DIR / Path(config_path)
@@ -170,8 +274,6 @@ ALLOWED_COMMANDS = load_commands()
 def run_predefined_command(command_key: str) -> dict:
     if command_key not in ALLOWED_COMMANDS:
         return {"success": False, "output": f"Command '{command_key}' not allowed."}
-
-    # Support both simple and advanced command definitions
     entry = ALLOWED_COMMANDS[command_key]
     if isinstance(entry, dict):
         cmd = entry.get("cmd")
@@ -179,7 +281,6 @@ def run_predefined_command(command_key: str) -> dict:
     else:
         cmd = entry
         wait = True
-
     try:
         if wait:
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -193,10 +294,6 @@ def run_predefined_command(command_key: str) -> dict:
     except Exception as e:
         return {"success": False, "output": str(e)}
 
-
-# ----------------------------
-# Flask API
-# ----------------------------
 app = Flask(__name__)
 
 @app.route("/status")
@@ -207,10 +304,8 @@ def status():
 def run_command():
     data = request.json
     command_key = data.get("command")
-
     if not command_key:
         return jsonify({"success": False, "output": "No command provided."}), 400
-
     result = run_predefined_command(command_key)
     return jsonify(result), 200 if result["success"] else 400
 
@@ -224,7 +319,6 @@ def on_connect(client, userdata, flags, rc):
     publish_discovery()
 
 def publish_discovery():
-    # Publish Home Assistant MQTT discovery configs with icons
     discovery_payloads = {
     # Host Info
     "hostname": {
@@ -357,12 +451,22 @@ def publish_discovery():
         "value_template": "{{ value_json.network_recv_bytes }}",
         "icon": "mdi:download-network",
         "unique_id": f"{device_id}_network_received"
+    },
+    
+    # Media Status
+    "media_status": {
+        "name": "Media Status",
+        "state_topic": f"{base_topic}/media/state",
+        "icon": "mdi:multimedia",
+        "unique_id": f"{device_id}_media_status",
+        "device": device_info,
+        "availability_topic": f"{base_topic}/availability"
     }
     }
     
     # Dynamically add all temp sensors
     for key in get_system_info().keys():
-        if key in get_temperatures_flat().keys():  # only temperature sensors
+        if key in get_temperatures_flat().keys():
             discovery_payloads[key] = {
                 "name": f"{key.replace('_', ' ').title()}",
                 "state_topic": f"{base_topic}/status",
@@ -386,20 +490,39 @@ def publish_discovery():
 
     for sensor, payload in discovery_payloads.items():
         payload["device"] = device_info
+        payload["availability_topic"] = f"{base_topic}/availability"
         topic = f"{discovery_prefix}/sensor/{device_id}/{sensor}/config"
         client.publish(topic, json.dumps(payload), retain=True)
         print(f"Published discovery for {sensor}")
 
+    try:
+        media_camera_payload = {
+            "platform": "mqtt",
+            "name": f"{DEVICE_NAME} Media",
+            "unique_id": f"{device_id}_media",
+            "device": device_info,
+            "availability_topic": f"{base_topic}/availability",
+            "topic": f"{base_topic}/media/thumbnail",
+            "json_attributes_topic": f"{base_topic}/media/attrs",
+            "icon": "mdi:music"
+        }
+        client.publish(
+            f"{discovery_prefix}/camera/{device_id}_media/config",
+            json.dumps(media_camera_payload),
+            retain=True
+        )
+        print("Published discovery for media camera")
+    except Exception as e:
+        print("Failed to publish media camera discovery:", e)
+
 def publish_status():
-    # Publish system status periodically
     while True:
         raw_info = get_system_info()
         cleaned = {k: clean_value(v) for k, v in raw_info.items()}
         status_payload = json.dumps(cleaned)
         client.publish(f"{base_topic}/status", status_payload, retain=True)
-        print("Published status:", status_payload)
+        client.publish(f"{base_topic}/availability", "online", retain=True)
         time.sleep(PUBLISH_INTERVAL)
-
 
 def on_mqtt_message(client, userdata, msg):
     try:
@@ -408,13 +531,8 @@ def on_mqtt_message(client, userdata, msg):
         if not command_key:
             print("[MQTT] No command provided")
             return
-
         result = run_predefined_command(command_key)
-        print(f"[MQTT] Ran command '{command_key}': {result}")
-
-        # Optional: publish a result topic
         client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
-
     except Exception as e:
         print(f"[MQTT] Error handling run command: {e}")
 
@@ -425,15 +543,11 @@ client.username_pw_set(MQTT_USER, MQTT_PASS)
 client.on_connect = on_connect
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
 
-# subscribe to the run command topic
 client.subscribe(f"{base_topic}/run")
 client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
-# Start MQTT loop
 threading.Thread(target=client.loop_forever, daemon=True).start()
-
-# Start status publishing loop
 threading.Thread(target=publish_status, daemon=True).start()
+threading.Thread(target=media_poller, daemon=True).start()
 
-# Run Flask API
 app.run(host="0.0.0.0", port=API_PORT)
