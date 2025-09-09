@@ -1,45 +1,9 @@
 import os, sys, json, time, socket, math, threading, platform, subprocess, psutil, GPUtil
-import configparser
 import paho.mqtt.client as mqtt
 from flask import Flask, request, jsonify
 from pathlib import Path
-
-# ----------------------------
-# Load configuration
-# ----------------------------
-BASE_DIR = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
-CONFIG_PATH = os.path.join(BASE_DIR, "config.ini")
-
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
-
-DEVICE_NAME = config["device"]["name"]
-
-MQTT_BROKER = config["mqtt"]["broker"]
-MQTT_PORT = int(config["mqtt"]["port"])
-MQTT_USER = config["mqtt"]["username"]
-MQTT_PASS = config["mqtt"]["password"]
-
-API_PORT = int(config["api"]["port"])
-PUBLISH_INTERVAL = int(config["device"].get("interval", 30))  # seconds
-
-# Sanitize device-id
-device_id = DEVICE_NAME.lower().replace(" ", "_")
-
-# Base MQTT topics
-base_topic = f"desktop/{device_id}"
-discovery_prefix = "homeassistant"
-
-# ----------------------------
-# Device Definition
-# ----------------------------
-device_info = {
-    "identifiers": [device_id],
-    "name": DEVICE_NAME,
-    "manufacturer": "Rigo Sotomayor",
-    "model": "Desktop Agent",
-    "sw_version": "1.0"
-}
+from common import DEVICE_NAME, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
+                   API_PORT, PUBLISH_INTERVAL, device_id, base_topic, discovery_prefix, device_info
 
 # ----------------------------
 # System Info Helpers
@@ -390,6 +354,7 @@ def on_mqtt_message(client, userdata, msg):
         client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
     except Exception as e:
         print(f"[MQTT] Error handling run command: {e}")
+
 
 # ----------------------------
 # Main
