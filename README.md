@@ -165,7 +165,7 @@ Keep in mind:
    - Name: `Desktop Agent`
    - Run whether user is logged in or not
 3. Under **Triggers**:
-   - New → Begin the task: `At startup`
+   - New → Begin the task: `At log on`
 4. Under **Actions**:
    - New → Action: `Start a program`
    - Program/script: `python`
