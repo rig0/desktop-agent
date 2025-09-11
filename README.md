@@ -12,7 +12,7 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 - **Home Assistant auto-discovery**: Device and sensors show up automatically if MQTT discovery is enabled.
 - **Built-in API**: Fetch system info over HTTP.
 - **Custom commands**: Define and trigger your own scripts/commands remotely.
-- **Auto Updater**: Optional auto updates (WIP)
+- **Auto Updater**: Optional auto updates
 
 ---
 
@@ -194,7 +194,7 @@ Keep in mind:
 
 ---
 
-### 3. Updater (Optional) (WIP)
+### 3. Updater (Optional)
 
 - You can create a task similar to the Media Agent. Under **Add arguments:** `C:\Path\To\updater.py`
 
