@@ -154,7 +154,7 @@ Keep in mind:
 
 - **Desktop Agent**: Can run **whether the user is logged in or not**.  
 - **Media Agent**: Must run **after login** because it interacts with the user session.  
-- **Updater**: Optional.  
+- **Updater**: Can use same settings as media agent.  
 
 ---
 
