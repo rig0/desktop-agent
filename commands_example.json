@@ -1,6 +1,6 @@
 {
-    "plexamp": {
-      "cmd": "C:\\Users\\Rambo\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
-      "wait": false
-    }
+  "notepad": {
+    "cmd": "notepad.exe",
+    "wait": false
+  }
 }
