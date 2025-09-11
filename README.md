@@ -12,7 +12,7 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 - **Home Assistant auto-discovery**: Device and sensors show up automatically if MQTT discovery is enabled.
 - **Built-in API**: Fetch system info over HTTP.
 - **Custom commands**: Define and trigger your own scripts/commands remotely.
-- **Auto Updater**: Optional auto updates
+- **Auto Updater**: Optional auto updates (WIP)
 
 ---
 
@@ -44,7 +44,6 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
    ```
 
 2. **Install Python dependencies**  
-   Make sure you have Python 3.10+ installed, then run:
    ```powershell
    pip install -r requirements.txt
    ```
@@ -196,7 +195,7 @@ Keep in mind:
 
 ---
 
-### 3. Updater (Optional)
+### 3. Updater (Optional) (WIP)
 
 - You can create a task similar to the Media Agent. Under **Add arguments:** `C:\Path\To\updater.py`
 
