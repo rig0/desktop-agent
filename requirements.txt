@@ -2,4 +2,3 @@ flask
 psutil
 paho-mqtt
 GPUtil
-setuptools
