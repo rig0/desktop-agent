@@ -61,7 +61,7 @@ def get_media_info():
 def media_poller():
     last_attrs = None
     last_image = None  # cache last image bytes
-    placeholder_path = os.path.join(os.path.dirname(__file__), "placeholder.png")
+    placeholder_path = os.path.join(os.path.dirname(__file__), "media.png")
 
     while True:
         try:
