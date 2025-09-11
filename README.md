@@ -39,7 +39,7 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 1. **Download / Clone the repo**  
    ```powershell
-   git clone https://rigslab.com/Rambo/hass-desktop-agent
+   git clone https://github.com/rig0/hass-desktop-agent
    cd hass-desktop-agent
    ```
 
