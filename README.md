@@ -158,7 +158,7 @@ Keep in mind:
 
 ---
 
-### 1. Desktop Agent (Always Running)
+### 1. Desktop Agent (Fully Background)
 
 1. Open **Task Scheduler** → **Create Task**.
 2. Under **General**:
