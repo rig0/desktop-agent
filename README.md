@@ -164,7 +164,6 @@ Keep in mind:
 2. Under **General**:
    - Name: `Desktop Agent`
    - Run whether user is logged in or not
-   - Run with highest privileges
 3. Under **Triggers**:
    - New → Begin the task: `At startup`
 4. Under **Actions**:
