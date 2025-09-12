@@ -72,4 +72,4 @@ def update_repo():
 if __name__ == "__main__":
     while True:
         update_repo()
-        time.sleep(300)  # 5 min while testing
+        time.sleep(3600)  # every hour
