@@ -57,11 +57,11 @@ def get_os_version():
                     distro_version = data.get("VERSION_ID", "")
             return f"{distro_name} {distro_version}".strip()
         except:
-            return platform.platform()
+            return platform.version()
     elif sys.platform.startswith("win"):
-        return platform.platform()
+        return platform.version()
     else:
-        return platform.platform()
+        return platform.version()
 
 
 def get_cpu_model():
