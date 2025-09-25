@@ -22,6 +22,7 @@ def get_system_info():
         "hostname": socket.gethostname(),
         "uptime_seconds": int(time.time() - psutil.boot_time()),
         "os": platform.system(),
+        "os_release": platform.release(),
         "os_version": get_os_version(),
         "cpu_model": get_cpu_model(),
         "cpu_usage": round(psutil.cpu_percent(interval=0.5)),
@@ -214,6 +215,13 @@ def publish_discovery():
         "value_template": "{{ value_json.os }}",
         "icon": "mdi:desktop-classic",
         "unique_id": f"{device_id}_os"
+    },
+    "os_release": {
+        "name": "OS Release",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.os_release}}",
+        "icon": "mdi:information",
+        "unique_id": f"{device_id}_os_release"
     },
     "os_version": {
         "name": "OS Version",
