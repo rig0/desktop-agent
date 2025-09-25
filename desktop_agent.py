@@ -22,7 +22,7 @@ def get_system_info():
         "hostname": socket.gethostname(),
         "uptime_seconds": int(time.time() - psutil.boot_time()),
         "os": platform.system(),
-        "os_version": platform.version(),
+        "os_version": get_os_version(),
         "cpu_model": get_cpu_model(),
         "cpu_usage": round(psutil.cpu_percent(interval=0.5)),
         "cpu_cores": psutil.cpu_count(logical=True),
@@ -38,6 +38,30 @@ def get_system_info():
         **gpu_flat,
         **temps_flat
     }
+
+def get_os_version():
+    if sys.platform.startswith("linux"):
+        try:
+            # Try standard library first
+            distro_name = ""
+            distro_version = ""
+            if os.path.exists("/etc/os-release"):
+                with open("/etc/os-release") as f:
+                    data = {}
+                    for line in f:
+                        if "=" in line:
+                            k, v = line.strip().split("=", 1)
+                            data[k] = v.strip('"')
+                    distro_name = data.get("NAME", "Linux")
+                    distro_version = data.get("VERSION_ID", "")
+            return f"{distro_name} {distro_version}".strip()
+        except:
+            return platform.platform()
+    elif sys.platform.startswith("win"):
+        return platform.platform()
+    else:
+        return platform.platform()
+
 
 def get_cpu_model():
     if sys.platform.startswith("linux"):
