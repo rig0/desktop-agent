@@ -1,6 +1,0 @@
-{
-  "notepad": {
-    "cmd": "notepad.exe",
-    "wait": false
-  }
-}

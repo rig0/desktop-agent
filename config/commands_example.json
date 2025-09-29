@@ -1,0 +1,22 @@
+{
+  "reboot": {
+    "cmd": "reboot",
+    "wait": false,
+    "platforms": ["linux", "win"]
+  },
+  "shutdown": {
+    "cmd": "shutdown",
+    "wait": false,
+    "platforms": ["linux", "win"]
+  },
+  "plexamp_linux": {
+    "cmd": "flatpak run com.plexamp.Plexamp",
+    "wait": false,
+    "platforms": ["linux"]
+  },
+  "plexamp_windows": {
+    "cmd": "C:\\Users\\User\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
+    "wait": false,
+    "platforms": ["win"]
+  }
+}

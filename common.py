@@ -5,14 +5,27 @@ import configparser
 # ----------------------------
 # Base paths
 # ----------------------------
-BASE_DIR = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
-CONFIG_PATH = os.path.join(BASE_DIR, "config.ini")
+BASE_DIR = os.path.dirname(
+    sys.executable if getattr(sys, "frozen", False) else __file__
+)
+CONFIG_PATH = os.path.join(BASE_DIR, "config", "config.ini")
+VERSION_PATH = os.path.join(BASE_DIR, "VERSION")
+
+# ----------------------------
+# Load version
+# ----------------------------
+try:
+    with open(VERSION_PATH, "r", encoding="utf-8") as f:
+        VERSION = f.read().strip()
+except FileNotFoundError:
+    VERSION = "0.0.0"  # fallback if VERSION file is missing
 
 # ----------------------------
 # Load configuration
 # ----------------------------
 config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
+if not config.read(CONFIG_PATH):
+    raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
 
 DEVICE_NAME = config["device"]["name"]
 
@@ -39,5 +52,6 @@ device_info = {
     "name": DEVICE_NAME,
     "manufacturer": "Rigo Sotomayor",
     "model": "Desktop Agent",
-    "sw_version": "1.0"
+    "sw_version": VERSION,
+    "configuration_url": "https://github.com/rig0/hass-desktop-agent",
 }
