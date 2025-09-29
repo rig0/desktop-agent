@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+SOCKET="/run/host/tmp/powerd.sock"
+
+if [[ "$1" == "reboot" || "$1" == "poweroff" ]]; then
+    if [ -e "$SOCKET" ]; then
+        echo "$1" | socat - UNIX-CONNECT:"$SOCKET"
+        exit 0
+    else
+        echo "Host power socket not available"
+        exit 1
+    fi
+fi
+
+# Otherwise fallback to real systemctl inside container
+exec /usr/bin/systemctl "$@"
