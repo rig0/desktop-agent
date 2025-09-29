@@ -1,0 +1,45 @@
+name: Update Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-version:
+    runs-on: CodeServer
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Update VERSION File
+        run: |
+          # Get current version from the VERSION file
+          current_version=$(cat VERSION)
+          IFS='.' read -ra VERSION <<< "$current_version"
+
+          # Increment patch version
+          new_version="${VERSION[0]}.${VERSION[1]}.$((VERSION[2]+1))"
+
+          # Update the VERSION file
+          echo "$new_version" > VERSION
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+
+          # Commit changes
+          git add VERSION
+          git commit -m "Bump version to $new_version"
+
+          # Tag the new version
+          git tag "v$new_version"
+
+          # Push changes and the new tag
+          git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git main
+          git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git "v$new_version"          
+      
+      - name: Send notification on success
+        if: success()
+        run: /home/rambo/app-updated.sh "Desktop Agent updated to $NEW_VERSION"
+
+      - name: Send notification on failure
+        if: failure()
+        run: /home/rambo/app-updated.sh "Desktop Agent Build $NEW_VERSION FAILED"
