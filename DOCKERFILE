@@ -1,0 +1,36 @@
+# Use the official Fedora Toolbox base image
+FROM registry.fedoraproject.org/fedora-toolbox:42
+
+# Install system dependencies
+RUN dnf -y update && \
+    dnf install -y \
+        python3 \
+        python3-pip \
+        python3-gobject \
+        python3-cairo \
+        gobject-introspection-devel \
+        python3-dbus \
+        python3-requests \
+        python3-paho-mqtt \
+        python3-flask \
+        gcc \
+        make \
+        redhat-rpm-config && \
+    dnf clean all
+
+# Install Python packages (user-level, no sudo needed inside toolbox)
+RUN pip3 install --user \
+        pydbus \
+        GPUtil
+
+# Set PATH to include pip user installs
+ENV PATH=/home/$USER/.local/bin:$PATH
+
+# Optional: set working directory to where the app lives
+WORKDIR /var/home/rambo/Apps/Agent
+
+# Optional: copy scripts into the container want to go fully self-contained
+# COPY ./Agent /var/home/rambo/Apps/Agent
+
+# Default shell
+CMD ["/bin/bash"]
