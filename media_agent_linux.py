@@ -1,4 +1,4 @@
-import os, time, json, threading, requests
+import os, sys, time, json, threading, requests
 import paho.mqtt.client as mqtt
 from pydbus import SessionBus
 from common import DEVICE_NAME, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
@@ -72,7 +72,8 @@ def get_media_info():
 def media_poller():
     last_attrs = None
     last_image = None
-    placeholder_path = os.path.join(BASE_DIR, "config", "media_thumb.png")
+    base_dir = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
+    placeholder_path = os.path.join(base_dir, "config", "media_thumb.png")
 
     while True:
         try:
