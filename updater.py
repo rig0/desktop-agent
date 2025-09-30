@@ -16,28 +16,26 @@ REPO_ZIP = "https://github.com/rig0/hass-desktop-agent/archive/refs/heads/main.z
 AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
 CHECKSUM_FILE = os.path.join(AGENT_DIR, ".last_checksum")
 
+
 def get_sha256(data: bytes) -> str:
     h = hashlib.sha256()
     h.update(data)
     return h.hexdigest()
 
-def copy_over(src, dst, skip_dirs=None):
-    # Copy files/dirs from src into dst without deleting extra files.
-    # Overwrites existing files, leaves unknown files alone.
-    skip_dirs = skip_dirs or []
+
+def copy_over(src, dst):
+    # Copy files/dirs from src into dst without user config files.
     os.makedirs(dst, exist_ok=True)
 
     for item in os.listdir(src):
-        if item in skip_dirs:
-            continue
-
         s = os.path.join(src, item)
         d = os.path.join(dst, item)
 
         if os.path.isdir(s):
-            copy_over(s, d, skip_dirs=skip_dirs)
+            copy_over(s, d)
         else:
             shutil.copy2(s, d)
+
 
 def update_repo():
     # Download zip archive
@@ -69,8 +67,9 @@ def update_repo():
     subdirs = [os.path.join(tmp_dir, d) for d in os.listdir(tmp_dir)]
     repo_root = subdirs[0] if subdirs else tmp_dir
 
-    # Copy everything into AGENT_DIR, but leave config/ untouched
-    copy_over(repo_root, AGENT_DIR, skip_dirs=["config"])
+    # Copy everything into AGENT_DIR (including config/),
+    # overwriting only files that exist in the repo
+    copy_over(repo_root, AGENT_DIR)
 
     # Save new checksum
     with open(CHECKSUM_FILE, "w") as f:
