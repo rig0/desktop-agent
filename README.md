@@ -64,6 +64,9 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 ---
 
+## Setup (Linux)
+WIP
+
 ## Home Assistant Integration
 
 If you have MQTT discovery enabled in Home Assistant, the desktop agent and its sensors will appear automatically.  
