@@ -47,12 +47,18 @@ def make_helpers_executable():
         for root, dirs, files in os.walk(helpers_dir):
             for name in files:
                 file_path = os.path.join(root, name)
-                st = os.stat(file_path)
-                os.chmod(file_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                try:
+                    st = os.stat(file_path)
+                    os.chmod(file_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                except PermissionError:
+                    print(f"Warning: Cannot chmod {file_path}, permission denied")
             for name in dirs:
                 dir_path = os.path.join(root, name)
-                st = os.stat(dir_path)
-                os.chmod(dir_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                try:
+                    st = os.stat(dir_path)
+                    os.chmod(dir_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                except PermissionError:
+                    print(f"Warning: Cannot chmod {dir_path}, permission denied")
 
 
 def update_repo():
