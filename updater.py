@@ -24,7 +24,7 @@ def get_sha256(data: bytes) -> str:
 
 
 def copy_over(src, dst):
-    # Copy files/dirs from src into dst without user config files.
+    # Copy files/dirs from src into dst without overwriting user config files.
     os.makedirs(dst, exist_ok=True)
 
     for item in os.listdir(src):
