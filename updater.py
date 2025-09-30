@@ -55,7 +55,6 @@ def make_helpers_executable():
                 os.chmod(dir_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
-
 def update_repo():
     # Download zip archive
     r = requests.get(REPO_ZIP)
