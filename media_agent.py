@@ -61,8 +61,8 @@ def get_media_info():
 def media_poller():
     last_attrs = None
     last_image = None  # cache last image bytes
-    base_dir = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
-    placeholder_path = os.path.join(base_dir, "config", "media_thumb.png")
+    BASE_DIR = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
+    placeholder_path = os.path.join(BASE_DIR, "config", "media_thumb.png")
 
     while True:
         try:
