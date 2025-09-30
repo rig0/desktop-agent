@@ -50,12 +50,12 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 3. **Copy configuration files**  
    ```powershell
-   copy config_example.ini config.ini
-   copy commands_example.json commands.json
+   copy config/config_example.ini config/config.ini
+   copy config/commands_example.json config/commands.json
    ```
 
 4. **Edit `config.ini`**  
-   Open `config.ini` in Notepad and fill in your MQTT broker info, device name, and API port.
+   Open `config/config.ini` in Notepad and fill in your MQTT broker info, device name, and API port.
 
 5. **Run the agent**  
    ```powershell
@@ -83,18 +83,32 @@ Key topics used by the agent:
 ---
 
 ## Example `commands.json` (Windows)
-
 ```json
 {
-  "notepad": {
-    "cmd": "notepad.exe",
-    "wait": false
+  "reboot": {
+    "cmd": "reboot",
+    "wait": false,
+    "platforms": ["linux", "win"]
+  },
+  "shutdown": {
+    "cmd": "shutdown",
+    "wait": false,
+    "platforms": ["linux", "win"]
+  },
+  "plexamp_linux": {
+    "cmd": "flatpak run com.plexamp.Plexamp",
+    "wait": false,
+    "platforms": ["linux"]
+  },
+  "plexamp_windows": {
+    "cmd": "C:\\Users\\User\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
+    "wait": false,
+    "platforms": ["win"]
   }
 }
+
 ```
-
-- **notepad** → launches Notepad as a quick test
-
+Shutdown and Reboot commands work with both linux and windows. Custom commands have to specify OS.
 ---
 
 ## API Usage
