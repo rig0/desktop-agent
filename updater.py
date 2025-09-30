@@ -6,6 +6,8 @@ import zipfile
 import io
 import time
 import hashlib
+import sys
+import stat
 
 # personal repo link
 # REPO_ZIP = "https://rigslab.com/Rambo/hass-desktop-agent/archive/main.zip"
@@ -35,6 +37,23 @@ def copy_over(src, dst):
             copy_over(s, d)
         else:
             shutil.copy2(s, d)
+
+def make_helpers_executable():
+    helpers_dir = os.path.join(AGENT_DIR, "helpers")
+    if not os.path.exists(helpers_dir):
+        return
+
+    if sys.platform.startswith("linux"):
+        for root, dirs, files in os.walk(helpers_dir):
+            for name in files:
+                file_path = os.path.join(root, name)
+                st = os.stat(file_path)
+                os.chmod(file_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            for name in dirs:
+                dir_path = os.path.join(root, name)
+                st = os.stat(dir_path)
+                os.chmod(dir_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
 
 
 def update_repo():
@@ -70,6 +89,9 @@ def update_repo():
     # Copy everything into AGENT_DIR (including config/),
     # overwriting only files that exist in the repo
     copy_over(repo_root, AGENT_DIR)
+
+    # Make /helpers executable if on Linux
+    make_helpers_executable()
 
     # Save new checksum
     with open(CHECKSUM_FILE, "w") as f:
