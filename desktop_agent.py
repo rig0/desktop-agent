@@ -135,12 +135,11 @@ def bytes_to_human(n: int) -> str:
 # ----------------------------
 
 # Load commands from JSON
-def load_commands(config_path="commands.json"):
-    base_dir = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
-    config_file = Path(base_dir) / config_path
+def load_commands(filename="commands.json"):
+    config_file = Path(BASE_DIR) / "config" / filename
     if not config_file.exists():
         raise FileNotFoundError(f"{config_file} not found.")
-    with open(config_file, "r") as f:
+    with open(config_file, "r", encoding="utf-8") as f:
         return json.load(f)
 
 ALLOWED_COMMANDS = load_commands()
