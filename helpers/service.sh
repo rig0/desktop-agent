@@ -13,6 +13,7 @@ TOOLBOX_NAME="desktop-agent"
 SCRIPTS=(
     "/home/rambo/Apps/Agent/desktop_agent.py"
     "/home/rambo/Apps/Agent/media_agent_linux.py"
+    "/home/rambo/Apps/Agent/updater.py"
 )
 
 # ----------------------------
