@@ -149,8 +149,8 @@ def get_linux_gui_env():
     env = os.environ.copy()
     env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
 
-    # Ensure our wrapper is found first
-    env["PATH"] = "/var/home/rambo/Apps/Agent:" + env.get("PATH", "")
+    # Ensure our wrapper is found first (move to config,make dynamic and conditional(in container?))
+    env["PATH"] = "/var/home/rambo/Apps/Agent/helpers:" + env.get("PATH", "")
 
     # Detect display server
     if "WAYLAND_DISPLAY" in env:
