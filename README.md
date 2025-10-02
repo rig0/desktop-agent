@@ -5,8 +5,9 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 ***Fully functional on both windows and linux but still under development. Updates may have breaking changes. Documentation is a WIP***
 
-*Consider the current state and [Tagged](https://github.com/rig0/hass-desktop-agent/tags) versions as nightly builds*
-*Stable releases will be found in [Releases](https://github.com/rig0/hass-desktop-agent/releases)*
+*Consider the current state and [Tagged](https://github.com/rig0/hass-desktop-agent/tags) versions as nightly builds.*
+
+*Stable builds will be found in [Releases](https://github.com/rig0/hass-desktop-agent/releases)*
 
 ---
 
