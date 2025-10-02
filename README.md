@@ -3,6 +3,11 @@
 A lightweight desktop agent that integrates your PC with [Home Assistant](https://www.home-assistant.io/) using **MQTT**.  
 It publishes live system metrics, exposes a simple API, and lets you run custom commands remotely.
 
+***Fully functional on both windows and linux but still under development. Updates may have breaking changes. Documentation is a WIP***
+
+*Consider the current state and [Tagged](https://github.com/rig0/hass-desktop-agent/tags) versions as nightly builds*
+*Stable releases will be found in [Releases](https://github.com/rig0/hass-desktop-agent/releases)*
+
 ---
 
 ## Features
