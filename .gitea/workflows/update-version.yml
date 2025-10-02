@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type (patch, minor, major)"
+        required: false
+        default: "patch"
 
 jobs:
   update-version:
@@ -12,34 +18,72 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Setup log capture
+        run: |
+          # Redirect all stdout/stderr to a log file and console
+          exec > >(tee -a job.log) 2>&1
+
       - name: Update VERSION File
         run: |
-          # Get current version from the VERSION file
+          # Read current version
           current_version=$(cat VERSION)
           IFS='.' read -ra VERSION <<< "$current_version"
 
-          # Increment patch version
-          new_version="${VERSION[0]}.${VERSION[1]}.$((VERSION[2]+1))"
+          bump_type="${{ github.event.inputs.bump }}"
+          bump_type=${bump_type:-patch}
 
-          # Update the VERSION file
+          case "$bump_type" in
+            major)
+              new_version="$((VERSION[0]+1)).0.0"
+              ;;
+            minor)
+              new_version="${VERSION[0]}.$((VERSION[1]+1)).0"
+              ;;
+            patch|*)
+              new_version="${VERSION[0]}.${VERSION[1]}.$((VERSION[2]+1))"
+              ;;
+          esac
+
           echo "$new_version" > VERSION
           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
 
-          # Commit changes
-          git add VERSION
-          git commit -m "Bump version to $new_version"
+          # Get last commit info
+          last_commit_msg=$(git log -1 --pretty=%B)
+          last_commit_hash=$(git rev-parse --short HEAD)
 
-          # Tag the new version
-          git tag "v$new_version"
+          echo "LAST_COMMIT_MSG=$last_commit_msg" >> $GITHUB_ENV
+          echo "LAST_COMMIT_HASH=$last_commit_hash" >> $GITHUB_ENV
+
+          # Commit version bump with last commit message context
+          git add VERSION
+          git commit -m "$last_commit_msg ($last_commit_hash)"
+
+          # Annotated tag with description
+          git tag -a "v$new_version" -m "Nightly build v$new_version
+
+          Based on commit: $last_commit_hash
+
+          $last_commit_msg
+          "
 
           # Push changes and the new tag
           git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git main
-          git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git "v$new_version"          
-      
+          git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git "v$new_version"
+
       - name: Send notification on success
         if: success()
-        run: /home/rambo/app-updated.sh "Desktop Agent updated to $NEW_VERSION"
+        run: |
+          /home/rambo/app-updated.sh "✅ Desktop Agent $NEW_VERSION
+          [$LAST_COMMIT_HASH] $LAST_COMMIT_MSG"
 
       - name: Send notification on failure
         if: failure()
-        run: /home/rambo/app-updated.sh "Desktop Agent Build $NEW_VERSION FAILED"
+        run: |
+          tail -n 10 job.log > lastlog.txt || echo "No log available" > lastlog.txt
+
+          msg="❌ Desktop Agent Build $NEW_VERSION FAILED
+          [$LAST_COMMIT_HASH] $LAST_COMMIT_MSG
+
+          $(cat lastlog.txt)"
+
+          /home/rambo/app-updated.sh "$msg"
