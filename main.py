@@ -211,9 +211,10 @@ def media_agent(client):
     print(sysinfo["os"])
     if sysinfo["os"] == "Linux":
         from modules.media_agent_linux import start_media_agent
-    elif sysinfo["os"] == "Windows":
-        from modules.media_agent import start_media_agent
-    start_media_agent(client)
+        start_media_agent(client)
+    # do nothing for windows. we need to run a separate script on windows.
+    #elif sysinfo["os"] == "Windows":
+        #from modules.media_agent import start_media_agent
 
 def updater():
     while True:
