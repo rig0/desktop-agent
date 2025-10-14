@@ -1,6 +1,6 @@
 import json, threading, time
 import paho.mqtt.client as mqtt
-from modules.common import API_PORT, PUBLISH_INTERVAL, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
+from modules.config import API_PORT, PUBLISH_INTERVAL, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
                    device_id, base_topic, discovery_prefix, device_info
 from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
 from modules.commands import run_predefined_command
@@ -230,7 +230,7 @@ def main():
     threading.Thread(target=start_linux_media(client), daemon=True).start()
     #start_linux_media(client)
     #start_media_agent(client)
-    
+
     """
     - Add logic to check if media agent is enabled in config; If so, 
         check for the host OS and run the correct agent
