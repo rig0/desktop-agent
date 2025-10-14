@@ -5,8 +5,6 @@ from modules.config import API_PORT, PUBLISH_INTERVAL, MQTT_BROKER, MQTT_PORT, M
 from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
 from modules.commands import run_predefined_command
 from modules.api import start_api
-from modules.media_agent import start_media_agent
-from modules.media_agent_linux import start_media_agent as start_linux_media
 
 client = mqtt.Client()
 
@@ -207,6 +205,15 @@ def on_mqtt_message(client, userdata, msg):
     except Exception as e:
         print(f"[MQTT] Error handling run command: {e}")
 
+def media_agent(client):
+    sysinfo = get_system_info()
+    print(sysinfo["os"])
+    if sysinfo["os"] == "Linux":
+        from modules.media_agent_linux import start_media_agent
+    elif sysinfo["os"] == "Windows":
+        from modules.media_agent import start_media_agent
+    start_media_agent(client)
+
 # ----------------------------
 # Main
 # ----------------------------
@@ -227,13 +234,8 @@ def main():
     threading.Thread(target=publish_status, daemon=True).start()
 
     # Start media agent
-    threading.Thread(target=start_linux_media(client), daemon=True).start()
-    #start_linux_media(client)
-    #start_media_agent(client)
-
+    threading.Thread(target=media_agent(client), daemon=True).start()
     """
-    - Add logic to check if media agent is enabled in config; If so, 
-        check for the host OS and run the correct agent
     - Add logic to check if API is enabled in config; If so run it
     - Add logic to check if updater is enabled in config: If so run it
     """
