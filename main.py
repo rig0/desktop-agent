@@ -5,6 +5,7 @@ from modules.config import API_PORT, PUBLISH_INTERVAL, MQTT_BROKER, MQTT_PORT, M
 from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
 from modules.commands import run_predefined_command
 from modules.api import start_api
+from modules.updater import update_repo
 
 client = mqtt.Client()
 
@@ -214,6 +215,11 @@ def media_agent(client):
         from modules.media_agent import start_media_agent
     start_media_agent(client)
 
+def updater():
+    while True:
+        update_repo()
+        time.sleep(60)  # 3600 every hour - make a config option
+
 # ----------------------------
 # Main
 # ----------------------------
@@ -235,10 +241,9 @@ def main():
 
     # Start media agent
     threading.Thread(target=media_agent(client), daemon=True).start()
-    """
-    - Add logic to check if API is enabled in config; If so run it
-    - Add logic to check if updater is enabled in config: If so run it
-    """
+
+    # Start updater
+    #threading.Thread(target=updater, daemon=True).start()
 
     # Start API
     start_api(API_PORT)
