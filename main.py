@@ -208,7 +208,6 @@ def on_mqtt_message(client, userdata, msg):
 
 def media_agent(client):
     sysinfo = get_system_info()
-    print(sysinfo["os"])
     if sysinfo["os"] == "Linux":
         from modules.media_agent_linux import start_media_agent
         start_media_agent(client)
@@ -241,10 +240,10 @@ def main():
     threading.Thread(target=publish_status, daemon=True).start()
 
     # Start API
-    if API_MOD: start_api(API_PORT)
+    if API_MOD: threading.Thread(target=start_api, args=(API_PORT,), daemon=True).start()
 
     # Start media agent
-    if MEDIA_AGENT: threading.Thread(target=media_agent(client), daemon=True).start()
+    if MEDIA_AGENT: threading.Thread(target=media_agent, args=(client,), daemon=True).start()
 
     # Start updater
     if UPDATES_MOD: threading.Thread(target=updater, daemon=True).start()
