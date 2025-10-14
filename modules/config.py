@@ -34,13 +34,13 @@ MQTT_PORT = int(config["mqtt"]["port"])
 MQTT_USER = config["mqtt"]["username"]
 MQTT_PASS = config["mqtt"]["password"]
 
-API_MOD = bool(config["modules"]["api"], True)
+API_MOD = bool(config["modules"]["api"])
 API_PORT = int(config["api"]["port"], 5555)
 
-MEDIA_AGENT = bool(config["modules"].get("media_agent"), False)
+MEDIA_AGENT = bool(config["modules"].get("media_agent"))
 
-UPDATES_MOD = bool(config["modules"].get("updates"), False)
-UPDATES_INT = int(config["updates"].get("interval", 3600))  # seconds
+UPDATES_MOD = bool(config["modules"].get("updates"))
+UPDATES_INT = int(config["updates"].get("interval"), 3600)  # seconds
 
 # ----------------------------
 # Device identifiers and topics
