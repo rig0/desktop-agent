@@ -1,6 +1,6 @@
 import json, threading, time
 import paho.mqtt.client as mqtt
-from modules.config import API_PORT, PUBLISH_INTERVAL, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
+from modules.config import API_PORT, PUBLISH_INT, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
                    device_id, base_topic, discovery_prefix, device_info
 from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
 from modules.commands import run_predefined_command
@@ -193,7 +193,7 @@ def publish_status():
         cleaned = {k: clean_value(v) for k, v in raw_info.items()}
         client.publish(f"{base_topic}/status", json.dumps(cleaned), retain=True)
         client.publish(f"{base_topic}/availability", "online", retain=True)
-        time.sleep(PUBLISH_INTERVAL)
+        time.sleep(PUBLISH_INT)
 
 def on_mqtt_message(client, userdata, msg):
     try:
