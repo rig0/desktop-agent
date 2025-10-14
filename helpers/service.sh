@@ -9,3 +9,5 @@ if command -v nm-online >/dev/null 2>&1; then
 fi
 
 python3 /var/home/rambo/Apps/Agent/main.py
+
+wait
