@@ -1,6 +1,6 @@
 import json, threading, time
 import paho.mqtt.client as mqtt
-from modules.config import API_PORT, PUBLISH_INT, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
+from modules.config import API_MOD, API_PORT, PUBLISH_INT, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, MEDIA_AGENT, UPDATES_MOD, UPDATES_INT, \
                    device_id, base_topic, discovery_prefix, device_info
 from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
 from modules.commands import run_predefined_command
@@ -219,7 +219,7 @@ def media_agent(client):
 def updater():
     while True:
         update_repo()
-        time.sleep(60)  # 3600 every hour - make a config option
+        time.sleep(UPDATES_INT)
 
 # ----------------------------
 # Main
@@ -240,14 +240,14 @@ def main():
     # Start desktop agent status publisher
     threading.Thread(target=publish_status, daemon=True).start()
 
+    # Start API
+    if API_MOD: start_api(API_PORT)
+
     # Start media agent
-    threading.Thread(target=media_agent(client), daemon=True).start()
+    if MEDIA_AGENT: threading.Thread(target=media_agent(client), daemon=True).start()
 
     # Start updater
-    #threading.Thread(target=updater, daemon=True).start()
-
-    # Start API
-    start_api(API_PORT)
+    if UPDATES_MOD: threading.Thread(target=updater, daemon=True).start()
 
     # Keep main thread alive
     print("[Main] Agent running. Press Ctrl+C to exit.")

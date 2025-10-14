@@ -27,13 +27,12 @@ if not config.read(CONFIG_PATH):
     raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
 
 DEVICE_NAME = config["device"]["name"]
+PUBLISH_INT = int(config["device"].get("interval", 15))  # seconds
 
 MQTT_BROKER = config["mqtt"]["broker"]
 MQTT_PORT = int(config["mqtt"]["port"])
 MQTT_USER = config["mqtt"]["username"]
 MQTT_PASS = config["mqtt"]["password"]
-
-PUBLISH_INT = int(config["device"].get("interval", 15))  # seconds
 
 API_MOD = bool(config["modules"]["api"], True)
 API_PORT = int(config["api"]["port"], 5555)
