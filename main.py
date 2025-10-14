@@ -1,11 +1,12 @@
 import json, threading, time
 import paho.mqtt.client as mqtt
-from modules.config import API_MOD, API_PORT, PUBLISH_INT, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, MEDIA_AGENT, UPDATES_MOD, UPDATES_INT, \
-                   device_id, base_topic, discovery_prefix, device_info
-from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
-from modules.commands import run_predefined_command
 from modules.api import start_api
 from modules.updater import update_repo
+from modules.commands import run_predefined_command
+from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
+from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
+                    API_MOD, API_PORT, MEDIA_AGENT, UPDATES_MOD, UPDATES_INT, \
+                    device_id, base_topic, discovery_prefix, device_info
 
 client = mqtt.Client()
 
