@@ -34,3 +34,5 @@ WORKDIR /var/home/rambo/Apps/Agent
 
 # Default shell
 CMD ["/bin/bash"]
+
+# THIS IS A WORK IN PROGRESS. HAS NOT BEEN TESTED!

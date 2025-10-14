@@ -11,11 +11,9 @@ import stat
 
 # personal repo link
 # REPO_ZIP = "https://rigslab.com/Rambo/hass-desktop-agent/archive/main.zip"
-
 # github link
 REPO_ZIP = "https://github.com/rig0/hass-desktop-agent/archive/refs/heads/main.zip"
-
-AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
+AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHECKSUM_FILE = os.path.join(AGENT_DIR, ".last_checksum")
 
 

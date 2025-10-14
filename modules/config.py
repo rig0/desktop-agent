@@ -1,13 +1,12 @@
 import os
 import sys
 import configparser
+from pathlib import Path
 
 # ----------------------------
-# Base paths
+# Paths
 # ----------------------------
-BASE_DIR = os.path.dirname(
-    sys.executable if getattr(sys, "frozen", False) else __file__
-)
+BASE_DIR = Path(__file__).parent.parent
 CONFIG_PATH = os.path.join(BASE_DIR, "config", "config.ini")
 VERSION_PATH = os.path.join(BASE_DIR, "VERSION")
 

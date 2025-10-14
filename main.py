@@ -1,0 +1,253 @@
+import json, threading, time
+import paho.mqtt.client as mqtt
+from modules.common import API_PORT, PUBLISH_INTERVAL, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, \
+                   device_id, base_topic, discovery_prefix, device_info
+from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
+from modules.commands import run_predefined_command
+from modules.api import start_api
+from modules.media_agent import start_media_agent
+from modules.media_agent_linux import start_media_agent as start_linux_media
+
+client = mqtt.Client()
+
+def on_connect(client, userdata, flags, rc):
+    print(f"Connected to MQTT broker with result code {rc}")
+    publish_discovery()
+
+def publish_discovery():
+    discovery_payloads = {
+    # Host Info
+    "hostname": {
+        "name": "Hostname",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.hostname }}",
+        "icon": "mdi:information",
+        "unique_id": f"{device_id}_hostname"
+    },
+    "uptime_seconds": {
+        "name": "Uptime",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "s",
+        "value_template": "{{ value_json.uptime_seconds }}",
+        "icon": "mdi:clock-outline",
+        "unique_id": f"{device_id}_uptime"
+    },
+    "os": {
+        "name": "OS",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.os }}",
+        "icon": "mdi:desktop-classic",
+        "unique_id": f"{device_id}_os"
+    },
+    "os_release": {
+        "name": "OS Release",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.os_release}}",
+        "icon": "mdi:information",
+        "unique_id": f"{device_id}_os_release"
+    },
+    "os_version": {
+        "name": "OS Version",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.os_version }}",
+        "icon": "mdi:information",
+        "unique_id": f"{device_id}_os_version"
+    },
+
+    # CPU
+    "cpu_model": {
+        "name": "CPU Model",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.cpu_model }}",
+        "icon": "mdi:cpu-64-bit",
+        "unique_id": f"{device_id}_cpu_model"
+    },
+    "cpu_usage": {
+        "name": "CPU Usage",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "%",
+        "value_template": "{{ value_json.cpu_usage }}",
+        "icon": "mdi:chip",
+        "unique_id": f"{device_id}_cpu_usage"
+    },
+    "cpu_cores": {
+        "name": "CPU Cores",
+        "state_topic": f"{base_topic}/status",
+        "value_template": "{{ value_json.cpu_cores }}",
+        "icon": "mdi:chip",
+        "unique_id": f"{device_id}_cpu_cores"
+    },
+    "cpu_frequency_mhz": {
+        "name": "CPU Frequency",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "MHz",
+        "value_template": "{{ value_json.cpu_frequency_mhz }}",
+        "icon": "mdi:chip",
+        "unique_id": f"{device_id}_cpu_frequency"
+    },
+
+    # Memory
+    "memory_usage": {
+        "name": "Memory Usage",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "%",
+        "value_template": "{{ value_json.memory_usage }}",
+        "icon": "mdi:memory",
+        "unique_id": f"{device_id}_memory_usage"
+    },
+    "memory_total_gb": {
+        "name": "Memory Total",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "GB",
+        "value_template": "{{ value_json.memory_total_gb }}",
+        "icon": "mdi:memory",
+        "unique_id": f"{device_id}_memory_total"
+    },
+    "memory_used_gb": {
+        "name": "Memory Used",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "GB",
+        "value_template": "{{ value_json.memory_used_gb }}",
+        "icon": "mdi:memory",
+        "unique_id": f"{device_id}_memory_used"
+    },
+
+    # Disk
+    "disk_usage": {
+        "name": "Disk Usage",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "%",
+        "value_template": "{{ value_json.disk_usage }}",
+        "icon": "mdi:harddisk",
+        "unique_id": f"{device_id}_disk_usage"
+    },
+    "disk_total_gb": {
+        "name": "Disk Total",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "GB",
+        "value_template": "{{ value_json.disk_total_gb }}",
+        "icon": "mdi:harddisk",
+        "unique_id": f"{device_id}_disk_total",
+    },
+    "disk_used_gb": {
+        "name": "Disk Used",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "GB",
+        "value_template": "{{ value_json.disk_used_gb }}",
+        "icon": "mdi:harddisk",
+        "unique_id": f"{device_id}_disk_used"
+    },
+
+    # Network
+    "network_sent_bytes": {
+        "name": "Network Sent",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "",
+        "value_template": "{{ value_json.network_sent_bytes }}",
+        "icon": "mdi:upload-network",
+        "unique_id": f"{device_id}_network_sent"
+    },
+    "network_recv_bytes": {
+        "name": "Network Received",
+        "state_topic": f"{base_topic}/status",
+        "unit_of_measurement": "",
+        "value_template": "{{ value_json.network_recv_bytes }}",
+        "icon": "mdi:download-network",
+        "unique_id": f"{device_id}_network_received"
+    }
+    }
+    
+    # Dynamically add all temp sensors
+    for key in get_system_info().keys():
+        if key in get_temperatures_flat().keys():
+            discovery_payloads[key] = {
+                "name": f"{key.replace('_', ' ').title()}",
+                "state_topic": f"{base_topic}/status",
+                "unit_of_measurement": "°C",
+                "value_template": f"{{{{ value_json.{key} }}}}",
+                "icon": "mdi:thermometer",
+                "unique_id": f"{device_id}_{key.lower()}"
+            }
+            
+    # Dynamically add all gpu sensors
+    for key in get_system_info().keys():
+        if key.startswith("gpu"):
+            discovery_payloads[key] = {
+                "name": f"{key.replace('_', ' ').title()}",
+                "state_topic": f"{base_topic}/status",
+                "unit_of_measurement": "°C" if "temperature" in key else "%" if "load" in key else "MB" if "memory" in key else None,
+                "value_template": f"{{{{ value_json.{key} }}}}",
+                "icon": "mdi:expansion-card",
+                "unique_id": f"{device_id}_{key.lower()}"
+            }
+
+    for sensor, payload in discovery_payloads.items():
+        payload["device"] = device_info
+        payload["availability_topic"] = f"{base_topic}/availability"
+        topic = f"{discovery_prefix}/sensor/{device_id}/{sensor}/config"
+        client.publish(topic, json.dumps(payload), retain=True)
+        print(f"Published discovery for {sensor}")
+
+def publish_status():
+    while True:
+        raw_info = get_system_info()
+        cleaned = {k: clean_value(v) for k, v in raw_info.items()}
+        client.publish(f"{base_topic}/status", json.dumps(cleaned), retain=True)
+        client.publish(f"{base_topic}/availability", "online", retain=True)
+        time.sleep(PUBLISH_INTERVAL)
+
+def on_mqtt_message(client, userdata, msg):
+    try:
+        payload = json.loads(msg.payload.decode())
+        command_key = payload.get("command")
+        if not command_key:
+            return
+        result = run_predefined_command(command_key)
+        client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
+    except Exception as e:
+        print(f"[MQTT] Error handling run command: {e}")
+
+# ----------------------------
+# Main
+# ----------------------------
+def main():
+    # Connect to MQTT Broker
+    client.username_pw_set(MQTT_USER, MQTT_PASS)
+    client.on_connect = on_connect
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+
+    # Listen for commands called via MQTT
+    client.subscribe(f"{base_topic}/run")
+    client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
+
+    # Start MQTT loop
+    threading.Thread(target=client.loop_forever, daemon=True).start()
+
+    # Start desktop agent status publisher
+    threading.Thread(target=publish_status, daemon=True).start()
+
+    # Start media agent
+    threading.Thread(target=start_linux_media(client), daemon=True).start()
+    #start_linux_media(client)
+    #start_media_agent(client)
+    
+    """
+    - Add logic to check if media agent is enabled in config; If so, 
+        check for the host OS and run the correct agent
+    - Add logic to check if API is enabled in config; If so run it
+    - Add logic to check if updater is enabled in config: If so run it
+    """
+
+    # Start API
+    start_api(API_PORT)
+
+    # Keep main thread alive
+    print("[Main] Agent running. Press Ctrl+C to exit.")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("[Main] Shutting down...")
+
+if __name__ == "__main__":
+    main()
