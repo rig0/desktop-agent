@@ -26,21 +26,21 @@ config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
     raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
 
-DEVICE_NAME = config["device"]["name"]
-PUBLISH_INT = int(config["device"].get("interval"), 15)
+DEVICE_NAME = config.get("device", "name")
+PUBLISH_INT = config.getint("device", "interval", fallback=15)
 
-MQTT_BROKER = config["mqtt"]["broker"]
-MQTT_PORT = int(config["mqtt"]["port"])
-MQTT_USER = config["mqtt"]["username"]
-MQTT_PASS = config["mqtt"]["password"]
+MQTT_BROKER = config.get("mqtt", "broker")
+MQTT_PORT = config.getint("mqtt", "port")
+MQTT_USER = config.get("mqtt", "username")
+MQTT_PASS = config.get("mqtt", "password")
 
-API_MOD = bool(config["modules"]["api"])
-API_PORT = int(config["api"]["port"])
+API_MOD = config.getboolean("modules", "api", fallback=False)
+API_PORT = config.getint("api", "port", fallback=5555)
 
-MEDIA_AGENT = bool(config["modules"].get("media_agent"))
+MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
 
-UPDATES_MOD = bool(config["modules"].get("updates"))
-UPDATES_INT = int(config["updates"].get("interval"))
+UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
+UPDATES_INT = config.getint("updates", "interval", fallback=3600)
 
 # ----------------------------
 # Device identifiers and topics
