@@ -13,6 +13,8 @@ def get_system_info():
     gpu_flat = get_gpu_info_flat()
     temps_flat = get_temperatures_flat()
 
+    total, used, free, percent = get_disk_info()
+
     return {
         "hostname": socket.gethostname(),
         "uptime_seconds": int(time.time() - psutil.boot_time()),
@@ -26,9 +28,9 @@ def get_system_info():
         "memory_usage": round(virtual_mem.percent),
         "memory_total_gb": round(virtual_mem.total / (1024 ** 3), 1),
         "memory_used_gb": round(virtual_mem.used / (1024 ** 3), 1),
-        "disk_usage": round(disk.percent),
-        "disk_total_gb": round(disk.total / (1024 ** 3), 1),
-        "disk_used_gb": round(disk.used / (1024 ** 3), 1),
+        "disk_usage": round(percent),
+        "disk_total_gb": round(total / (1024 ** 3), 1),
+        "disk_used_gb": round(used / (1024 ** 3), 1),
         "network_sent_bytes": bytes_to_human(net_io.bytes_sent),
         "network_recv_bytes": bytes_to_human(net_io.bytes_recv),
         **gpu_flat,
@@ -77,6 +79,36 @@ def get_cpu_model():
             return "Unknown CPU"
     else:
         return platform.processor() or "Unknown CPU"
+
+def get_disk_info():
+    # For Windows systems, get the disk info of the root directory
+    if sys.platform.startswith("win"):
+        usage = psutil.disk_usage('C:\\')
+        return usage.total, usage.used, usage.free, usage.percent
+
+    # For Linux systems, focus on /var/home partition
+    else:
+        total = used = free = 0
+        target_partitions = ['/var/home', '/home']
+        for partition in psutil.disk_partitions(all=False):
+            if partition.mountpoint in target_partitions:
+                try:
+                    usage = psutil.disk_usage(partition.mountpoint)
+                    total = usage.total
+                    used = usage.used
+                    free = usage.free
+                    # Once we find a match, we don't need to check other partitions
+                    break
+                except PermissionError:
+                    # Skip partitions that cannot be accessed
+                    continue
+                except OSError:
+                    # Skip invalid mount points
+                    continue
+                
+        # Calculate the percentage of disk used
+        percent = (used / total) * 100 if total > 0 else 0
+        return total, used, free, percent
 
 def safe_number(val, default=0):
     if val is None:
