@@ -225,7 +225,7 @@ def media_agent(client):
     elif sysinfo["os"] == "Windows":
         from modules.media_agent import start_media_agent
     start_media_agent(client)
-    
+
 
 # ----------------------------
 # Updater
@@ -235,6 +235,7 @@ def updater():
     while True:
         update_repo()
         time.sleep(UPDATES_INT)
+
 
 # ----------------------------
 # Main
