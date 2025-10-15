@@ -54,16 +54,26 @@ class IGDBClient:
     def _download_image(self, url, folder, filename):
         if not url:
             return None
-        os.makedirs(folder, exist_ok=True)
-        filepath = os.path.join(folder, filename)
+        
+        base_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+
+        full_folder_path = os.path.join(base_dir, folder)
+
+        os.makedirs(full_folder_path, exist_ok=True)
+        
+        filepath = os.path.join(full_folder_path, filename)
+        
         try:
             img_data = requests.get(url).content
             with open(filepath, "wb") as f:
                 f.write(img_data)
+            
             return filepath
+        
         except Exception as e:
             print(f"Failed to download image {url}: {e}")
             return None
+
 
     def search_game(self, game_name):
         # Cache lookup
