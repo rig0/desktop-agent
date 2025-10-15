@@ -9,7 +9,9 @@ class IGDBClient:
     def __init__(self, client_id, access_token, cache_db="igdb_cache.sqlite"):
         self.client_id = client_id
         self.access_token = access_token
-        self.cache_db = cache_db
+        base_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+        os.makedirs(base_dir, exist_ok=True)
+        self.cache_db = os.path.join(base_dir, cache_db)
         self._init_cache()
 
     def _init_cache(self):
@@ -60,7 +62,7 @@ class IGDBClient:
         full_folder_path = os.path.join(base_dir, folder)
 
         os.makedirs(full_folder_path, exist_ok=True)
-        
+
         filepath = os.path.join(full_folder_path, filename)
         
         try:
