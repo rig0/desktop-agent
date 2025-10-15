@@ -7,7 +7,7 @@ from pathlib import Path
 
 def load_commands(filename="commands.json"):
     BASE_DIR = Path(__file__).parent.parent
-    config_file = BASE_DIR / "config" / filename
+    config_file = BASE_DIR / "data" / filename
     if not config_file.exists():
         raise FileNotFoundError(f"{config_file} not found at {config_file}")
     with open(config_file, "r", encoding="utf-8") as f:
