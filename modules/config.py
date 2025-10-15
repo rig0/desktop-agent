@@ -37,10 +37,14 @@ MQTT_PASS = config.get("mqtt", "password")
 API_MOD = config.getboolean("modules", "api", fallback=False)
 API_PORT = config.getint("api", "port", fallback=5555)
 
-MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
-
 UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
 UPDATES_INT = config.getint("updates", "interval", fallback=3600)
+
+MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
+
+LUTRIS_AGENT = config.getboolean("modules", "lutris_agent", fallback=False)
+IGDB_CLIENT = config.getboolean("igdb", "client_id")
+IGDB_TOKEN = config.getint("igdb", "token")
 
 # ----------------------------
 # Device identifiers and topics
