@@ -1,8 +1,9 @@
 import os, sys, time, json, asyncio, threading
 from pathlib import Path
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
-from modules.config import DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
 import paho.mqtt.client as mqtt
+from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
+                    DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
 
 # ----------------------------
 # Media (SMTC) helpers
@@ -134,3 +135,14 @@ def start_media_agent(client: mqtt.Client):
 
     publish_discovery()
     threading.Thread(target=media_poller, daemon=True).start()
+
+def on_connect(client, userdata, flags, rc):
+    print(f"Connected to MQTT broker with result code {rc}")
+    publish_discovery()
+    
+if __name__ == "__main__":
+    client = mqtt.Client()
+    client.username_pw_set(MQTT_USER, MQTT_PASS)
+    client.on_connect = on_connect
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    start_media_agent(client)
