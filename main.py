@@ -230,7 +230,7 @@ def media_agent(client):
             start_media_agent(client)
         elif sysinfo["os"] == "Windows":
             wait_for_user_session()  # Ensure user session is ready before starting agent
-            from modules.media_agent_windows import start_media_agent
+            from modules.media_agent import start_media_agent
             start_media_agent(client)
     except TimeoutError as e:
         print(f"Media Agent Error: {e}")
