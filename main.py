@@ -9,6 +9,11 @@ from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH
                     API_MOD, API_PORT, MEDIA_AGENT, UPDATES_MOD, UPDATES_INT, \
                     device_id, base_topic, discovery_prefix, device_info
 
+
+# ----------------------------
+# MQTT Client
+# ----------------------------
+
 client = mqtt.Client()
 
 def on_connect(client, userdata, flags, rc):
@@ -208,6 +213,11 @@ def on_mqtt_message(client, userdata, msg):
     except Exception as e:
         print(f"[MQTT] Error handling run command: {e}")
 
+
+# ----------------------------
+# Media Agent Handler
+# ----------------------------
+
 def is_user_session_active():
     sysinfo = get_system_info()
     if sysinfo["os"] == "Windows":
@@ -234,7 +244,12 @@ def media_agent(client):
             start_media_agent(client)
     except TimeoutError as e:
         print(f"Media Agent Error: {e}")
-    
+
+
+# ----------------------------
+# Updater
+# ----------------------------
+
 def updater():
     while True:
         update_repo()
@@ -243,6 +258,7 @@ def updater():
 # ----------------------------
 # Main
 # ----------------------------
+
 def main():
     # Connect to MQTT Broker
     client.username_pw_set(MQTT_USER, MQTT_PASS)

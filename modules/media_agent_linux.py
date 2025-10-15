@@ -4,9 +4,11 @@ from pathlib import Path
 from modules.config import DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
 import paho.mqtt.client as mqtt
 
+
 # ----------------------------
-# Media helpers (MPRIS over D-Bus)
+# Linux Media Agent (MPRIS/D-Bus)
 # ----------------------------
+
 def get_media_info():
     try:
         bus = SessionBus()

@@ -12,9 +12,11 @@ except ImportError:
     from config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
                     DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
 
+
 # ----------------------------
-# Media (SMTC) helpers
+# Windows Media Agent (SMTC)
 # ----------------------------
+
 async def _get_media_info_async():
     sessions = await MediaManager.request_async()
     current = sessions.get_current_session()
