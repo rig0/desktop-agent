@@ -72,7 +72,7 @@ def start_media_agent(client: mqtt.Client):
         last_attrs = None
         last_image = None
         BASE_DIR = Path(__file__).parent.parent
-        placeholder_path = BASE_DIR / "config" / "media_thumb.png"
+        placeholder_path = BASE_DIR / "data" / "media_thumb.png"
 
         while True:
             try:

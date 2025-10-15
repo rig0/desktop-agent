@@ -7,7 +7,7 @@ from pathlib import Path
 # Paths
 # ----------------------------
 BASE_DIR = Path(__file__).parent.parent
-CONFIG_PATH = os.path.join(BASE_DIR, "config", "config.ini")
+CONFIG_PATH = os.path.join(BASE_DIR, "data", "config.ini")
 VERSION_PATH = os.path.join(BASE_DIR, "VERSION")
 
 # ----------------------------
