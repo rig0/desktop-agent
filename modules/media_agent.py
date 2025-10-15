@@ -155,5 +155,5 @@ if __name__ == "__main__":
     client.on_connect = on_connect
     client.connect(MQTT_BROKER, MQTT_PORT, 60)
     start_media_agent(client)
-    while true:
+    while True:
         time.sleep(1)
