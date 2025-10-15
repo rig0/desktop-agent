@@ -208,13 +208,32 @@ def on_mqtt_message(client, userdata, msg):
     except Exception as e:
         print(f"[MQTT] Error handling run command: {e}")
 
+def is_user_session_active():
+    sysinfo = get_system_info()
+    if sysinfo["os"] == "Windows":
+        return "explorer.exe" in os.popen('tasklist').read()
+    else: return True
+
+def wait_for_user_session(timeout=3600):
+    start_time = time.time()
+    while not is_user_session_active():
+        elapsed_time = time.time() - start_time
+        if elapsed_time > timeout:
+            raise TimeoutError("Waiting for user session timed out.")
+        time.sleep(3)  # Check every 3 seconds
+
 def media_agent(client):
     sysinfo = get_system_info()
-    if sysinfo["os"] == "Linux":
-        from modules.media_agent_linux import start_media_agent
-    #elif sysinfo["os"] == "Windows":
-        #from modules.media_agent import start_media_agent
-    start_media_agent(client)
+    try:
+        if sysinfo["os"] == "Linux":
+            from modules.media_agent_linux import start_media_agent
+            start_media_agent(client)
+        elif sysinfo["os"] == "Windows":
+            wait_for_user_session()  # Ensure user session is ready before starting agent
+            from modules.media_agent_windows import start_media_agent
+            start_media_agent(client)
+    except TimeoutError as e:
+        print(f"Media Agent Error: {e}")
     
 def updater():
     while True:
