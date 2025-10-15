@@ -43,8 +43,8 @@ UPDATES_INT = config.getint("updates", "interval", fallback=3600)
 MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
 
 LUTRIS_AGENT = config.getboolean("modules", "lutris_agent", fallback=False)
-IGDB_CLIENT = config.getboolean("igdb", "client_id")
-IGDB_TOKEN = config.getint("igdb", "token")
+IGDB_CLIENT = config.get("igdb", "client_id")
+IGDB_TOKEN = config.get("igdb", "token")
 
 # ----------------------------
 # Device identifiers and topics
