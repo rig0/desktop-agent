@@ -72,9 +72,9 @@ def run_system_power_command(action: str) -> dict:
 
         if platform_name == "linux":
             if action == "reboot":
-                cmd = "systemctl reboot"
+                cmd = "sudo systemctl reboot"
             elif action == "shutdown":
-                cmd = "systemctl poweroff"
+                cmd = "sudo systemctl poweroff"
             else:
                 return {"success": False, "output": f"Unknown action '{action}'"}
 
