@@ -8,7 +8,7 @@ except ImportError:
     from igdb import IGDBClient
 import json
 
-def fetch_game_info(game):
+def get_game_info(game):
     igdb = IGDBClient(IGDB_CLIENT, IGDB_TOKEN)
     game_info = igdb.search_game(game)
     if game_info:

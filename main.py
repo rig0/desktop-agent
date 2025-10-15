@@ -4,7 +4,7 @@ from modules.api import start_api
 from modules.updater import update_repo
 from modules.commands import run_predefined_command
 from modules.desktop_agent import get_system_info, clean_value, get_temperatures_flat
-from modules.lutris_agent import fetch_game_info
+from modules.lutris_agent import get_game_info
 from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
                     API_MOD, API_PORT, MEDIA_AGENT, UPDATES_MOD, UPDATES_INT, \
                     device_id, base_topic, discovery_prefix, device_info
@@ -247,7 +247,7 @@ def main():
     if MEDIA_AGENT: threading.Thread(target=media_agent, args=(client,), daemon=True).start()
 
     # Start lutris agent
-    #if LUTRIS_AGENT: threading.Thread(target=fetch_game_info, args=("Apex Legends",), daemon=True).start()
+    #if LUTRIS_AGENT: threading.Thread(target=get_game_info, args=("Apex Legends",), daemon=True).start()
 
     # Start updater
     if UPDATES_MOD: threading.Thread(target=updater, daemon=True).start()
