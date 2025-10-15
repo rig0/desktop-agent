@@ -1,4 +1,4 @@
-import json, threading, time
+import json, threading, time, os
 import paho.mqtt.client as mqtt
 from modules.api import start_api
 from modules.updater import update_repo
