@@ -23,4 +23,4 @@ def get_game_info(game):
 
 if __name__ == "__main__":
     game = "My Summer Car"
-    fetch_game_info(game)
+    get_game_info(game)
