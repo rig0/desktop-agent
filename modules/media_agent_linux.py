@@ -138,7 +138,6 @@ def start_media_agent(client: mqtt.Client):
             "device": device_info,
             "availability_topic": f"{base_topic}/availability",
             "topic": f"{base_topic}/media/thumbnail",
-            "json_attributes_topic": f"{base_topic}/media/attrs",
             "icon": "mdi:music"
         }
 
