@@ -235,9 +235,18 @@ cd "$SCRIPT_DIR/.." || exit 1
 
 # Install Python dependencies
 echo "Installing Python dependencies from requirements-linux.txt..."
+
+# Check if python is installed
 command -v python3 >/dev/null 2>&1 || { echo "Python3 is not installed! Aborting."; exit 1; }
+
+# Check if requirements file exists
+[ -f requirements-linux.txt ] || { echo "requirements-linux.txt not found!"; exit 1; }
+
+# Install
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements-linux.txt
+
+# Check if nvidia driver is installed
 if command -v nvidia-smi >/dev/null 2>&1; then
     python3 -m pip install GPUtil
 else
