@@ -108,7 +108,6 @@ CONFIG_FILE="$CONFIG_DIR/config.ini"
 
 mkdir -p "$CONFIG_DIR"
 
-
 # Device section
 DEFAULT_DEVICE_NAME=$(hostname)
 read -p "Device name [$DEFAULT_DEVICE_NAME]: " DEVICE_NAME
@@ -224,6 +223,7 @@ echo "✅ Config file written to $CONFIG_FILE"
 # ----------------------------
 # Python Dependencies
 # ----------------------------
+echo "=== Desktop Agent python dependency installer ==="
 
 # Change to parent directory
 SCRIPT_DIR=$(dirname "$0")
