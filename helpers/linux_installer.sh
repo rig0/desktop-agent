@@ -42,8 +42,12 @@ else
     exit 1
 fi
 
-echo "Detected distro: $DISTRO"
-$IMMUTABLE && echo "⚠️ Immutable OS detected: $DISTRO"
+
+if [ "$IMMUTABLE" = true ]; then
+    echo "⚠️ Immutable OS detected: $DISTRO"
+else
+    echo "Detected distro: $DISTRO"
+fi
 
 # Base packages
 if [ "$DISTRO" = "debian" ]; then
