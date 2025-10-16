@@ -93,7 +93,7 @@ def start_media_agent(client: mqtt.Client):
 
                     # Publish attributes if changed
                     if attrs != last_attrs:
-                        client.publish(f"{base_topic}/media/attrs", json.dumps(attrs), retain=True)
+                        client.publish(f"{base_topic}/media/attrs", json.dumps(attrs), retain=False)
                         last_attrs = attrs
 
                     # Thumbnail or placeholder
