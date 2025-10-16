@@ -48,7 +48,7 @@ UPDATES_INT = config.getint("updates", "interval", fallback=3600)
 
 MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
 
-GAME_AGENT = config.getboolean("modules", "lutris_agent", fallback=False)
+GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
 GAME_FILE = os.path.join(BASE_DIR, "data", "current_game.txt")
 IGDB_CLIENT = config.get("igdb", "client_id")
 IGDB_TOKEN = config.get("igdb", "token")
