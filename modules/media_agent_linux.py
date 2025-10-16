@@ -51,7 +51,7 @@ def get_media_info():
                     if resp.ok:
                         thumbnail_bytes = resp.content
             except Exception as e:
-                print("Failed to fetch artwork:", e)
+                print("[MediaAgent] Failed to fetch artwork:", e)
 
         return {
             "title": title,
@@ -63,14 +63,14 @@ def get_media_info():
         }
 
     except Exception as e:
-        print("Error getting media info:", e)
+        print("[MediaAgent] Error getting media info:", e)
         return None
 
 
 def start_media_agent(client: mqtt.Client):
     # Starts the media polling thread and publishes discovery.
     def media_poller():
-        print("Media poller thread started")
+        print("[MediaAgent] Media agent thread started")
         last_attrs = None
         last_image = None
         BASE_DIR = Path(__file__).parent.parent
@@ -103,7 +103,7 @@ def start_media_agent(client: mqtt.Client):
                             with open(placeholder_path, "rb") as f:
                                 thumbnail_bytes = f.read()
                         except Exception as e:
-                            print("Failed to load placeholder:", e)
+                            print("[MediaAgent] Failed to load placeholder:", e)
                             thumbnail_bytes = None
 
                     # Only publish if image changed
@@ -112,7 +112,7 @@ def start_media_agent(client: mqtt.Client):
                         last_image = thumbnail_bytes
 
             except Exception as e:
-                print("Media poller error:", e)
+                print("[MediaAgent] Media poller error:", e)
 
             time.sleep(5)
 
@@ -129,7 +129,7 @@ def start_media_agent(client: mqtt.Client):
 
         topic = f"{discovery_prefix}/sensor/{device_id}/media_status/config"
         client.publish(topic, json.dumps(sensor_payload), retain=True)
-        print("Published discovery for media status")
+        print("[MediaAgent] Published discovery for media status")
 
         camera_payload = {
             "platform": "mqtt",
@@ -143,7 +143,7 @@ def start_media_agent(client: mqtt.Client):
 
         topic = f"{discovery_prefix}/camera/{device_id}_media/config"
         client.publish(topic, json.dumps(camera_payload), retain=True)
-        print("Published discovery for media camera")
+        print("[MediaAgent] Published discovery for media camera")
 
     publish_discovery()
     threading.Thread(target=media_poller, daemon=True).start()

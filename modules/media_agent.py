@@ -2,7 +2,6 @@ import os, sys, time, json, asyncio, threading
 from pathlib import Path
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 import paho.mqtt.client as mqtt
-
 # Attempt relative import for use as a module within a package structure
 try:
     from .config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
@@ -44,7 +43,7 @@ async def _get_media_info_async():
                 DataReader.from_buffer(buffer).read_bytes(byte_array)
                 thumbnail_bytes = bytes(byte_array)
         except Exception as e:
-            print("Failed to read thumbnail:", e)
+            print("[MediaAgent] Failed to read thumbnail:", e)
 
     playback = current.get_playback_info()
     status = int(playback.playback_status)
@@ -64,13 +63,14 @@ def get_media_info():
     try:
         return asyncio.run(_get_media_info_async())
     except Exception as e:
-        print("Error getting media info:", e)
+        print("[MediaAgent] Error getting media info:", e)
         return None
 
 
 def start_media_agent(client: mqtt.Client):
     # Starts the media polling thread and publishes discovery.
     def media_poller():
+        print("[MediaAgent] Media agent thread started")
         last_attrs = None
         last_image = None
         BASE_DIR = Path(__file__).parent.parent
@@ -100,7 +100,7 @@ def start_media_agent(client: mqtt.Client):
                             with open(placeholder_path, "rb") as f:
                                 thumbnail_bytes = f.read()
                         except Exception as e:
-                            print("Failed to load placeholder:", e)
+                            print("[MediaAgent] Failed to load placeholder:", e)
                             thumbnail_bytes = None
 
                     if thumbnail_bytes and thumbnail_bytes != last_image:
@@ -108,7 +108,7 @@ def start_media_agent(client: mqtt.Client):
                         last_image = thumbnail_bytes
 
             except Exception as e:
-                print("Media poller error:", e)
+                print("[MediaAgent] Media poller error:", e)
 
             time.sleep(5)
 
@@ -126,7 +126,7 @@ def start_media_agent(client: mqtt.Client):
 
         topic = f"{discovery_prefix}/sensor/{device_id}/media_status/config"
         client.publish(topic, json.dumps(sensor_payload), retain=True)
-        print("Published discovery for media status")
+        print("[MediaAgent] Published discovery for media status")
 
         # Camera-style media thumbnail
         camera_payload = {
@@ -140,13 +140,13 @@ def start_media_agent(client: mqtt.Client):
         }
         topic = f"{discovery_prefix}/camera/{device_id}_media/config"
         client.publish(topic, json.dumps(camera_payload), retain=True)
-        print("Published discovery for media camera")
+        print("[MediaAgent] Published discovery for media camera")
 
     publish_discovery()
     threading.Thread(target=media_poller, daemon=True).start()
 
 def on_connect(client, userdata, flags, rc):
-    print(f"Connected to MQTT broker with result code {rc}")
+    print(f"[MediaAgent] Connected to MQTT broker with result code {rc}")
     publish_discovery()
     
 if __name__ == "__main__":

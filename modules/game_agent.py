@@ -17,7 +17,7 @@ except ImportError:
 # ----------------------------
 
 def on_connect(client, userdata, flags, rc):
-    print(f"Connected with result code {str(rc)}")
+    print(f"[GameAgent] Connected with result code {str(rc)}")
 
 def get_game_info(game):
     igdb = IGDBClient(IGDB_CLIENT, IGDB_TOKEN)
@@ -93,7 +93,7 @@ def get_game_attrs(game_info):
 
 def start_game_agent(client: mqtt.Client, game_name_file_path):
     def game_poller():
-        print("Game poller thread started")
+        print("[GameAgent] Game poller thread started")
         last_attrs = None
         last_known_game_name = None
         last_cover = None
@@ -101,15 +101,13 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
         while True:
             try:
-                #print("Checking game status...")  # Debugging output
-
                 # Read game name from file
                 try:
                     with open(game_name_file_path, 'r') as f:
                         game_name = f.readline().strip()
                 except FileNotFoundError:
                     game_name = None
-                    print("Game name file not found.")  # Debugging output
+                    print("[GameAgent] Game name file not found.")  # Debugging output
 
                 if game_name and game_name != last_known_game_name:
                     game_info = get_game_info(game_name)
@@ -139,7 +137,6 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
                     last_known_game_name = game_name
 
                 elif not game_name:
-                    #print("No game running, should publish idle state.")  # Debugging output
                     # If GAME_NAME is empty, the game is no longer running.
                     if last_known_game_name is not None:
                         client.publish(f"{base_topic}/game/state", "idle", retain=True)
@@ -149,7 +146,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
                         last_known_game_name = None
 
             except Exception as e:
-                print("Game poller error:", e)
+                print("[GameAgent] Game poller error:", e)
 
             # Check for new game every 3 seconds
             time.sleep(3)
@@ -167,7 +164,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
         topic = f"{discovery_prefix}/sensor/{device_id}/game_status/config"
         client.publish(topic, json.dumps(sensor_payload), retain=True)
-        print("Published discovery for game status")
+        print("[GameAgent] Published discovery for game status")
 
         cover_payload = {
             "platform": "mqtt",
@@ -181,7 +178,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
         topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
         client.publish(topic, json.dumps(cover_payload), retain=True)
-        print("Published discovery for game cover")
+        print("[GameAgent] Published discovery for game cover")
 
         artwork_payload = {
             "platform": "mqtt",
@@ -195,7 +192,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
         topic = f"{discovery_prefix}/camera/{device_id}_game_artwork/config"
         client.publish(topic, json.dumps(artwork_payload), retain=True)
-        print("Published discovery for game artwork") 
+        print("[GameAgent] Published discovery for game artwork") 
 
     publish_discovery()
     threading.Thread(target=game_poller, daemon=True).start()
