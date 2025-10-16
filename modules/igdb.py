@@ -70,7 +70,8 @@ class IGDBClient:
             with open(filepath, "wb") as f:
                 f.write(img_data)
             
-            return filepath
+            absolute_filepath = os.path.abspath(filepath)
+            return absolute_filepath
         
         except Exception as e:
             print(f"Failed to download image {url}: {e}")
