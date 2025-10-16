@@ -108,7 +108,7 @@ class IGDBClient:
         cover_url = "https:" + game["cover"]["url"].replace("t_thumb", "t_cover_big") if "cover" in game else None
         artwork_url = None
         if "artworks" in game and game["artworks"]:
-            artwork_url = "https:" + game["artworks"][0]["url"].replace("t_thumb", "t_original")
+            artwork_url = "https:" + game["artworks"][-1]["url"].replace("t_thumb", "t_original")
         elif "screenshots" in game and game["screenshots"]:
             artwork_url = "https:" + game["screenshots"][0]["url"].replace("t_thumb", "t_original")
 
