@@ -71,6 +71,7 @@ def get_game_attrs(game_info):
 
     attrs = {
         "name": game_info.get("name", "Unknown Game"),
+        "title": game_info.get("name", "Unknown Game"),
         "summary": game_info.get("summary", "No summary available."),
         "release_date": game_info.get("release_date", "Not available"),
         "genres": ', '.join(game_info.get("genres", [])),
