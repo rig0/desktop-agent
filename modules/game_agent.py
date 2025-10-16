@@ -24,6 +24,23 @@ def get_game_info(game):
     game_info = igdb.search_game(game)
     return game_info
 
+def get_game_artwork(img_dir, img_url):
+    img_bytes = None
+    try:
+        if img_dir and os.path.exists(img_dir):
+            with open(img_dir, "rb") as f:
+                img_bytes = f.read()
+
+        elif img_url:
+            resp = requests.get(img_url, timeout=5)
+            if resp.ok:
+                img_bytes = resp.content
+
+    except Exception as e:
+        print(f"Failed to fetch cover: {e}")
+        
+    return img_bytes
+
 def get_game_attrs(game_info):
     # Extracting the cover URL and replacing 't_thumb' with 't_cover_big'
     cover_url = game_info["_raw"].get("cover", {}).get("url", "")
@@ -44,6 +61,14 @@ def get_game_attrs(game_info):
     else:
         artwork_full_url = None  # No artwork or screenshot available
 
+    # Get cached images 
+    cover_local = game_info['cover']
+    artwork_local = game_info['artwork']
+
+    # Get images in bytes. Try cache, if not fetch from url
+    cover_bytes = get_game_artwork(cover_local, cover_full_url)
+    artwork_bytes = get_game_artwork(artwork_local, artwork_full_url)
+
     attrs = {
         "name": game_info.get("name", "Unknown Game"),
         "summary": game_info.get("summary", "No summary available."),
@@ -56,13 +81,21 @@ def get_game_attrs(game_info):
         "artwork_url": artwork_full_url or "Artwork not available",
         "url": game_info.get("url", "")
     }
-    return attrs
+
+    images = {
+        "cover": cover_bytes,
+        "artwork": artwork_bytes
+    }
+
+    return attrs, images
 
 def start_game_agent(client: mqtt.Client, game_name_file_path):
     def game_poller():
         print("Game poller thread started")
         last_attrs = None
         last_known_game_name = None
+        last_cover = None
+        last_artwork = None
 
         while True:
             try:
@@ -75,7 +108,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
                 if game_name and game_name != last_known_game_name:
                     game_info = get_game_info(game_name)
-                    attrs = get_game_attrs(game_info)
+                    attrs, images = get_game_attrs(game_info)
                     state = "playing"
 
                     # Publish state
@@ -86,6 +119,18 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
                         client.publish(f"{base_topic}/game/attrs", json.dumps(attrs), retain=True)
                         last_attrs = attrs
                     
+                    # Publish cover image if changed
+                    cover_bytes = images["cover"]
+                    if cover_bytes and cover_bytes != last_cover:
+                        client.publish(f"{base_topic}/game/cover", cover_bytes, retain=True)
+                        last_cover = cover_bytes
+
+                    # Publish artwork image if changed
+                    artwork_bytes = images["artwork"]
+                    if artwork_bytes and artwork_bytes != last_artwork:
+                        client.publish(f"{base_topic}/game/artwork", artwork_bytes, retain=True)
+                        last_artwork = artwork_bytes
+
                     last_known_game_name = game_name
 
                 elif not game_name:
@@ -115,16 +160,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
         client.publish(topic, json.dumps(sensor_payload), retain=True)
         print("Published discovery for game status")
 
-        """
-        # TO DO ADD CAMERA ENTITIES FOR COVER AND ARTWORK
-        # SOMETHING LIKE THIS; turn image into bytes in get_game_attrs. use local image if exists?
-
-        # Only publish if image changed
-        if image_bytes and image_bytes != last_image:
-            client.publish(f"{base_topic}/game/cover", image_bytes, retain=True)
-            last_image = image_bytes
-
-         cover_payload = {
+        cover_payload = {
             "platform": "mqtt",
             "name": f"{DEVICE_NAME} Game Cover",
             "unique_id": f"{device_id}_game_cover",
@@ -136,8 +172,21 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
         topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
         client.publish(topic, json.dumps(cover_payload), retain=True)
-        print("Published discovery for game cover") 
-        """
+        print("Published discovery for game cover")
+
+        artwork_payload = {
+            "platform": "mqtt",
+            "name": f"{DEVICE_NAME} Game Art",
+            "unique_id": f"{device_id}_game_artwork",
+            "device": device_info,
+            "availability_topic": f"{base_topic}/availability",
+            "topic": f"{base_topic}/game/artwork",
+            "icon": "mdi:gamepad-variant"
+        }
+
+        topic = f"{discovery_prefix}/camera/{device_id}_game_artwork/config"
+        client.publish(topic, json.dumps(artwork_payload), retain=True)
+        print("Published discovery for game artwork") 
 
     publish_discovery()
     threading.Thread(target=game_poller, daemon=True).start()
