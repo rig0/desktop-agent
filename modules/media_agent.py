@@ -120,7 +120,8 @@ def start_media_agent(client: mqtt.Client):
             "icon": "mdi:multimedia",
             "unique_id": f"{device_id}_media_status",
             "device": device_info,
-            "availability_topic": f"{base_topic}/availability"
+            "availability_topic": f"{base_topic}/availability",
+            "json_attributes_topic": f"{base_topic}/media/attrs",
         }
 
         topic = f"{discovery_prefix}/sensor/{device_id}/media_status/config"
