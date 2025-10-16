@@ -115,6 +115,30 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
         client.publish(topic, json.dumps(sensor_payload), retain=True)
         print("Published discovery for game status")
 
+        """
+        # TO DO ADD CAMERA ENTITIES FOR COVER AND ARTWORK
+        # SOMETHING LIKE THIS; turn image into bytes in get_game_attrs. use local image if exists?
+
+        # Only publish if image changed
+        if image_bytes and image_bytes != last_image:
+            client.publish(f"{base_topic}/game/cover", image_bytes, retain=True)
+            last_image = image_bytes
+
+         cover_payload = {
+            "platform": "mqtt",
+            "name": f"{DEVICE_NAME} Game Cover",
+            "unique_id": f"{device_id}_game_cover",
+            "device": device_info,
+            "availability_topic": f"{base_topic}/availability",
+            "topic": f"{base_topic}/game/cover",
+            "icon": "mdi:gamepad-variant"
+        }
+
+        topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
+        client.publish(topic, json.dumps(cover_payload), retain=True)
+        print("Published discovery for game cover") 
+        """
+
     publish_discovery()
     threading.Thread(target=game_poller, daemon=True).start()
 
