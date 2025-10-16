@@ -8,6 +8,8 @@ if command -v nm-online >/dev/null 2>&1; then
     nm-online -q --timeout=300
 fi
 
-python3 /var/home/rambo/Apps/Agent/main.py
+# Get the directory of the current script.
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+MAIN="$SCRIPT_DIR/../main.py"
 
-wait
+python3 $MAIN
