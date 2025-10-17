@@ -66,6 +66,7 @@ if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
         libglib2.0-dev
         libgirepository1.0-dev
         libcairo2-dev
+        gobject-introspection
         python3-gi
         python3-gi-cairo
         gir1.2-gtk-3.0
@@ -350,7 +351,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "  deactivate"
 else
     echo "Installing Python dependencies..."
-    python3 -m pip install --upgrade pip
+    python3 -m pip install --upgrade pip setuptools wheel
     python3 -m pip install -r requirements-linux.txt
 
     # GPUtil succeeded on non-nvidia system. disable this for now.
