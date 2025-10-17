@@ -326,13 +326,6 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "Installing dependencies into virtual environment..."
     "$VENV_PIP" install -r requirements-linux.txt
 
-    # GPUtil succeeded on non-nvidia system. disable this for now.
-    # if command -v nvidia-smi >/dev/null 2>&1; then
-    #     "$VENV_PIP" install GPUtil
-    # else
-    #     echo "❌ nvidia-smi not found. Skipping GPUtil."
-    # fi
-
     echo
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
     echo
@@ -353,13 +346,6 @@ else
     echo "Installing Python dependencies..."
     python3 -m pip install --upgrade pip setuptools wheel
     python3 -m pip install -r requirements-linux.txt
-
-    # GPUtil succeeded on non-nvidia system. disable this for now.
-    # if command -v nvidia-smi >/dev/null 2>&1; then
-    #     python3 -m pip install GPUtil
-    # else
-    #     echo "❌ nvidia-smi not found. Skipping GPUtil."
-    # fi
 
     echo
     echo "✅ Python dependencies installed"
