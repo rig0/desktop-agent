@@ -275,36 +275,37 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# Check pip availability
+# Ensure pip is available
 if ! python3 -m pip --version >/dev/null 2>&1; then
-    echo "❌ pip not found! Installing python3-pip..."
+    echo "⚠️ pip not found, installing python3-pip..."
+    sudo apt update
     sudo apt install -y python3-pip || { echo "Failed to install pip"; exit 1; }
+fi
+
+# Ensure venv module is installed
+if ! python3 -m venv --help >/dev/null 2>&1; then
+    echo "⚠️ python3-venv not found, installing..."
+    sudo apt install -y python3-venv || { echo "Failed to install python3-venv"; exit 1; }
 fi
 
 # Check if system is externally managed
 EXTERNALLY_MANAGED=false
-python3 -m pip check >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
+python3 -m pip install --upgrade pip >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
 
-# Check is installation is layered. Add checks for venv restrictions on debian systems
-if [ $RPM_OSTREE = 1 ]; then
-    echo "RPM_OSTREE installation detected."
-    echo "Reboot then install the python requirements like so: \n"
-    echo "cd desktop-agent-directory"
-    echo "python3 -m pip install --upgrade pip"
-    echo "python3 -m pip install -r requirements-linux.txt"
-elif [ "$EXTERNALLY_MANAGED" = true ]; then # venv
+# Create virtual environment if system is externally managed
+if [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "⚠️ System Python is externally managed. Creating virtual environment..."
     VENV_DIR="../.venv"
     python3 -m venv "$VENV_DIR"
     VENV_PY="$VENV_DIR/bin/python"
     VENV_PIP="$VENV_DIR/bin/pip"
 
-    # Upgrade pip inside venv
+    echo "Upgrading pip inside virtual environment..."
     "$VENV_PIP" install --upgrade pip
-    echo "Installing python dependencies into virtual environment..."
+
+    echo "Installing dependencies into virtual environment..."
     "$VENV_PIP" install -r requirements-linux.txt
 
-    # Optional: install GPUtil if NVIDIA driver present
     if command -v nvidia-smi >/dev/null 2>&1; then
         "$VENV_PIP" install GPUtil
     else
@@ -313,25 +314,15 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then # venv
 
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
 else
-    # Install Python dependencies
-    echo "Installing Python dependencies from requirements-linux.txt..."
-
-    # Check if python is installed
-    command -v python3 >/dev/null 2>&1 || { echo "Python3 is not installed! Aborting."; exit 1; }
-
-    # Check if requirements file exists
-    [ -f requirements-linux.txt ] || { echo "requirements-linux.txt not found!"; exit 1; }
-
-    # Install
+    echo "Installing Python dependencies system-wide..."
     python3 -m pip install --upgrade pip
     python3 -m pip install -r requirements-linux.txt
 
-    # Check if nvidia driver is installed
     if command -v nvidia-smi >/dev/null 2>&1; then
         python3 -m pip install GPUtil
     else
-        echo "nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil"
+        echo "❌ nvidia-smi not found. Skipping GPUtil."
     fi
 
-    echo "✅ Python dependencies installed."
+    echo "✅ Python dependencies installed system-wide"
 fi
