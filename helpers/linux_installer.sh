@@ -306,23 +306,36 @@ if [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "Installing dependencies into virtual environment..."
     "$VENV_PIP" install -r requirements-linux.txt
 
-    if command -v nvidia-smi >/dev/null 2>&1; then
-        "$VENV_PIP" install GPUtil
-    else
-        echo "❌ nvidia-smi not found. Skipping GPUtil."
-    fi
+    # GPUtil succeeded on non-nvidia system. disable this for now.
+    # if command -v nvidia-smi >/dev/null 2>&1; then
+    #     "$VENV_PIP" install GPUtil
+    # else
+    #     echo "❌ nvidia-smi not found. Skipping GPUtil."
+    # fi
 
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
+    echo "Since your system Python is externally managed, a virtual environment was created at:"
+    echo "  $(realpath ../.venv)"
+    echo
+    echo "To activate the virtual environment and run the Desktop Agent:"
+    echo "  cd $(realpath ..)"
+    echo "  source .venv/bin/activate"
+    echo "  python main.py"
+    echo
+    echo "While inside the virtual environment, you can install additional Python packages safely using pip."
+    echo "To exit the virtual environment, simply run:"
+    echo "  deactivate"
 else
     echo "Installing Python dependencies system-wide..."
     python3 -m pip install --upgrade pip
     python3 -m pip install -r requirements-linux.txt
 
-    if command -v nvidia-smi >/dev/null 2>&1; then
-        python3 -m pip install GPUtil
-    else
-        echo "❌ nvidia-smi not found. Skipping GPUtil."
-    fi
+    # GPUtil succeeded on non-nvidia system. disable this for now.
+    # if command -v nvidia-smi >/dev/null 2>&1; then
+    #     python3 -m pip install GPUtil
+    # else
+    #     echo "❌ nvidia-smi not found. Skipping GPUtil."
+    # fi
 
-    echo "✅ Python dependencies installed system-wide"
+    echo "✅ Python dependencies installed"
 fi
