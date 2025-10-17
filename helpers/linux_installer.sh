@@ -335,7 +335,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo
     echo "To activate the virtual environment and run the Desktop Agent:"
     echo
-    echo "  cd $(realpath)"
+    echo "  cd $(realpath ./)"
     echo "  source $(realpath ../.venv/bin/activate)"
     echo "  python3 main.py"
     echo
