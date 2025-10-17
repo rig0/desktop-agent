@@ -101,6 +101,12 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
         while True:
             try:
+                # Check if the file exists, and if not, create an empty file
+                if not os.path.exists(GAME_FILE):
+                    os.makedirs(os.path.dirname(GAME_FILE), exist_ok=True)
+                    with open(GAME_FILE, 'w') as f:
+                        pass  # Create an empty file
+                    
                 # Read game name from file
                 try:
                     with open(game_name_file_path, 'r') as f:
