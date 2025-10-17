@@ -98,17 +98,17 @@ GPU_PKGS=()
 $INSTALL_AMD && GPU_PKGS+=("radeontop")
 $INSTALL_INTEL && GPU_PKGS+=("intel-gpu-tools")
 
-# Convert BASE_PKGS multi-line string to array
-read -r -a BASE_ARR <<< "$BASE_PKGS"
+# Convert BASE_PKGS multi-line string to array (fix newlines)
+read -r -a BASE_ARR <<< "$(echo "$BASE_PKGS" | tr '\n' ' ')"
 
 # Combine base and GPU packages
 ALL_PKGS=("${BASE_ARR[@]}" "${GPU_PKGS[@]}")
 
 # Install dependencies
-if [ "$DISTRO" = "debian" ]; then
+if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
     sudo apt update
     sudo apt install -y "${ALL_PKGS[@]}"
-elif [ "$DISTRO" = "fedora" ]; then
+elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
     if [ "$IMMUTABLE" = true ]; then
         echo "⚠️ Immutable Fedora detected. You can layer packages with rpm-ostree or use toolbox."
         echo "It's recommended to layer the packages. Running in a toolbox requires some workarounds."
