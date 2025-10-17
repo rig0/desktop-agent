@@ -3,4 +3,5 @@ psutil
 paho-mqtt
 GPUtil
 requests
+PyGObject
 pydbus

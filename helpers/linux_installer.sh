@@ -63,6 +63,8 @@ if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
         python3-pip
         python3-venv
         python3-dev
+        libglib2.0-dev
+        libgirepository1.0-dev
         python3-gi
         python3-gi-cairo
         gir1.2-gtk-3.0
@@ -82,6 +84,8 @@ elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
         python3-pip
         python3-virtualenv
         python3-devel
+        glib2-devel
+        gobject-introspection-devel
         python3-gobject
         python3-gobject-base
         cairo-gobject
