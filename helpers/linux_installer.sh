@@ -5,8 +5,59 @@ set -e
 # Install system dependencies
 # ----------------------------
 
+# Default: don’t install GPU extras. NVIDIA cards get detected automatically.
+INSTALL_AMD=false
+INSTALL_INTEL=false
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --with-amd) INSTALL_AMD=true ;;
+    --with-intel) INSTALL_INTEL=true ;;
+    --with-all-gpus) INSTALL_AMD=true; INSTALL_INTEL=true ;;
+    -h|--help)
+      echo "Usage: $0 [--with-amd] [--with-intel] [--with-all-gpus]"
+      exit 0
+      ;;
+  esac
+  shift
+done
+
+# Detect distro
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO=$ID   # debian, ubuntu, fedora, bazzite, etc.
+else
+    echo "Could not detect Linux distribution! Consider manual installation."
+    exit 1
+fi
+
+# Check if $DISTRO is supported. These as the systems that are tested and confirmed working. *(ideally, not there yet)
+SUPPORTED_DISTROS=("debian" "ubuntu" "fedora" "bazzite")
+if [[ ! " ${SUPPORTED_DISTROS[@]} " =~ " ${DISTRO} " ]]; then
+    echo "Unsupported distribution: $DISTRO"
+    echo "Consider manual installation."
+    exit 1
+fi
+
+# Check if OS is Immutable
+IMMUTABLE=false
+if [ -f /etc/fedora-release ]; then
+    if command -v rpm-ostree >/dev/null 2>&1; then
+        IMMUTABLE=true
+    else
+        IMMUTABLE=false
+    fi
+fi
+
+if [ "$IMMUTABLE" = true ]; then
+	    echo "⚠️ Immutable OS detected: $DISTRO"
+	else
+	    echo "Detected distro: $DISTRO"
+	fi
+
 # Base packages
-if [ "$DISTRO" = "debian" ]; then
+if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
     BASE_PKGS="
         python3
         python3-pip
@@ -22,7 +73,7 @@ if [ "$DISTRO" = "debian" ]; then
         libpq-dev
         curl
     "
-elif [ "$DISTRO" = "fedora" ]; then
+elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
     BASE_PKGS="
         python3
         python3-pip
@@ -69,6 +120,7 @@ elif [ "$DISTRO" = "fedora" ]; then
             echo "  toolbox enter desktop-agent"
             echo "  sudo dnf install -y ${ALL_PKGS[*]}"
         else
+            RPM_OSTREE=1
             sudo rpm-ostree install "${ALL_PKGS[@]}"
             echo "Reboot required to apply changes."
         fi
@@ -211,31 +263,38 @@ echo "✅ Config file written to $CONFIG_FILE"
 # ----------------------------
 # Install python dependencies
 # ----------------------------
-
-echo "=== Desktop Agent python dependency installer ==="
-
-# Change to parent directory
-SCRIPT_DIR=$(dirname "$0")
-cd "$SCRIPT_DIR/.." || exit 1
-
-# Install Python dependencies
-echo "Installing Python dependencies from requirements-linux.txt..."
-
-# Check if python is installed
-command -v python3 >/dev/null 2>&1 || { echo "Python3 is not installed! Aborting."; exit 1; }
-
-# Check if requirements file exists
-[ -f requirements-linux.txt ] || { echo "requirements-linux.txt not found!"; exit 1; }
-
-# Install
-python3 -m pip install --upgrade pip
-python3 -m pip install -r requirements-linux.txt
-
-# Check if nvidia driver is installed
-if command -v nvidia-smi >/dev/null 2>&1; then
-    python3 -m pip install GPUtil
+if [ $RPM_OSTREE = 1 ]; then
+    echo "RPM_OSTREE installation detected."
+    echo "Reboot then install the python requirements like so: \n"
+    echo "cd desktop-agent-directory"
+    echo "python3 -m pip install --upgrade pip"
+    echo "python3 -m pip install -r requirements-linux.txt"
 else
-    echo "❌ nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil"
-fi
+    echo "=== Desktop Agent python dependency installer ==="
 
-echo "✅ Python dependencies installed."
+    # Change to parent directory
+    SCRIPT_DIR=$(dirname "$0")
+    cd "$SCRIPT_DIR/.." || exit 1
+
+    # Install Python dependencies
+    echo "Installing Python dependencies from requirements-linux.txt..."
+
+    # Check if python is installed
+    command -v python3 >/dev/null 2>&1 || { echo "Python3 is not installed! Aborting."; exit 1; }
+
+    # Check if requirements file exists
+    [ -f requirements-linux.txt ] || { echo "requirements-linux.txt not found!"; exit 1; }
+
+    # Install
+    python3 -m pip install --upgrade pip
+    python3 -m pip install -r requirements-linux.txt
+
+    # Check if nvidia driver is installed
+    if command -v nvidia-smi >/dev/null 2>&1; then
+        python3 -m pip install GPUtil
+    else
+        echo "nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil"
+    fi
+
+    echo "✅ Python dependencies installed."
+fi
