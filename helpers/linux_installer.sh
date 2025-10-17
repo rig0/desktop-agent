@@ -309,8 +309,8 @@ python3 -m pip install --upgrade pip >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
 if [ "$RPM_OSTREE" = 1 ]; then
     echo "Layered installation detected."
     echo "Reboot then install the python requirements like so:"
-    echo "  cd desktop-agent-directory"
-    echo "  python3 -m pip install --upgrade pip"
+    echo "  cd $(realpath ./)"
+    echo "  python3 -m pip install --upgrade pip setuptools wheel"
     echo "  python3 -m pip install -r requirements-linux.txt"
 # Check if system is externally managed and create virtual environment
 elif [ "$EXTERNALLY_MANAGED" = true ]; then
@@ -348,6 +348,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "While inside the virtual environment, you can install additional Python packages safely using pip."
     echo "To exit the virtual environment, simply run:"
     echo "  deactivate"
+    echo
 else
     echo "Installing Python dependencies..."
     python3 -m pip install --upgrade pip setuptools wheel
@@ -360,5 +361,12 @@ else
     #     echo "❌ nvidia-smi not found. Skipping GPUtil."
     # fi
 
+    echo
     echo "✅ Python dependencies installed"
+    echo
+    echo "Run Desktop Agent by running:"
+    echo
+    echo "  cd $(realpath ./)"
+    echo "  python3 main.py"
+    echo
 fi
