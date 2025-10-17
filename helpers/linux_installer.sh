@@ -63,6 +63,9 @@ if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
         python3-pip
         python3-venv
         python3-dev
+        python3-gi
+        python3-gi-cairo
+        gir1.2-gtk-3.0
         build-essential
         pkg-config
         libffi-dev
@@ -79,6 +82,10 @@ elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
         python3-pip
         python3-virtualenv
         python3-devel
+        python3-gobject
+        python3-gobject-base
+        cairo-gobject
+        gtk3
         gcc
         gcc-c++
         make
@@ -328,6 +335,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo
     echo "To activate the virtual environment and run the Desktop Agent:"
     echo
+    echo "  cd $(realpath)"
     echo "  source $(realpath ../.venv/bin/activate)"
     echo "  python3 main.py"
     echo
