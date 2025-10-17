@@ -269,6 +269,9 @@ EOL
 
 echo "✅ Config file written to $CONFIG_FILE"
 
+# Copy commands example to commands.json
+DATA_DIR=$(realpath ../data)
+cp "$DATA_DIR/commands_example.json" "$DATA_DIR/commands.json"
 
 # ----------------------------
 # Install python dependencies
@@ -312,7 +315,7 @@ if [ "$RPM_OSTREE" = 1 ]; then
 # Check if system is externally managed and create virtual environment
 elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "⚠️ System Python is externally managed. Creating virtual environment..."
-    VENV_DIR="../.venv"
+    VENV_DIR=".venv"
     python3 -m venv --system-site-packages "$VENV_DIR"
     VENV_PY="$VENV_DIR/bin/python"
     VENV_PIP="$VENV_DIR/bin/pip"
@@ -334,12 +337,12 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
     echo
     echo "Since your system Python is externally managed, a virtual environment was created at:"
-    echo "  $(realpath ../.venv)"
+    echo "  $(realpath ./.venv)"
     echo
     echo "To activate the virtual environment and run the Desktop Agent:"
     echo
     echo "  cd $(realpath ./)"
-    echo "  source $(realpath ../.venv/bin/activate)"
+    echo "  source ./.venv/bin/activate)"
     echo "  python3 main.py"
     echo
     echo "While inside the virtual environment, you can install additional Python packages safely using pip."
