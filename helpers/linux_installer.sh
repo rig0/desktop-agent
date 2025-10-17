@@ -317,12 +317,12 @@ if [ "$RPM_OSTREE" = 1 ]; then
 elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "⚠️ System Python is externally managed. Creating virtual environment..."
     VENV_DIR="../.venv"
-    python3 -m venv "$VENV_DIR"
+    python3 -m venv --system-site-packages "$VENV_DIR"
     VENV_PY="$VENV_DIR/bin/python"
     VENV_PIP="$VENV_DIR/bin/pip"
 
     echo "Upgrading pip inside virtual environment..."
-    "$VENV_PIP" install --upgrade pip
+    "$VENV_PIP" install --upgrade pip setuptools wheel
 
     echo "Installing dependencies into virtual environment..."
     "$VENV_PIP" install -r requirements-linux.txt
