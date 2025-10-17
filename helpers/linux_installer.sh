@@ -5,6 +5,43 @@ set -e
 # Install system dependencies
 # ----------------------------
 
+# Base packages
+if [ "$DISTRO" = "debian" ]; then
+    BASE_PKGS="
+        python3
+        python3-pip
+        python3-venv
+        python3-dev
+        build-essential
+        pkg-config
+        libffi-dev
+        libssl-dev
+        zlib1g-dev
+        libxml2-dev
+        libxslt1-dev
+        libpq-dev
+        curl
+    "
+elif [ "$DISTRO" = "fedora" ]; then
+    BASE_PKGS="
+        python3
+        python3-pip
+        python3-virtualenv
+        python3-devel
+        gcc
+        gcc-c++
+        make
+        pkg-config
+        libffi-devel
+        openssl-devel
+        zlib-devel
+        libxml2-devel
+        libxslt-devel
+        libpq-devel
+        curl
+    "
+fi
+
 # Optional GPU packages
 GPU_PKGS=()
 $INSTALL_AMD && GPU_PKGS+=("radeontop")
