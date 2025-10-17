@@ -65,7 +65,6 @@ if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
         python3-dev
         libglib2.0-dev
         libgirepository1.0-dev
-        libgirepository-2.0-dev
         libcairo2-dev
         python3-gi
         python3-gi-cairo
