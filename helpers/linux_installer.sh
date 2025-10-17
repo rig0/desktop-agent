@@ -263,19 +263,56 @@ echo "✅ Config file written to $CONFIG_FILE"
 # ----------------------------
 # Install python dependencies
 # ----------------------------
+
+echo "=== Desktop Agent python dependency installer ==="
+
+SCRIPT_DIR=$(dirname "$0")
+cd "$SCRIPT_DIR/.." || exit 1
+
+# Check python3 exists
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "❌ python3 is not installed! Aborting."
+    exit 1
+fi
+
+# Check pip availability
+if ! python3 -m pip --version >/dev/null 2>&1; then
+    echo "❌ pip not found! Installing python3-pip..."
+    sudo apt install -y python3-pip || { echo "Failed to install pip"; exit 1; }
+fi
+
+# Check if system is externally managed
+EXTERNALLY_MANAGED=false
+python3 -m pip check >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
+
+# Check is installation is layered. Add checks for venv restrictions on debian systems
 if [ $RPM_OSTREE = 1 ]; then
     echo "RPM_OSTREE installation detected."
     echo "Reboot then install the python requirements like so: \n"
     echo "cd desktop-agent-directory"
     echo "python3 -m pip install --upgrade pip"
     echo "python3 -m pip install -r requirements-linux.txt"
+elif [ "$EXTERNALLY_MANAGED" = true ]; then # venv
+    echo "⚠️ System Python is externally managed. Creating virtual environment..."
+    VENV_DIR="../.venv"
+    python3 -m venv "$VENV_DIR"
+    VENV_PY="$VENV_DIR/bin/python"
+    VENV_PIP="$VENV_DIR/bin/pip"
+
+    # Upgrade pip inside venv
+    "$VENV_PIP" install --upgrade pip
+    echo "Installing python dependencies into virtual environment..."
+    "$VENV_PIP" install -r requirements-linux.txt
+
+    # Optional: install GPUtil if NVIDIA driver present
+    if command -v nvidia-smi >/dev/null 2>&1; then
+        "$VENV_PIP" install GPUtil
+    else
+        echo "❌ nvidia-smi not found. Skipping GPUtil."
+    fi
+
+    echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
 else
-    echo "=== Desktop Agent python dependency installer ==="
-
-    # Change to parent directory
-    SCRIPT_DIR=$(dirname "$0")
-    cd "$SCRIPT_DIR/.." || exit 1
-
     # Install Python dependencies
     echo "Installing Python dependencies from requirements-linux.txt..."
 
