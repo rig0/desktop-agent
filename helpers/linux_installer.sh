@@ -294,7 +294,7 @@ python3 -m pip install --upgrade pip >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
 
 # Check if installation is layered or system is immutable
 if [ "$RPM_OSTREE" = 1 ]; then
-    echo "RPM_OSTREE installation detected."
+    echo "Layered installation detected."
     echo "Reboot then install the python requirements like so:"
     echo "  cd desktop-agent-directory"
     echo "  python3 -m pip install --upgrade pip"
