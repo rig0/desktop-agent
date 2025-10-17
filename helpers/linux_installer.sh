@@ -321,6 +321,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     # fi
 
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
+    echo
     echo "Since your system Python is externally managed, a virtual environment was created at:"
     echo "  $(realpath ../.venv)"
     echo
@@ -333,7 +334,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "To exit the virtual environment, simply run:"
     echo "  deactivate"
 else
-    echo "Installing Python dependencies system-wide..."
+    echo "Installing Python dependencies..."
     python3 -m pip install --upgrade pip
     python3 -m pip install -r requirements-linux.txt
 
