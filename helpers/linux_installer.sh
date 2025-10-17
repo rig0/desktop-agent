@@ -319,7 +319,8 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     # else
     #     echo "❌ nvidia-smi not found. Skipping GPUtil."
     # fi
-
+    
+    echo
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
     echo
     echo "Since your system Python is externally managed, a virtual environment was created at:"
