@@ -319,7 +319,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     # else
     #     echo "❌ nvidia-smi not found. Skipping GPUtil."
     # fi
-    
+
     echo
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
     echo
@@ -327,9 +327,9 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "  $(realpath ../.venv)"
     echo
     echo "To activate the virtual environment and run the Desktop Agent:"
-    echo "  cd $(realpath ..)"
-    echo "  source .venv/bin/activate"
-    echo "  python main.py"
+    echo
+    echo "  source $(realpath ../.venv/bin/activate)"
+    echo "  python3 main.py"
     echo
     echo "While inside the virtual environment, you can install additional Python packages safely using pip."
     echo "To exit the virtual environment, simply run:"
