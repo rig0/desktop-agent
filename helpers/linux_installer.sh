@@ -171,7 +171,6 @@ EOL
 echo "✅ Config file written to $CONFIG_FILE"
 
 
-
 # ----------------------------
 # Install python dependencies
 # ----------------------------
