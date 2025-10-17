@@ -45,16 +45,12 @@ IMMUTABLE=false
 if [ -f /etc/fedora-release ]; then
     if command -v rpm-ostree >/dev/null 2>&1; then
         IMMUTABLE=true
+        echo "⚠️ Immutable OS detected: $DISTRO"
     else
         IMMUTABLE=false
+        echo "Detected distro: $DISTRO"
     fi
 fi
-
-if [ "$IMMUTABLE" = true ]; then
-	    echo "⚠️ Immutable OS detected: $DISTRO"
-	else
-	    echo "Detected distro: $DISTRO"
-	fi
 
 # Base packages
 if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
