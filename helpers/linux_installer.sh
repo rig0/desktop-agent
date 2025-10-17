@@ -292,8 +292,15 @@ fi
 EXTERNALLY_MANAGED=false
 python3 -m pip install --upgrade pip >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
 
-# Create virtual environment if system is externally managed
-if [ "$EXTERNALLY_MANAGED" = true ]; then
+# Check if installation is layered or system is immutable
+if [ "$RPM_OSTREE" = 1 ]; then
+    echo "RPM_OSTREE installation detected."
+    echo "Reboot then install the python requirements like so:"
+    echo "  cd desktop-agent-directory"
+    echo "  python3 -m pip install --upgrade pip"
+    echo "  python3 -m pip install -r requirements-linux.txt"
+# Check if system is externally managed and create virtual environment
+elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "⚠️ System Python is externally managed. Creating virtual environment..."
     VENV_DIR="../.venv"
     python3 -m venv "$VENV_DIR"
