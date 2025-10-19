@@ -34,7 +34,7 @@ else
 fi
 
 # Check if $DISTRO is supported. These as the systems that are tested and confirmed working. *(ideally, not there yet)
-SUPPORTED_DISTROS=("debian" "ubuntu" "fedora" "bazzite")
+SUPPORTED_DISTROS=("debian" "ubuntu" "fedora" "bazzite" "linuxmint")
 if [[ ! " ${SUPPORTED_DISTROS[@]} " =~ " ${DISTRO} " ]]; then
     echo
     echo "Unsupported distribution: $DISTRO"
