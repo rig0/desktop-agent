@@ -272,7 +272,7 @@ interval = $UPDATES_INTERVAL
 client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
 EOL
-
+echo
 echo "✅ Config file written to $CONFIG_FILE"
 
 # Copy commands example to commands.json
