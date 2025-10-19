@@ -2,7 +2,7 @@
 set -e
 
 # ----------------------------
-# Install system dependencies
+# Prepare
 # ----------------------------
 
 # Default: don’t install GPU extras. NVIDIA cards get detected automatically.
@@ -31,7 +31,7 @@ if [ -f /etc/os-release ]; then
 
     # Some Fedora-based immutables (kinoite, silverblue, bazzite) set VARIANT_ID
     if [ "$DISTRO_ID" = "fedora" ] && [ -n "${VARIANT_ID:-}" ]; then
-        if [ $VARIANT_ID = "kde" ] || [ $VARIANT_ID = "workstation" ]; then
+        if [ "$VARIANT_ID" = "kde" ] || [ "$VARIANT_ID" = "workstation" ]; then
             DISTRO="$DISTRO_ID-$VARIANT_ID"
         else
             DISTRO=$VARIANT_ID
@@ -41,12 +41,18 @@ if [ -f /etc/os-release ]; then
     fi
 else
     echo 
-    echo "Could not detect Linux distribution! Consider manual installation."
+    echo "Could not detect Linux distribution!"
     exit 1
 fi
 
-# Check if $DISTRO is supported. These as the systems that are tested and confirmed working. 
-SUPPORTED_DISTROS=("debian" "ubuntu" "linuxmint" "fedora" "bazzite" "bazzite-nvidia" "kinoite" "silverblue" "fedora-workstation" "fedora-kde")
+# ----------------------------
+# Supported distributions
+# ----------------------------
+DEBIAN_BASED=("debian" "ubuntu" "linuxmint")
+FEDORA_BASED=("fedora" "bazzite" "bazzite-nvidia" "kinoite" "silverblue" "fedora-workstation" "fedora-kde")
+
+SUPPORTED_DISTROS=("${DEBIAN_BASED[@]}" "${FEDORA_BASED[@]}")
+
 if [[ ! " ${SUPPORTED_DISTROS[@]} " =~ " ${DISTRO} " ]]; then
     echo
     echo "Unsupported distribution: $DISTRO"
@@ -54,23 +60,23 @@ if [[ ! " ${SUPPORTED_DISTROS[@]} " =~ " ${DISTRO} " ]]; then
     exit 1
 fi
 
+# ----------------------------
 # Check if OS is Immutable
+# ----------------------------
 IMMUTABLE=false
-if [ -f /etc/fedora-release ]; then
-    if command -v rpm-ostree >/dev/null 2>&1; then
-        IMMUTABLE=true
-        echo
-        echo "Immutable OS detected: $DISTRO"
-    else
-        IMMUTABLE=false
-        echo
-        echo "Detected distro: $DISTRO"
-        echo
-    fi
+if [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]] && command -v rpm-ostree >/dev/null 2>&1; then
+    IMMUTABLE=true
+    echo
+    echo "Immutable OS detected: $DISTRO"
+else
+    echo
+    echo "Detected distro: $DISTRO"
 fi
 
+# ----------------------------
 # Base packages
-if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
+# ----------------------------
+if [[ " ${DEBIAN_BASED[@]} " =~ " ${DISTRO} " ]]; then
     BASE_PKGS="
         python3
         python3-pip
@@ -93,7 +99,7 @@ if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
         libpq-dev
         curl
     "
-elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
+elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
     BASE_PKGS="
         python3
         python3-pip
@@ -120,7 +126,9 @@ elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
     "
 fi
 
+# ----------------------------
 # Optional GPU packages
+# ----------------------------
 GPU_PKGS=()
 $INSTALL_AMD && GPU_PKGS+=("radeontop")
 $INSTALL_INTEL && GPU_PKGS+=("intel-gpu-tools")
@@ -131,15 +139,18 @@ read -r -a BASE_ARR <<< "$(echo "$BASE_PKGS" | tr '\n' ' ')"
 # Combine base and GPU packages
 ALL_PKGS=("${BASE_ARR[@]}" "${GPU_PKGS[@]}")
 
-# Install dependencies
-if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
+# ----------------------------
+# Install System dependencies
+# ----------------------------
+if [[ " ${DEBIAN_BASED[@]} " =~ " ${DISTRO} " ]]; then
     sudo apt update
     sudo apt install -y "${ALL_PKGS[@]}"
-elif [ "$DISTRO" = "linuxmint" ] ; then
-    sudo apt update
-    sudo apt install -y "${ALL_PKGS[@]}"
-    sudo apt install python3.12-venv
-elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
+
+    if [ "$DISTRO" = "linuxmint" ]; then
+        sudo apt install -y python3.12-venv
+    fi
+
+elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
     if [ "$IMMUTABLE" = true ]; then
         echo
         echo "⚠️ Immutable Fedora detected. You can layer packages with rpm-ostree or use toolbox."
@@ -164,9 +175,9 @@ elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
         sudo dnf install -y "${ALL_PKGS[@]}"
     fi
 fi
+
 echo
 echo "✅ All dependencies installed."
-
 
 # ----------------------------
 # Create configuration file
