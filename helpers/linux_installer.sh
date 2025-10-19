@@ -131,7 +131,7 @@ elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
             echo "  sudo dnf install -y ${ALL_PKGS[*]}"
         else
             RPM_OSTREE=1
-            sudo rpm-ostree install "${ALL_PKGS[@]}"
+            sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
             echo "Reboot required to apply changes."
         fi
     else
