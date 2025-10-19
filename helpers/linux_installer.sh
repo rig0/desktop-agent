@@ -26,15 +26,22 @@ done
 # Detect distro
 if [ -f /etc/os-release ]; then
     . /etc/os-release
-    DISTRO=$ID   # debian, ubuntu, fedora, bazzite, etc.
+
+    DISTRO_ID=$ID   # debian, ubuntu, fedora, bazzite, etc.
+
+    # Some Fedora-based immutables (kinoite, silverblue, bazzite) set VARIANT_ID
+    if [ "$DISTRO_ID" = "fedora" ] && [ -n "${VARIANT_ID:-}" ]; then
+        DISTRO=$VARIANT_ID
+    else
+        DISTRO=$DISTRO_ID
+    fi
 else
-    echo
     echo "Could not detect Linux distribution! Consider manual installation."
     exit 1
 fi
 
 # Check if $DISTRO is supported. These as the systems that are tested and confirmed working. *(ideally, not there yet)
-SUPPORTED_DISTROS=("debian" "ubuntu" "fedora" "bazzite" "linuxmint")
+SUPPORTED_DISTROS=("debian" "ubuntu" "linuxmint" "fedora" "bazzite" "bazzite-nvidia" "kinoite" "silverblue")
 if [[ ! " ${SUPPORTED_DISTROS[@]} " =~ " ${DISTRO} " ]]; then
     echo
     echo "Unsupported distribution: $DISTRO"
