@@ -45,7 +45,7 @@ IMMUTABLE=false
 if [ -f /etc/fedora-release ]; then
     if command -v rpm-ostree >/dev/null 2>&1; then
         IMMUTABLE=true
-        echo "⚠️ Immutable OS detected: $DISTRO"
+        echo "Immutable OS detected: $DISTRO"
     else
         IMMUTABLE=false
         echo "Detected distro: $DISTRO"
@@ -120,33 +120,39 @@ if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
     sudo apt install -y "${ALL_PKGS[@]}"
 elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
     if [ "$IMMUTABLE" = true ]; then
+        echo
         echo "⚠️ Immutable Fedora detected. You can layer packages with rpm-ostree or use toolbox."
         echo "It's recommended to layer the packages. Running in a toolbox requires some workarounds."
         read -p "Do you want to layer packages into the system? (Y/n): " choice
+        echo
         if [[ "$choice" =~ ^[Nn]$ ]]; then
+            echo
             echo "Skipping layering. Use toolbox for installation instead."
             echo "Example:"
             echo "  toolbox create desktop-agent"
             echo "  toolbox enter desktop-agent"
             echo "  sudo dnf install -y ${ALL_PKGS[*]}"
+            echo
         else
             RPM_OSTREE=1
             sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
-            echo "Reboot required to apply changes."
+            echo
+            echo "Reboot required to apply changes!"
         fi
     else
         sudo dnf install -y "${ALL_PKGS[@]}"
     fi
 fi
-
+echo
 echo "✅ All dependencies installed."
 
 
 # ----------------------------
 # Create configuration file
 # ----------------------------
-
+echo
 echo "=== Desktop Agent Config Setup ==="
+echo
 
 CONFIG_DIR="../data"
 CONFIG_FILE="$CONFIG_DIR/config.ini"
@@ -276,8 +282,9 @@ cp "$DATA_DIR/commands_example.json" "$DATA_DIR/commands.json"
 # ----------------------------
 # Install python dependencies
 # ----------------------------
-
+echo
 echo "=== Desktop Agent python dependency installer ==="
+echo
 
 SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR/.." || exit 1
@@ -312,6 +319,10 @@ if [ "$RPM_OSTREE" = 1 ]; then
     echo "  cd $(realpath ./)"
     echo "  python3 -m pip install --upgrade pip setuptools wheel"
     echo "  python3 -m pip install -r requirements-linux.txt"
+    echo
+    echo "Then run the agent:"
+    echo "  python3 main.py"
+    echo
 # Check if system is externally managed and create virtual environment
 elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "⚠️ System Python is externally managed. Creating virtual environment..."
