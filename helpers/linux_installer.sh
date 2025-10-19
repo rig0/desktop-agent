@@ -288,18 +288,18 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# Ensure pip is available
-if ! python3 -m pip --version >/dev/null 2>&1; then
-    echo "⚠️ pip not found, installing python3-pip..."
-    sudo apt update
-    sudo apt install -y python3-pip || { echo "Failed to install pip"; exit 1; }
-fi
+# # Ensure pip is available
+# if ! python3 -m pip --version >/dev/null 2>&1; then
+#     echo "⚠️ pip not found, installing python3-pip..."
+#     sudo apt update
+#     sudo apt install -y python3-pip || { echo "Failed to install pip"; exit 1; }
+# fi
 
 # Ensure venv module is installed
-if ! python3 -m venv --help >/dev/null 2>&1; then
-    echo "⚠️ python3-venv not found, installing..."
-    sudo apt install -y python3-venv || { echo "Failed to install python3-venv"; exit 1; }
-fi
+# if ! python3 -m venv --help >/dev/null 2>&1; then
+#     echo "⚠️ python3-venv not found, installing..."
+#     sudo apt install -y python3-venv || { echo "Failed to install python3-venv"; exit 1; }
+# fi
 
 # Check if system is externally managed
 EXTERNALLY_MANAGED=false
