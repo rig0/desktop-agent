@@ -28,6 +28,7 @@ if [ -f /etc/os-release ]; then
     . /etc/os-release
     DISTRO=$ID   # debian, ubuntu, fedora, bazzite, etc.
 else
+    echo
     echo "Could not detect Linux distribution! Consider manual installation."
     exit 1
 fi
@@ -35,6 +36,7 @@ fi
 # Check if $DISTRO is supported. These as the systems that are tested and confirmed working. *(ideally, not there yet)
 SUPPORTED_DISTROS=("debian" "ubuntu" "fedora" "bazzite")
 if [[ ! " ${SUPPORTED_DISTROS[@]} " =~ " ${DISTRO} " ]]; then
+    echo
     echo "Unsupported distribution: $DISTRO"
     echo "Consider manual installation."
     exit 1
@@ -45,10 +47,13 @@ IMMUTABLE=false
 if [ -f /etc/fedora-release ]; then
     if command -v rpm-ostree >/dev/null 2>&1; then
         IMMUTABLE=true
+        echo
         echo "Immutable OS detected: $DISTRO"
     else
         IMMUTABLE=false
+        echo
         echo "Detected distro: $DISTRO"
+        echo
     fi
 fi
 
