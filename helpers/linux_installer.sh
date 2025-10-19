@@ -159,12 +159,16 @@ elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
         echo
         if [[ "$choice" =~ ^[Nn]$ ]]; then
             echo
-            echo "Skipping layering. Use toolbox for installation instead."
-            echo "Example:"
-            echo "  toolbox create desktop-agent"
-            echo "  toolbox enter desktop-agent"
-            echo "  sudo dnf install -y ${ALL_PKGS[*]}"
-            echo
+            echo "Skipping layering. Using toolbox for installation instead."
+            echo 
+            toolbox create desktop-agent
+            toolbox enter desktop-agent
+            sudo dnf install -y "${ALL_PKGS[@]}"
+            # echo "Example:"
+            # echo "  toolbox create desktop-agent"
+            # echo "  toolbox enter desktop-agent"
+            # echo "  sudo dnf install -y ${ALL_PKGS[*]}"
+            # echo
         else
             RPM_OSTREE=1
             sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
