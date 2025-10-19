@@ -123,6 +123,10 @@ ALL_PKGS=("${BASE_ARR[@]}" "${GPU_PKGS[@]}")
 if [ "$DISTRO" = "debian" ] || [ "$DISTRO" = "ubuntu" ]; then
     sudo apt update
     sudo apt install -y "${ALL_PKGS[@]}"
+elif [ "$DISTRO" = "linuxmint" ] ; then
+    sudo apt update
+    sudo apt install -y "${ALL_PKGS[@]}"
+    sudo apt install python3.12-venv
 elif [ "$DISTRO" = "fedora" ] || [ "$DISTRO" = "bazzite" ]; then
     if [ "$IMMUTABLE" = true ]; then
         echo
