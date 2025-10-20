@@ -129,8 +129,8 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
 # Check python
-if (-not (Get-Command python3 -ErrorAction SilentlyContinue)) {
-    Write-Error "Python3 is not installed! Aborting."
+if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+    Write-Error "Python is not installed! Aborting."
     exit 1
 }
 
@@ -141,8 +141,8 @@ if (-not (Test-Path "requirements-windows.txt")) {
 }
 
 # Install python packages
-python3 -m pip install --upgrade pip
-python3 -m pip install -r requirements-linux.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements-linux.txt
 
 # Install media agent dependencies
 if ($MEDIA_ENABLED) {
@@ -156,7 +156,7 @@ if ($MEDIA_ENABLED) {
         Write-Host "Downloading Microsoft Build Tools..."
         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
 
-        Write-Host "Installing minimal C++ build tools silently..."
+        Write-Host "Installing minimal C++ build tools..."
         Start-Process -FilePath $installerPath -ArgumentList `
           "--quiet", "--wait", "--norestart", `
           "--add", "Microsoft.VisualStudio.Workload.VCTools", `
@@ -169,13 +169,13 @@ if ($MEDIA_ENABLED) {
     }
 
     # Install winsdk
-    python3 -m pip install winsdk
+    python -m pip install winsdk
 }
 
 
 # Check for NVIDIA
 if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
-    python3 -m pip install GPUtil
+    python -m pip install GPUtil
 } else {
     Write-Host "❌ nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil"
 }
