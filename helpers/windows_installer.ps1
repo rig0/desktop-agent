@@ -151,7 +151,7 @@ if (Test-Path $aliasPython3) {
     Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue
 }
 
-$env:PATH = ($env:PATH -split ";") | Where-Object { ($_ -notlike "*WindowsApps*") } -join ";"
+$env:PATH = ( ($env:PATH -split ";") | Where-Object { $_ -notlike "*WindowsApps*" } ) -join ";"
 
 if (-not $aliasFound) {
     Write-Host "No Microsoft Store Python aliases found."
@@ -169,36 +169,31 @@ $pythonPaths = @(
     "$env:ProgramFiles\Python312\python.exe",
     "$env:ProgramFiles(x86)\Python311\python.exe",
     "$env:ProgramFiles(x86)\Python312\python.exe"
-) | Where-Object { $_ -and ($_ -notlike "*WindowsApps*") -and (Test-Path $_) }
+) | Where-Object { $_ -and (Test-Path $_) }
 
-if ($pythonPaths.Count -gt 0) {
-    $PythonExe = $pythonPaths[0]
-    Write-Host "Found Python at: $PythonExe"
-    $env:PATH = (Split-Path $PythonExe) + ";" + $env:PATH
-} else {
+if ($pythonPaths.Count -eq 0) {
     Write-Host "Python not found. Installing Python 3.12..."
-
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-        Write-Host "Installing Python via winget..."
-        Start-Process -FilePath "winget" -ArgumentList "install", "--id", "Python.Python.3.12", "-e", "--source", "winget", "--accept-package-agreements", "--accept-source-agreements", "--silent" -Wait
+        Start-Process -FilePath "winget" -ArgumentList "install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements --silent" -NoNewWindow -Wait
     } else {
-        Write-Host "winget not available. Downloading Python installer..."
+        Write-Host "winget not available. Downloading installer..."
         $pythonInstaller = "$env:TEMP\python-installer.exe"
-        $pythonUrl = "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe"
-        Invoke-WebRequest -Uri $pythonUrl -OutFile $pythonInstaller
+        Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe" -OutFile $pythonInstaller
         Start-Process -FilePath $pythonInstaller -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0" -Wait
         Remove-Item $pythonInstaller -Force
     }
 
-    # Refresh PATH and verify
-    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
-    if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-        Write-Error "Python installation failed. Please install manually."
-        exit 1
-    }
-
-    Write-Host "Python successfully installed and added to PATH."
+    # Refresh PATH
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine")
 }
+
+# Verify
+if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+    Write-Error "Python installation failed. Please install manually."
+    exit 1
+}
+
+Write-Host "Python successfully installed and added to PATH."
 
 # ----------------------------
 # Install Python Packages
