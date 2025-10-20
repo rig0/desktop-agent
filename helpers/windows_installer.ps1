@@ -136,7 +136,7 @@ $aliasPython = Join-Path $aliasPath "python.exe"
 $aliasPython3 = Join-Path $aliasPath "python3.exe"
 
 # Check if alias exists and is not a real Python install
-if (Test-Path $aliasPython -or Test-Path $aliasPython3) {
+if ((Test-Path $aliasPython) -or (Test-Path $aliasPython3)) {
     Write-Host "Removing fake Python Store aliases..."
     try {
         # Temporarily rename to disable the store link
