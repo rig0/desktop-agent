@@ -352,10 +352,12 @@ elif [ "$TOOLBOX" = 1 ]; then
     toolbox run -c desktop-agent python3 -m pip install --upgrade pip setuptools wheel
     toolbox run -c desktop-agent python3 -m pip install -r requirements-linux.txt
     echo
+    cd $(realpath ./)
     echo "✅ Python dependencies installed"
     echo
     echo "Run Desktop Agent by running:"
     echo
+    echo "  cd $(realpath ./)"
     echo "  toolbox run -c desktop-agent python3 main.py"
     echo
     echo "A service (toolbox_service) script can be found in $(realpath ./helpers)"
