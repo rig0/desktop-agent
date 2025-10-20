@@ -128,6 +128,29 @@ Write-Host "=== Desktop Agent python dependency installer ==="
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
+# Disable Microsoft Store Python Alias
+Write-Host "=== Checking for Microsoft Store Python alias ==="
+
+$aliasPath = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
+$aliasPython = Join-Path $aliasPath "python.exe"
+$aliasPython3 = Join-Path $aliasPath "python3.exe"
+
+# Check if alias exists and is not a real Python install
+if (Test-Path $aliasPython -or Test-Path $aliasPython3) {
+    Write-Host "Removing fake Python Store aliases..."
+    try {
+        # Temporarily rename to disable the store link
+        Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue
+        Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue
+        Write-Host "✅ Microsoft Store aliases disabled."
+    } catch {
+        Write-Host "ℹ️ Could not rename alias (may already be removed or require admin)."
+    }
+} else {
+    Write-Host "✅ No Store aliases detected."
+}
+
+
 # Check if Python is available
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     Write-Host "Python not found. Installing Python 3.12..."
