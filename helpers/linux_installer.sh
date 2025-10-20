@@ -156,7 +156,7 @@ elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
         echo
         echo "⚠️  Immutable Fedora detected. You can layer packages with rpm-ostree or use a toolbox (container)."
         echo "Given the nature of this software, It's recommended to layer the packages with rpm-ostree."
-        echo "Running in a toolbox currenttly requires some workarounds for some sensors."
+        echo "Running in a toolbox currently requires some workarounds for some sensors."
         echo
         read -p "Do you want to layer packages into the system? (Y/n): " choice
         echo
