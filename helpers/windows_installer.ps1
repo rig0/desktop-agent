@@ -129,27 +129,32 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
 # ----------------------------
-# Disable Microsoft Store Python Alias
+# Disable Microsoft Store Python Aliases (Alternative)
 # ----------------------------
 Write-Host "=== Checking Python installation ==="
 
-# Common alias paths
 $aliasDir = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
 $aliasPython = Join-Path $aliasDir "python.exe"
 $aliasPython3 = Join-Path $aliasDir "python3.exe"
 
-# If fake aliases exist, disable them
-if ((Test-Path $aliasPython) -or (Test-Path $aliasPython3)) {
-    Write-Host "Microsoft Store Python aliases detected. Disabling..."
-    # try {
-    #     if (Test-Path $aliasPython) { Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue }
-    #     if (Test-Path $aliasPython3) { Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue }
-    #     Write-Host "Aliases disabled. Real Python will be used."
-    # } catch {
-    #     Write-Host "Could not rename aliases — may need to run as Administrator."
-    # }
+$aliasFound = $false
+
+if (Test-Path $aliasPython) {
+    Write-Host "Microsoft Store python.exe alias detected."
+    $aliasFound = $true
+    Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue
+}
+
+if (Test-Path $aliasPython3) {
+    Write-Host "Microsoft Store python3.exe alias detected."
+    $aliasFound = $true
+    Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue
+}
+
+if (-not $aliasFound) {
+    Write-Host "No Microsoft Store Python aliases found."
 } else {
-    Write-Host "No Microsoft Store aliases found."
+    Write-Host "Aliases detected. Make sure real Python is installed and in PATH."
 }
 
 # ----------------------------
