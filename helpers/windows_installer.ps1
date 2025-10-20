@@ -151,6 +151,8 @@ if (Test-Path $aliasPython3) {
     Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue
 }
 
+$env:PATH = ($env:PATH -split ";") | Where-Object { ($_ -notlike "*WindowsApps*") } -join ";"
+
 if (-not $aliasFound) {
     Write-Host "No Microsoft Store Python aliases found."
 } else {
@@ -167,7 +169,7 @@ $pythonPaths = @(
     "$env:ProgramFiles\Python312\python.exe",
     "$env:ProgramFiles(x86)\Python311\python.exe",
     "$env:ProgramFiles(x86)\Python312\python.exe"
-) | Where-Object { $_ -and (Test-Path $_) }
+) | Where-Object { $_ -and ($_ -notlike "*WindowsApps*") -and (Test-Path $_) }
 
 if ($pythonPaths.Count -gt 0) {
     $PythonExe = $pythonPaths[0]
