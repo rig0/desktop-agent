@@ -142,12 +142,12 @@ if (Test-Path $aliasPython -or Test-Path $aliasPython3) {
         # Temporarily rename to disable the store link
         Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue
         Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue
-        Write-Host "✅ Microsoft Store aliases disabled."
+        Write-Host "Microsoft Store aliases disabled."
     } catch {
-        Write-Host "ℹ️ Could not rename alias (may already be removed or require admin)."
+        Write-Host "Could not rename alias (may already be removed or require admin)."
     }
 } else {
-    Write-Host "✅ No Store aliases detected."
+    Write-Host "No Store aliases detected."
 }
 
 
