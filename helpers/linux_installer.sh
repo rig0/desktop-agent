@@ -71,6 +71,7 @@ if [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]] && command -v rpm-ostree >/dev/
 else
     echo
     echo "Detected distro: $DISTRO"
+    echo
 fi
 
 # ----------------------------
