@@ -141,13 +141,13 @@ $aliasPython3 = Join-Path $aliasDir "python3.exe"
 # If fake aliases exist, disable them
 if ((Test-Path $aliasPython) -or (Test-Path $aliasPython3)) {
     Write-Host "Microsoft Store Python aliases detected. Disabling..."
-    try {
-        if (Test-Path $aliasPython) { Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue }
-        if (Test-Path $aliasPython3) { Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue }
-        Write-Host "Aliases disabled. Real Python will be used."
-    } catch {
-        Write-Host "Could not rename aliases — may need to run as Administrator."
-    }
+    # try {
+    #     if (Test-Path $aliasPython) { Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue }
+    #     if (Test-Path $aliasPython3) { Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue }
+    #     Write-Host "Aliases disabled. Real Python will be used."
+    # } catch {
+    #     Write-Host "Could not rename aliases — may need to run as Administrator."
+    # }
 } else {
     Write-Host "No Microsoft Store aliases found."
 }
