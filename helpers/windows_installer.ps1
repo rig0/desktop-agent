@@ -142,7 +142,7 @@ $aliasPython3 = Join-Path $aliasDir "python3.exe"
 if ((Test-Path $aliasPython) -or (Test-Path $aliasPython3)) {
     Write-Host "Microsoft Store Python aliases detected. Disabling..."
     try {
-        if (Test-Path $aliasPython)  { Rename-Item -Path $aliasPython  -NewName "python_disabled.exe"  -ErrorAction SilentlyContinue }
+        if (Test-Path $aliasPython) { Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue }
         if (Test-Path $aliasPython3) { Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue }
         Write-Host "Aliases disabled. Real Python will be used."
     } catch {
@@ -156,7 +156,7 @@ if ((Test-Path $aliasPython) -or (Test-Path $aliasPython3)) {
 # Locate or Install Python
 # ----------------------------
 $pythonPaths = @(
-    (Get-Command python  -ErrorAction SilentlyContinue).Source,
+    (Get-Command python -ErrorAction SilentlyContinue).Source,
     (Get-Command python3 -ErrorAction SilentlyContinue).Source,
     "$env:ProgramFiles\Python311\python.exe",
     "$env:ProgramFiles\Python312\python.exe",
@@ -190,7 +190,7 @@ if ($pythonPaths.Count -gt 0) {
         exit 1
     }
 
-    Write-Host "✅ Python successfully installed and added to PATH."
+    Write-Host "Python successfully installed and added to PATH."
 }
 
 # ----------------------------
@@ -210,7 +210,7 @@ python -m pip install -r requirements-windows.txt
 # Optional: Media Agent Dependencies
 # ----------------------------
 if ($MEDIA_ENABLED) {
-    Write-Host "🎵 Media Agent enabled. Installing Windows SDK dependencies..."
+    Write-Host "Media Agent enabled. Installing Windows SDK dependencies..."
 
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
         $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
@@ -235,4 +235,4 @@ if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
     Write-Host "nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil."
 }
 
-Write-Host "✅ All Python dependencies installed successfully."
+Write-Host "All Python dependencies installed successfully."
