@@ -128,11 +128,38 @@ Write-Host "=== Desktop Agent python dependency installer ==="
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
-# Check python
+# Check if Python is available
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-    Write-Error "Python is not installed! Aborting."
-    exit 1
+    Write-Host "Python not found. Installing Python 3.12..."
+
+    # Use winget (preferred for clean install)
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Start-Process -FilePath "winget" -ArgumentList "install", "--id", "Python.Python.3.12", "-e", "--source", "winget", "--accept-package-agreements", "--accept-source-agreements", "--silent" -Wait
+    } else {
+        # Fallback to direct installer if winget is unavailable
+        $pythonInstaller = "$env:TEMP\python-installer.exe"
+        $pythonUrl = "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe"
+        Write-Host "Downloading Python installer..."
+        Invoke-WebRequest -Uri $pythonUrl -OutFile $pythonInstaller
+
+        Write-Host "Installing Python..."
+        Start-Process -FilePath $pythonInstaller -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0" -Wait
+
+        Remove-Item $pythonInstaller -Force
+    }
+
+    # Refresh PATH and verify installation
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
+    if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+        Write-Error "❌ Python installation failed. Please install manually."
+        exit 1
+    }
+
+    Write-Host "✅ Python successfully installed and added to PATH."
+} else {
+    Write-Host "✅ Python already installed."
 }
+
 
 # Check requirements file
 if (-not (Test-Path "requirements-windows.txt")) {
