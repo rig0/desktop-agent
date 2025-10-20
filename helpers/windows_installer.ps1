@@ -144,6 +144,35 @@ if (-not (Test-Path "requirements-windows.txt")) {
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements-linux.txt
 
+# Install media agent dependencies
+if ($MEDIA_ENABLED) {
+    Write-Host "Media Agent enabled. Installing Windows SDK dependencies..."
+
+    # Check if cl.exe (Visual C++ compiler) exists
+    if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
+        $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
+        $installerPath = "$env:TEMP\vs_BuildTools.exe"
+
+        Write-Host "Downloading Microsoft Build Tools..."
+        Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
+
+        Write-Host "Installing minimal C++ build tools silently..."
+        Start-Process -FilePath $installerPath -ArgumentList `
+          "--quiet", "--wait", "--norestart", `
+          "--add", "Microsoft.VisualStudio.Workload.VCTools", `
+          "--includeRecommended" `
+          -NoNewWindow -Wait
+
+        Write-Host "✅ Build tools installed successfully."
+    } else {
+        Write-Host "✅ Build tools already present."
+    }
+
+    # Install winsdk
+    python3 -m pip install winsdk
+}
+
+
 # Check for NVIDIA
 if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
     python3 -m pip install GPUtil
