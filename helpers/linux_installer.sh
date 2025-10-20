@@ -158,17 +158,14 @@ elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
         read -p "Do you want to layer packages into the system? (Y/n): " choice
         echo
         if [[ "$choice" =~ ^[Nn]$ ]]; then
+            TOOLBOX=1
+            HOSTNAME=$(hostname)
             echo
             echo "Skipping layering. Using toolbox for installation instead."
             echo 
-            toolbox create desktop-agent
-            toolbox enter desktop-agent
-            sudo dnf install -y "${ALL_PKGS[@]}"
-            # echo "Example:"
-            # echo "  toolbox create desktop-agent"
-            # echo "  toolbox enter desktop-agent"
-            # echo "  sudo dnf install -y ${ALL_PKGS[*]}"
-            # echo
+            toolbox create -c desktop-agent || true
+            toolbox run -c desktop-agent sudo dnf install -y "${ALL_PKGS[@]}"
+            toolbox run -c desktop-agent sudo hostname $HOSTNAME
         else
             RPM_OSTREE=1
             sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
@@ -352,16 +349,32 @@ python3 -m pip install --upgrade pip >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
 if [ "$RPM_OSTREE" = 1 ]; then
     echo "Layered installation detected."
     echo "Reboot then install the python requirements like so:"
+    echo
     echo "  cd $(realpath ./)"
     echo "  python3 -m pip install --upgrade pip setuptools wheel"
     echo "  python3 -m pip install -r requirements-linux.txt"
     echo
     echo "Then run the agent:"
+    echo
     echo "  python3 main.py"
     echo
+elif [ "$TOOLBOX" = 1 ]; then
+    echo "Installing python dependencies in toolbox desktop-agent..."
+    echo
+    toolbox run -c desktop-agent python3 -m pip install --upgrade pip setuptools wheel
+    toolbox run -c desktop-agent python3 -m pip install -r requirements-linux.txt
+    echo
+    echo "✅ Python dependencies installed"
+    echo
+    echo "Run Desktop Agent by running:"
+    echo
+    echo "  toolbox run -c desktop-agent python3 main.py"
+    echo
+
 # Check if system is externally managed and create virtual environment
 elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "⚠️ System Python is externally managed. Creating virtual environment..."
+    echo
     VENV_DIR=".venv"
     python3 -m venv --system-site-packages "$VENV_DIR"
     VENV_PY="$VENV_DIR/bin/python"
@@ -377,6 +390,7 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo "✅ Python dependencies installed in virtual environment at $VENV_DIR"
     echo
     echo "Since your system Python is externally managed, a virtual environment was created at:"
+    echo
     echo "  $(realpath ./.venv)"
     echo
     echo "To activate the virtual environment and run the Desktop Agent:"
@@ -387,10 +401,12 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo
     echo "While inside the virtual environment, you can install additional Python packages safely using pip."
     echo "To exit the virtual environment, simply run:"
+    echo
     echo "  deactivate"
     echo
 else
     echo "Installing Python dependencies..."
+    echo
     python3 -m pip install --upgrade pip setuptools wheel
     python3 -m pip install -r requirements-linux.txt
 
