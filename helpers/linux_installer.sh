@@ -154,8 +154,10 @@ if [[ " ${DEBIAN_BASED[@]} " =~ " ${DISTRO} " ]]; then
 elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
     if [ "$IMMUTABLE" = true ]; then
         echo
-        echo "⚠️ Immutable Fedora detected. You can layer packages with rpm-ostree or use toolbox."
-        echo "It's recommended to layer the packages. Running in a toolbox requires some workarounds."
+        echo "⚠️  Immutable Fedora detected. You can layer packages with rpm-ostree or use a toolbox (container)."
+        echo "Given the nature of this software, It's recommended to layer the packages with rpm-ostree."
+        echo "Running in a toolbox currenttly requires some workarounds for some sensors."
+        echo
         read -p "Do you want to layer packages into the system? (Y/n): " choice
         echo
         if [[ "$choice" =~ ^[Nn]$ ]]; then
