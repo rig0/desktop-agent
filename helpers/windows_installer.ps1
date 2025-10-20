@@ -150,7 +150,6 @@ if (Test-Path $aliasPython -or Test-Path $aliasPython3) {
     Write-Host "No Store aliases detected."
 }
 
-
 # Check if Python is available
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     Write-Host "Python not found. Installing Python 3.12..."
