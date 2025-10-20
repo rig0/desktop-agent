@@ -49,14 +49,14 @@ def make_helpers_executable():
                     st = os.stat(file_path)
                     os.chmod(file_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
                 except PermissionError:
-                    print(f"Warning: Cannot chmod {file_path}, permission denied")
+                    print(f"[Updater] Warning: Cannot chmod {file_path}, permission denied")
             for name in dirs:
                 dir_path = os.path.join(root, name)
                 try:
                     st = os.stat(dir_path)
                     os.chmod(dir_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
                 except PermissionError:
-                    print(f"Warning: Cannot chmod {dir_path}, permission denied")
+                    print(f"[Updater] Warning: Cannot chmod {dir_path}, permission denied")
 
 
 def update_repo():
@@ -73,10 +73,10 @@ def update_repo():
         with open(CHECKSUM_FILE, "r") as f:
             old_checksum = f.read().strip()
         if new_checksum == old_checksum:
-            print("No changes detected, skipping update.")
+            print("[Updater] No changes detected, skipping update.")
             return
 
-    print("Update found, applying...")
+    print("[Updater] Update found, applying...")
 
     # Create temp dir
     tmp_dir = tempfile.mkdtemp(dir=AGENT_DIR)
@@ -102,6 +102,8 @@ def update_repo():
 
     # Cleanup tmp dir
     shutil.rmtree(tmp_dir)
+
+    print("[Updater] Update complete.")
 
 
 if __name__ == "__main__":
