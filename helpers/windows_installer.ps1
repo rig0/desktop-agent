@@ -113,7 +113,7 @@ interval = $UPDATES_INTERVAL
 [igdb]
 client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
-"@ | Set-Content -Path $CONFIG_FILE -Encoding UTF8NoBOM
+"@ | Set-Content -Path $CONFIG_FILE -Encoding UTF8
 
 Write-Host "✅ Config file written to $CONFIG_FILE"
 
