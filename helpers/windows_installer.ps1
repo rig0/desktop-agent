@@ -135,8 +135,8 @@ if (-not (Get-Command python3 -ErrorAction SilentlyContinue)) {
 }
 
 # Check requirements file
-if (-not (Test-Path "requirements-linux.txt")) {
-    Write-Error "requirements-linux.txt not found!"
+if (-not (Test-Path "requirements-windows.txt")) {
+    Write-Error "requirements-windows.txt not found!"
     exit 1
 }
 
