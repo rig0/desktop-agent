@@ -87,7 +87,7 @@ if ($GAME_CHOICE -eq "y") {
 }
 
 # Write config.ini
-@"
+$content = @"
 [device]
 name = $DEVICE_NAME
 interval = $UPDATE_INTERVAL
@@ -113,7 +113,9 @@ interval = $UPDATES_INTERVAL
 [igdb]
 client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
-"@ | Set-Content -Path $CONFIG_FILE -Encoding UTF8
+"@ 
+
+[System.IO.File]::WriteAllText($CONFIG_FILE, $content, [System.Text.Encoding]::UTF8)
 
 Write-Host "✅ Config file written to $CONFIG_FILE"
 
