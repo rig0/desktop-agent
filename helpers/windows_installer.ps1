@@ -122,55 +122,68 @@ Write-Host "✅ Config file written to $CONFIG_FILE"
 # Python Dependencies
 # ----------------------------
 
-Write-Host "=== Desktop Agent python dependency installer ==="
+Write-Host "=== Desktop Agent Python dependency installer ==="
 
 # Change to parent directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
+# ----------------------------
 # Disable Microsoft Store Python Alias
-Write-Host "=== Checking for Microsoft Store Python alias ==="
+# ----------------------------
+Write-Host "=== Checking Python installation ==="
 
-$aliasPath = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
-$aliasPython = Join-Path $aliasPath "python.exe"
-$aliasPython3 = Join-Path $aliasPath "python3.exe"
+# Common alias paths
+$aliasDir = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
+$aliasPython = Join-Path $aliasDir "python.exe"
+$aliasPython3 = Join-Path $aliasDir "python3.exe"
 
-# Check if alias exists and is not a real Python install
+# If fake aliases exist, disable them
 if ((Test-Path $aliasPython) -or (Test-Path $aliasPython3)) {
-    Write-Host "Removing fake Python Store aliases..."
+    Write-Host "⚠️ Microsoft Store Python aliases detected. Disabling..."
     try {
-        # Temporarily rename to disable the store link
-        Rename-Item -Path $aliasPython -NewName "python_disabled.exe" -ErrorAction SilentlyContinue
-        Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue
-        Write-Host "Microsoft Store aliases disabled."
+        if (Test-Path $aliasPython)  { Rename-Item -Path $aliasPython  -NewName "python_disabled.exe"  -ErrorAction SilentlyContinue }
+        if (Test-Path $aliasPython3) { Rename-Item -Path $aliasPython3 -NewName "python3_disabled.exe" -ErrorAction SilentlyContinue }
+        Write-Host "✅ Aliases disabled. Real Python will be used."
     } catch {
-        Write-Host "Could not rename alias (may already be removed or require admin)."
+        Write-Host "⚠️ Could not rename aliases — may need to run as Administrator."
     }
 } else {
-    Write-Host "No Store aliases detected."
+    Write-Host "✅ No Microsoft Store aliases found."
 }
 
-# Check if Python is available
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-    Write-Host "Python not found. Installing Python 3.12..."
+# ----------------------------
+# Locate or Install Python
+# ----------------------------
+$pythonPaths = @(
+    (Get-Command python  -ErrorAction SilentlyContinue).Source,
+    (Get-Command python3 -ErrorAction SilentlyContinue).Source,
+    "$env:ProgramFiles\Python311\python.exe",
+    "$env:ProgramFiles\Python312\python.exe",
+    "$env:ProgramFiles(x86)\Python311\python.exe",
+    "$env:ProgramFiles(x86)\Python312\python.exe"
+) | Where-Object { $_ -and (Test-Path $_) }
 
-    # Use winget (preferred for clean install)
+if ($pythonPaths.Count -gt 0) {
+    $PythonExe = $pythonPaths[0]
+    Write-Host "✅ Found Python at: $PythonExe"
+    $env:PATH = (Split-Path $PythonExe) + ";" + $env:PATH
+} else {
+    Write-Host "🐍 Python not found. Installing Python 3.12..."
+
     if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Write-Host "Installing Python via winget..."
         Start-Process -FilePath "winget" -ArgumentList "install", "--id", "Python.Python.3.12", "-e", "--source", "winget", "--accept-package-agreements", "--accept-source-agreements", "--silent" -Wait
     } else {
-        # Fallback to direct installer if winget is unavailable
+        Write-Host "winget not available. Downloading Python installer..."
         $pythonInstaller = "$env:TEMP\python-installer.exe"
         $pythonUrl = "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe"
-        Write-Host "Downloading Python installer..."
         Invoke-WebRequest -Uri $pythonUrl -OutFile $pythonInstaller
-
-        Write-Host "Installing Python..."
         Start-Process -FilePath $pythonInstaller -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0" -Wait
-
         Remove-Item $pythonInstaller -Force
     }
 
-    # Refresh PATH and verify installation
+    # Refresh PATH and verify
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
     if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
         Write-Error "❌ Python installation failed. Please install manually."
@@ -178,55 +191,48 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     }
 
     Write-Host "✅ Python successfully installed and added to PATH."
-} else {
-    Write-Host "✅ Python already installed."
 }
 
-
-# Check requirements file
+# ----------------------------
+# Install Python Packages
+# ----------------------------
 if (-not (Test-Path "requirements-windows.txt")) {
-    Write-Error "requirements-windows.txt not found!"
+    Write-Error "❌ requirements-windows.txt not found!"
     exit 1
 }
 
-# Install python packages
-python -m pip install --upgrade pip
-python -m pip install -r requirements-linux.txt
+Write-Host "📦 Installing Python dependencies..."
+python -m ensurepip --upgrade
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements-windows.txt
 
-# Install media agent dependencies
+# ----------------------------
+# Optional: Media Agent Dependencies
+# ----------------------------
 if ($MEDIA_ENABLED) {
-    Write-Host "Media Agent enabled. Installing Windows SDK dependencies..."
+    Write-Host "🎵 Media Agent enabled. Installing Windows SDK dependencies..."
 
-    # Check if cl.exe (Visual C++ compiler) exists
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
         $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
         $installerPath = "$env:TEMP\vs_BuildTools.exe"
-
         Write-Host "Downloading Microsoft Build Tools..."
         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
-
-        Write-Host "Installing minimal C++ build tools..."
-        Start-Process -FilePath $installerPath -ArgumentList `
-          "--quiet", "--wait", "--norestart", `
-          "--add", "Microsoft.VisualStudio.Workload.VCTools", `
-          "--includeRecommended" `
-          -NoNewWindow -Wait
-
+        Start-Process -FilePath $installerPath -ArgumentList "--quiet", "--wait", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended" -Wait
         Write-Host "✅ Build tools installed successfully."
     } else {
         Write-Host "✅ Build tools already present."
     }
 
-    # Install winsdk
     python -m pip install winsdk
 }
 
-
-# Check for NVIDIA
+# ----------------------------
+# Optional: NVIDIA GPU Support
+# ----------------------------
 if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
     python -m pip install GPUtil
 } else {
-    Write-Host "❌ nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil"
+    Write-Host "❌ nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil."
 }
 
-Write-Host "✅ Python dependencies installed."
+Write-Host "✅ All Python dependencies installed successfully."
