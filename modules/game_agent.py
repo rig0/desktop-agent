@@ -106,6 +106,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
                     os.makedirs(os.path.dirname(game_name_file_path), exist_ok=True)
                     with open(game_name_file_path, 'w') as f:
                         pass  # Create an empty file
+                    client.publish(f"{base_topic}/game/state", "idle", retain=True)
 
                 # Read game name from file
                 try:
