@@ -328,19 +328,6 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# # Ensure pip is available
-# if ! python3 -m pip --version >/dev/null 2>&1; then
-#     echo "⚠️ pip not found, installing python3-pip..."
-#     sudo apt update
-#     sudo apt install -y python3-pip || { echo "Failed to install pip"; exit 1; }
-# fi
-
-# Ensure venv module is installed
-# if ! python3 -m venv --help >/dev/null 2>&1; then
-#     echo "⚠️ python3-venv not found, installing..."
-#     sudo apt install -y python3-venv || { echo "Failed to install python3-venv"; exit 1; }
-# fi
-
 # Check if system is externally managed
 EXTERNALLY_MANAGED=false
 python3 -m pip install --upgrade pip >/dev/null 2>&1 || EXTERNALLY_MANAGED=true
@@ -361,6 +348,7 @@ if [ "$RPM_OSTREE" = 1 ]; then
 elif [ "$TOOLBOX" = 1 ]; then
     echo "Installing python dependencies in toolbox desktop-agent..."
     echo
+    cd $(realpath ./)
     toolbox run -c desktop-agent python3 -m pip install --upgrade pip setuptools wheel
     toolbox run -c desktop-agent python3 -m pip install -r requirements-linux.txt
     echo
@@ -369,6 +357,8 @@ elif [ "$TOOLBOX" = 1 ]; then
     echo "Run Desktop Agent by running:"
     echo
     echo "  toolbox run -c desktop-agent python3 main.py"
+    echo
+    echo "A service (toolbox_service) script can be found in $(realpath ./helpers)"
     echo
 
 # Check if system is externally managed and create virtual environment
