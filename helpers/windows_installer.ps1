@@ -21,11 +21,11 @@ function Ensure-Admin {
 }
 Ensure-Admin
 
-
 # ----------------------------
 # Desktop Agent Config Setup
 # ----------------------------
 Write-Host "=== Desktop Agent Config Setup ==="
+Write-Host ""
 
 # Script folder (helpers)
 $ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
@@ -153,7 +153,9 @@ client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
 "@ 
 
-[System.IO.File]::WriteAllText($CONFIG_FILE, $content, [System.Text.Encoding]::UTF8)
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
+
 
 Write-Host "✅ Config file written to $CONFIG_FILE"
 
@@ -269,13 +271,7 @@ if ($MEDIA_ENABLED) {
     python -m pip install winsdk
 }
 
-# ----------------------------
-# Optional: NVIDIA GPU Support
-# ----------------------------
-# if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
-#     python -m pip install GPUtil
-# } else {
-#     Write-Host "nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil."
-# }
-
 Write-Host "All Python dependencies installed successfully."
+
+Write-Host "`nInstallation complete. Press any key to exit..."
+$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
