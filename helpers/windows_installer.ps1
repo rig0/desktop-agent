@@ -27,16 +27,23 @@ Ensure-Admin
 # ----------------------------
 Write-Host "=== Desktop Agent Config Setup ==="
 
-# Define absolute paths
-$ScriptRoot = Split-Path -Parent (Resolve-Path $MyInvocation.MyCommand.Definition)
-$CONFIG_DIR  = Join-Path $ScriptRoot "data"
+# Script folder (helpers)
+$ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
+$ScriptRoot = Split-Path -Parent $ScriptPath
+
+# Project root (../)
+$ProjectRoot = Split-Path -Parent $ScriptRoot
+
+# Absolute path to data/config.ini (project_root/data/config.ini)
+$CONFIG_DIR  = Join-Path $ProjectRoot "data"
 $CONFIG_FILE = Join-Path $CONFIG_DIR "config.ini"
 
+# Ensure data directory exists
 if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-#Write-Host "Using configuration file: $CONFIG_FILE"
+Write-Host "Using configuration file: $CONFIG_FILE"
 
 if (-not (Test-Path $CONFIG_DIR)) { New-Item -ItemType Directory -Path $CONFIG_DIR | Out-Null }
 
