@@ -262,6 +262,7 @@ if ($MEDIA_ENABLED) {
         $installerPath = "$env:TEMP\vs_BuildTools.exe"
         Write-Host "Downloading Microsoft Build Tools..."
         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
+        Write-Host "Installing Microsoft Build Tools. This could take some time..."
         Start-Process -FilePath $installerPath -ArgumentList "--quiet", "--wait", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended" -Wait
         Write-Host "Build tools installed successfully."
     } else {
