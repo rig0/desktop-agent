@@ -119,6 +119,28 @@ token = $IGDB_TOKEN
 
 Write-Host "✅ Config file written to $CONFIG_FILE"
 
+# ----------------------------
+# Self-Elevate to Administrator
+# ----------------------------
+function Ensure-Admin {
+    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Write-Host "Elevating to Administrator..."
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = "powershell.exe"
+        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        $psi.Verb = "runas"
+        try {
+            [System.Diagnostics.Process]::Start($psi) | Out-Null
+        } catch {
+            Write-Error "Elevation cancelled. Administrator privileges are required for this step."
+            exit 1
+        }
+        exit 0
+    }
+}
+
 
 # ----------------------------
 # Python Dependencies
@@ -126,12 +148,15 @@ Write-Host "✅ Config file written to $CONFIG_FILE"
 
 Write-Host "=== Desktop Agent Python dependency installer ==="
 
+Write-Host "Admin privelages needed to install python and dependencies"
+Ensure-Admin
+
 # Change to parent directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
 # ----------------------------
-# Disable Microsoft Store Python Aliases (Alternative)
+# Disable Microsoft Store Python Aliases
 # ----------------------------
 Write-Host "=== Checking Python installation ==="
 
