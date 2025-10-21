@@ -1,11 +1,42 @@
 # ----------------------------
+# Self-Elevate to Administrator
+# ----------------------------
+function Ensure-Admin {
+    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Write-Host "Elevating to Administrator..."
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = "powershell.exe"
+        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        $psi.Verb = "runas"
+        try {
+            [System.Diagnostics.Process]::Start($psi) | Out-Null
+        } catch {
+            Write-Error "Elevation cancelled. Administrator privileges are required for this step."
+            exit 1
+        }
+        exit 0
+    }
+}
+Ensure-Admin
+
+
+# ----------------------------
 # Desktop Agent Config Setup
 # ----------------------------
-
 Write-Host "=== Desktop Agent Config Setup ==="
 
-$CONFIG_DIR = "..\data"
+# Define absolute paths
+$ScriptRoot = Split-Path -Parent (Resolve-Path $MyInvocation.MyCommand.Definition)
+$CONFIG_DIR  = Join-Path $ScriptRoot "data"
 $CONFIG_FILE = Join-Path $CONFIG_DIR "config.ini"
+
+if (-not (Test-Path $CONFIG_DIR)) {
+    New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
+}
+
+Write-Host "Using configuration file: $CONFIG_FILE"
 
 if (-not (Test-Path $CONFIG_DIR)) { New-Item -ItemType Directory -Path $CONFIG_DIR | Out-Null }
 
@@ -120,36 +151,9 @@ token = $IGDB_TOKEN
 Write-Host "✅ Config file written to $CONFIG_FILE"
 
 # ----------------------------
-# Self-Elevate to Administrator
-# ----------------------------
-function Ensure-Admin {
-    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
-    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Host "Elevating to Administrator..."
-        $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = "powershell.exe"
-        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        $psi.Verb = "runas"
-        try {
-            [System.Diagnostics.Process]::Start($psi) | Out-Null
-        } catch {
-            Write-Error "Elevation cancelled. Administrator privileges are required for this step."
-            exit 1
-        }
-        exit 0
-    }
-}
-
-
-# ----------------------------
 # Python Dependencies
 # ----------------------------
-
 Write-Host "=== Desktop Agent Python dependency installer ==="
-
-Write-Host "Admin privelages needed to install python and dependencies"
-Ensure-Admin
 
 # Change to parent directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
