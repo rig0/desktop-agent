@@ -303,5 +303,5 @@ Write-Host ""
 Write-Host "Instructions for creating services for the agents can be found here:" 
 Write-Host "https://github.com/rig0/hass-desktop-agent/"
 Write-Host ""
-Write-Host "`nInstallation complete. Press any key to exit..."
+Write-Host "`nPress any key to exit..."
 $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
