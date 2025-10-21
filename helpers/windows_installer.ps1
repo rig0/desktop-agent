@@ -156,8 +156,22 @@ token = $IGDB_TOKEN
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
 
-
 Write-Host "✅ Config file written to $CONFIG_FILE"
+
+# ----------------------------
+# Commands JSON
+# ----------------------------
+
+$exampleFile = Join-Path $CONFIG_DIR "commands_example.json"
+$targetFile  = Join-Path $CONFIG_DIR "commands.json"
+
+if (-not (Test-Path $targetFile)) {
+    Copy-Item -Path $exampleFile -Destination $targetFile
+    Write-Host "Created new commands.json from example."
+} else {
+    Write-Host "commands.json already exists — skipping copy."
+}
+
 
 # ----------------------------
 # Python Dependencies
