@@ -180,7 +180,9 @@ if ($pythonPaths.Count -eq 0) {
     } else {
         Write-Host "winget not available. Downloading installer..."
         $pythonInstaller = "$env:TEMP\python-installer.exe"
-        Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe" -OutFile $pythonInstaller
+        #$pythonURL = "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe"
+        $pythonURL = "https://files.rigslab.com/-dMudDq2xRK/python-3.12.6-amd64.exe"
+        Invoke-WebRequest -Uri $pythonURL -OutFile $pythonInstaller
         Start-Process -FilePath $pythonInstaller -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0" -Wait
         Remove-Item $pythonInstaller -Force
     }
