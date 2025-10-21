@@ -265,7 +265,7 @@ python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements-windows.txt
 
 # ----------------------------
-# Optional: Media Agent Dependencies
+# Media Agent Dependencies
 # ----------------------------
 if ($MEDIA_ENABLED) {
     Write-Host "Media Agent enabled. Installing Windows SDK dependencies..."
@@ -287,6 +287,21 @@ if ($MEDIA_ENABLED) {
 }
 
 Write-Host "All Python dependencies installed successfully."
-
+Write-Host ""
+Write-Host "-------------------------------------------------"
+Write-Host ""
+Write-Host "Installation complete!"
+Write-Host ""
+Write-Host "To run the desktop agent:"
+Write-Host "    cd $ScriptRoot"
+Write-Host "    python3 main.py"
+Write-Host ""
+Write-Host "To run the media agent:"
+Write-Host "    cd $ScriptPath"
+Write-Host "    python3 media_agent.py"
+Write-Host ""
+Write-Host "Instructions for creating services for the agents can be found here:" 
+Write-Host "https://github.com/rig0/hass-desktop-agent/"
+Write-Host ""
 Write-Host "`nInstallation complete. Press any key to exit..."
 $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
