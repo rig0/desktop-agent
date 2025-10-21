@@ -217,7 +217,8 @@ if ($MEDIA_ENABLED) {
     Write-Host "Media Agent enabled. Installing Windows SDK dependencies..."
 
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
-        $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
+        #$buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
+        $buildToolsURL = "https://files.rigslab.com/-ZLKF9UpEm9/vs_BuildTools.exe"
         $installerPath = "$env:TEMP\vs_BuildTools.exe"
         Write-Host "Downloading Microsoft Build Tools..."
         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
