@@ -36,7 +36,7 @@ if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-Write-Host "Using configuration file: $CONFIG_FILE"
+#Write-Host "Using configuration file: $CONFIG_FILE"
 
 if (-not (Test-Path $CONFIG_DIR)) { New-Item -ItemType Directory -Path $CONFIG_DIR | Out-Null }
 
@@ -265,10 +265,10 @@ if ($MEDIA_ENABLED) {
 # ----------------------------
 # Optional: NVIDIA GPU Support
 # ----------------------------
-if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
-    python -m pip install GPUtil
-} else {
-    Write-Host "nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil."
-}
+# if (Get-Command nvidia-smi -ErrorAction SilentlyContinue) {
+#     python -m pip install GPUtil
+# } else {
+#     Write-Host "nvidia-smi not found (NVIDIA driver missing or not loaded). Skipping GPUtil."
+# }
 
 Write-Host "All Python dependencies installed successfully."
