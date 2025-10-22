@@ -285,12 +285,12 @@ Write-Host "-------------------------------------------------" -ForegroundColor 
 Write-Host "-------------------------------------------------`n" -ForegroundColor DarkGray
 
 Write-Host "Installation complete!" -ForegroundColor Green
-Write-Host "`nTo run the desktop agent:" -ForegroundColor Cyan
-Write-Host "    cd $ScriptRoot" -ForegroundColor Cyan
-Write-Host "    python3 main.py" -ForegroundColor Cyan
-Write-Host "`nTo run the media agent:" -ForegroundColor Cyan
-Write-Host "    cd $ScriptRoot" -ForegroundColor Cyan
-Write-Host "    python3 media_agent.py" -ForegroundColor Cyan
+Write-Host "`nTo run the desktop agent:" 
+Write-Host "    cd $ScriptRoot"
+Write-Host "    python3 main.py"
+Write-Host "`nTo run the media agent:"
+Write-Host "    cd $ScriptRoot"
+Write-Host "    python3 media_agent.py"
 Write-Host "`nInstructions for creating services for the agents can be found here:" -ForegroundColor Yellow
 Write-Host "https://github.com/rig0/hass-desktop-agent/" -ForegroundColor Yellow
 
