@@ -24,7 +24,7 @@ Ensure-Admin
 # ----------------------------
 # Desktop Agent Config Setup
 # ----------------------------
-Write-Host "`n=== Desktop Agent Setup ===`n"
+Write-Host "`n=== Desktop Agent Setup ===`n" -ForegroundColor Cyan
 
 # Script folder (helpers)
 $ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
@@ -42,7 +42,7 @@ if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-Write-Host "Using configuration file: $CONFIG_FILE"
+#Write-Host "Using configuration file: $CONFIG_FILE"
 
 # Device section
 $DEFAULT_DEVICE_NAME = $env:COMPUTERNAME
@@ -108,10 +108,9 @@ $GAME_CHOICE = Read-Host "Enable game agent module? [y/N]"
 $GAME_CHOICE = ($GAME_CHOICE.Trim()).ToLower()
 if ($GAME_CHOICE -eq "y") {
     $GAME_ENABLED = $true
-    Write-Host ""
-    Write-Host "To use the IGDB API, you need a client ID and access token."
+    Write-Host "`nTo use the IGDB API, you need a client ID and access token."
     Write-Host "Read more: https://api-docs.igdb.com/#authentication"
-    Write-Host "Reminder: access token, not client secret!"
+    Write-Host "Reminder: access token, not client secret!`n"
     $IGDB_CLIENT_ID = Read-Host "IGDB Client ID"
     $IGDB_CLIENT_ID = $IGDB_CLIENT_ID.Trim()
     $IGDB_TOKEN = Read-Host "IGDB Access Token"
@@ -154,7 +153,7 @@ token = $IGDB_TOKEN
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
 
-Write-Host "✅ Config file written to $CONFIG_FILE"
+Write-Host "`n✅ Config file written to $CONFIG_FILE" -ForegroundColor Green
 
 # ----------------------------
 # Commands JSON
@@ -166,6 +165,7 @@ $targetFile  = Join-Path $CONFIG_DIR "commands.json"
 if (-not (Test-Path $targetFile)) {
     Copy-Item -Path $exampleFile -Destination $targetFile
     Write-Host "Created new commands.json from example."
+    Write-Host "`n✅ Commands file created at $targetFile`n" -ForegroundColor Green
 } else {
     Write-Host "commands.json already exists skipping copy."
 }
@@ -174,7 +174,7 @@ if (-not (Test-Path $targetFile)) {
 # ----------------------------
 # Python Dependencies
 # ----------------------------
-Write-Host "`n=== Installing python and pip dependencies ===`n"
+Write-Host "`n=== Installing python and pip dependencies ===`n" -ForegroundColor Cyan
 
 # Change to parent directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -220,7 +220,7 @@ $pythonPaths = @(
 ) | Where-Object { $_ -and (Test-Path $_) }
 
 if ($pythonPaths.Count -eq 0) {
-    Write-Host "`nPython not found. Installing Python 3.12..."
+    Write-Host "`Python not found. Installing Python 3.12..." -ForegroundColor Yellow
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         Start-Process -FilePath "winget" -ArgumentList "install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements --silent" -NoNewWindow -Wait
     } else {
@@ -244,7 +244,7 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-Write-Host "`nPython successfully installed and added to PATH."
+Write-Host "`nPython successfully installed and added to PATH.`n" -ForegroundColor Green
 
 
 # Install Python Packages
@@ -253,7 +253,7 @@ if (-not (Test-Path "requirements-windows.txt")) {
     exit 1
 }
 
-Write-Host "`nInstalling Python packages..."
+Write-Host "Installing Python packages...`n"
 python -m ensurepip --upgrade
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements-windows.txt
@@ -268,11 +268,11 @@ if ($MEDIA_ENABLED) {
         #$buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
         $buildToolsURL = "https://files.rigslab.com/-ZLKF9UpEm9/vs_BuildTools.exe"
         $installerPath = "$env:TEMP\vs_BuildTools.exe"
-        Write-Host "Downloading Microsoft Build Tools..."
+        Write-Host "`nDownloading Microsoft Build Tools..."
         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
-        Write-Host "`nInstalling Microsoft Build Tools. This could take some time..."
+        Write-Host "`nInstalling Microsoft Build Tools. This could take some time..." -ForegroundColor Yellow
         Start-Process -FilePath $installerPath -ArgumentList "--quiet", "--wait", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended" -Wait
-        Write-Host "`nBuild tools installed successfully."
+        Write-Host "`nBuild tools installed successfully.`n" -ForegroundColor Green
     } else {
         Write-Host "Build tools already present."
     }
@@ -280,8 +280,11 @@ if ($MEDIA_ENABLED) {
     python -m pip install winsdk
 }
 
-Write-Host "`nAll Python dependencies installed successfully.`n"
+Write-Host "`nAll Python dependencies installed successfully.`n" -ForegroundColor Green
+
+Write-Host "-------------------------------------------------" -ForegroundColor DarkGray
 Write-Host "-------------------------------------------------`n" -ForegroundColor DarkGray
+
 Write-Host "Installation complete!" -ForegroundColor Green
 Write-Host "`nTo run the desktop agent:" -ForegroundColor Cyan
 Write-Host "    cd $ScriptRoot" -ForegroundColor Cyan
