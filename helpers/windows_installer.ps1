@@ -24,8 +24,7 @@ Ensure-Admin
 # ----------------------------
 # Desktop Agent Config Setup
 # ----------------------------
-Write-Host "=== Desktop Agent Config Setup ==="
-Write-Host " "
+Write-Host "`n=== Desktop Agent Config Setup ===`n"
 
 # Script folder (helpers)
 $ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
@@ -176,16 +175,14 @@ if (-not (Test-Path $targetFile)) {
 # ----------------------------
 # Python Dependencies
 # ----------------------------
-Write-Host "=== Desktop Agent Python dependency installer ==="
+Write-Host "=== Installing python and pip dependencies ===`n"
 
 # Change to parent directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location (Join-Path $ScriptDir "..")
 
-# ----------------------------
 # Disable Microsoft Store Python Aliases
-# ----------------------------
-Write-Host "=== Checking Python installation ==="
+Write-Host "Checking Python installation"
 
 $aliasDir = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
 $aliasPython = Join-Path $aliasDir "python.exe"
@@ -213,9 +210,7 @@ if (-not $aliasFound) {
     Write-Host "Aliases detected. Make sure real Python is installed and in PATH."
 }
 
-# ----------------------------
 # Locate or Install Python
-# ----------------------------
 $pythonPaths = @(
     (Get-Command python -ErrorAction SilentlyContinue).Source,
     (Get-Command python3 -ErrorAction SilentlyContinue).Source,
@@ -249,17 +244,16 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-Write-Host "Python successfully installed and added to PATH."
+Write-Host "`nPython successfully installed and added to PATH."
 
-# ----------------------------
+
 # Install Python Packages
-# ----------------------------
 if (-not (Test-Path "requirements-windows.txt")) {
     Write-Error "requirements-windows.txt not found!"
     exit 1
 }
 
-Write-Host "Installing Python dependencies..."
+Write-Host "Installing Python packages..."
 python -m ensurepip --upgrade
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements-windows.txt
@@ -286,22 +280,33 @@ if ($MEDIA_ENABLED) {
     python -m pip install winsdk
 }
 
-Write-Host "All Python dependencies installed successfully."
-Write-Host " "
-Write-Host "-------------------------------------------------"
-Write-Host " "
-Write-Host "Installation complete!"
-Write-Host " "
-Write-Host "To run the desktop agent:"
-Write-Host "    cd $ScriptRoot"
+Write-Host "`nAll Python dependencies installed successfully.`n"
+Write-Host "-------------------------------------------------`n" -ForegroundColor DarkGray
+Write-Host "Installation complete!" -ForegroundColor Green
+Write-Host "`nTo run the desktop agent:" -ForegroundColor Cyan
+Write-Host "    cd $ScriptRoot" 
 Write-Host "    python3 main.py"
-Write-Host " "
-Write-Host "To run the media agent:"
-Write-Host "    cd $ScriptPath"
+Write-Host "`nTo run the media agent:" -ForegroundColor Cyan
+Write-Host "    cd $ScriptRoot"
 Write-Host "    python3 media_agent.py"
-Write-Host " "
-Write-Host "Instructions for creating services for the agents can be found here:" 
-Write-Host "https://github.com/rig0/hass-desktop-agent/"
-Write-Host " "
+Write-Host "`nInstructions for creating services for the agents can be found here:" -ForegroundColor Yellow
+Write-Host "https://github.com/rig0/hass-desktop-agent/" -ForegroundColor Yellow
+Write-Host "`n"
+
+# Write-Host @"
+# `nAll Python dependencies installed successfully.`n
+# -------------------------------------------------`n
+# Installation complete!`n
+# To run the desktop agent:`n
+#     cd $ScriptRoot`n
+#     python3 main.py`n
+# `n
+# To run the media agent:`n
+#     cd $ScriptRoot`n
+#     python3 media_agent.py`n
+# `n
+# Instructions for creating services for the agents can be found here:`n
+# https://github.com/rig0/hass-desktop-agent/`n
+# "@
 Write-Host "`nPress any key to exit..."
 $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
