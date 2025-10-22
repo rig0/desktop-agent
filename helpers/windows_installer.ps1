@@ -148,7 +148,7 @@ interval = $UPDATES_INTERVAL
 [igdb]
 client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
-"@ 
+"@
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
