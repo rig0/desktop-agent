@@ -1,4 +1,4 @@
-import os, sys, time, socket, math, platform, subprocess, psutil, GPUtil, re, glob, json, threading
+import os, sys, time, socket, math, platform, subprocess, psutil, GPUtil, re, glob, json, threading, shutil
 
 # ----------------------------
 # System Info Helpers
@@ -61,24 +61,36 @@ def get_os_version():
         return platform.version()
 
 def get_cpu_model():
-    if sys.platform.startswith("linux"):
+    if platform.system() == "Windows":
+        if shutil.which("wmic"):
+            try:
+                output = subprocess.check_output("wmic cpu get Name", shell=True)
+                lines = [line.strip() for line in output.decode().splitlines() if line.strip()]
+                if len(lines) >= 2:
+                    return lines[1]
+            except:
+                pass
+        # fallback to registry
+        try:
+            import winreg
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                 r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+            cpu, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+            return cpu
+        except:
+            return "Unknown CPU"
+    elif platform.system() == "Linux":
         try:
             with open("/proc/cpuinfo") as f:
                 for line in f:
                     if "model name" in line:
-                        return line.strip().split(":")[1].strip()
-        except:
-            return "Unknown CPU"
-    elif sys.platform.startswith("win"):
-        try:
-            output = subprocess.check_output("wmic cpu get Name", shell=True).decode()
-            lines = [line.strip() for line in output.splitlines() if line.strip()]
-            if len(lines) >= 2:
-                return lines[1]
+                        return line.split(":", 1)[1].strip()
         except:
             return "Unknown CPU"
     else:
         return platform.processor() or "Unknown CPU"
+
+
 
 def get_disk_info():
     # For Windows systems, get the disk info of the root directory
