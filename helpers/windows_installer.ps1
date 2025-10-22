@@ -51,8 +51,9 @@ if ([string]::IsNullOrWhiteSpace($DEVICE_NAME)) { $DEVICE_NAME = $DEFAULT_DEVICE
 $DEVICE_NAME = $DEVICE_NAME.Trim()
 
 $UPDATE_INTERVAL = Read-Host "Update interval in seconds [15]"
-if ([string]::IsNullOrWhiteSpace($UPDATE_INTERVAL)) { $UPDATE_INTERVAL = 15 }
 $UPDATE_INTERVAL = $UPDATE_INTERVAL.Trim()
+if ([string]::IsNullOrWhiteSpace($UPDATE_INTERVAL)) { $UPDATE_INTERVAL = 15 }
+else { $UPDATE_INTERVAL = [int]$UPDATE_INTERVAL }
 
 # MQTT section (mandatory)
 do {
@@ -159,15 +160,15 @@ Write-Host "✅ Config file written to $CONFIG_FILE"
 # Commands JSON
 # ----------------------------
 
-# $exampleFile = Join-Path $CONFIG_DIR "commands_example.json"
-# $targetFile  = Join-Path $CONFIG_DIR "commands.json"
+$exampleFile = Join-Path $CONFIG_DIR "commands_example.json"
+$targetFile  = Join-Path $CONFIG_DIR "commands.json"
 
-# if (-not (Test-Path $targetFile)) {
-#     Copy-Item -Path $exampleFile -Destination $targetFile
-#     Write-Host "Created new commands.json from example."
-# } else {
-#     Write-Host "commands.json already exists — skipping copy."
-# }
+if (-not (Test-Path $targetFile)) {
+    Copy-Item -Path $exampleFile -Destination $targetFile
+    Write-Host "Created new commands.json from example."
+} else {
+    Write-Host "commands.json already exists skipping copy."
+}
 
 
 # ----------------------------
