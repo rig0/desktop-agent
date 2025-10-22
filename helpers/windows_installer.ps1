@@ -24,7 +24,7 @@ Ensure-Admin
 # ----------------------------
 # Desktop Agent Config Setup
 # ----------------------------
-Write-Host "`n=== Desktop Agent Config Setup ===`n"
+Write-Host "`n=== Desktop Agent Setup ===`n"
 
 # Script folder (helpers)
 $ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
@@ -174,7 +174,7 @@ if (-not (Test-Path $targetFile)) {
 # ----------------------------
 # Python Dependencies
 # ----------------------------
-Write-Host "=== Installing python and pip dependencies ===`n"
+Write-Host "`n=== Installing python and pip dependencies ===`n"
 
 # Change to parent directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -220,7 +220,7 @@ $pythonPaths = @(
 ) | Where-Object { $_ -and (Test-Path $_) }
 
 if ($pythonPaths.Count -eq 0) {
-    Write-Host "Python not found. Installing Python 3.12..."
+    Write-Host "`nPython not found. Installing Python 3.12..."
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         Start-Process -FilePath "winget" -ArgumentList "install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements --silent" -NoNewWindow -Wait
     } else {
@@ -229,6 +229,7 @@ if ($pythonPaths.Count -eq 0) {
         #$pythonURL = "https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe"
         $pythonURL = "https://files.rigslab.com/-dMudDq2xRK/python-3.12.6-amd64.exe"
         Invoke-WebRequest -Uri $pythonURL -OutFile $pythonInstaller
+        Write-Host "`Installing python..."
         Start-Process -FilePath $pythonInstaller -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0" -Wait
         Remove-Item $pythonInstaller -Force
     }
@@ -252,7 +253,7 @@ if (-not (Test-Path "requirements-windows.txt")) {
     exit 1
 }
 
-Write-Host "Installing Python packages..."
+Write-Host "`nInstalling Python packages..."
 python -m ensurepip --upgrade
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements-windows.txt
@@ -261,7 +262,7 @@ python -m pip install -r requirements-windows.txt
 # Media Agent Dependencies
 # ----------------------------
 if ($MEDIA_ENABLED) {
-    Write-Host "Media Agent enabled. Installing Windows SDK dependencies..."
+    Write-Host "`nMedia Agent enabled. Installing Windows SDK dependencies..."
 
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
         #$buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
@@ -269,9 +270,9 @@ if ($MEDIA_ENABLED) {
         $installerPath = "$env:TEMP\vs_BuildTools.exe"
         Write-Host "Downloading Microsoft Build Tools..."
         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
-        Write-Host "Installing Microsoft Build Tools. This could take some time..."
+        Write-Host "`nInstalling Microsoft Build Tools. This could take some time..."
         Start-Process -FilePath $installerPath -ArgumentList "--quiet", "--wait", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended" -Wait
-        Write-Host "Build tools installed successfully."
+        Write-Host "`nBuild tools installed successfully."
     } else {
         Write-Host "Build tools already present."
     }
@@ -283,29 +284,13 @@ Write-Host "`nAll Python dependencies installed successfully.`n"
 Write-Host "-------------------------------------------------`n" -ForegroundColor DarkGray
 Write-Host "Installation complete!" -ForegroundColor Green
 Write-Host "`nTo run the desktop agent:" -ForegroundColor Cyan
-Write-Host "    cd $ScriptRoot" 
-Write-Host "    python3 main.py"
+Write-Host "    cd $ScriptRoot" -ForegroundColor Cyan
+Write-Host "    python3 main.py" -ForegroundColor Cyan
 Write-Host "`nTo run the media agent:" -ForegroundColor Cyan
-Write-Host "    cd $ScriptRoot"
-Write-Host "    python3 media_agent.py"
+Write-Host "    cd $ScriptRoot" -ForegroundColor Cyan
+Write-Host "    python3 media_agent.py" -ForegroundColor Cyan
 Write-Host "`nInstructions for creating services for the agents can be found here:" -ForegroundColor Yellow
 Write-Host "https://github.com/rig0/hass-desktop-agent/" -ForegroundColor Yellow
-Write-Host "`n"
 
-# Write-Host @"
-# `nAll Python dependencies installed successfully.`n
-# -------------------------------------------------`n
-# Installation complete!`n
-# To run the desktop agent:`n
-#     cd $ScriptRoot`n
-#     python3 main.py`n
-# `n
-# To run the media agent:`n
-#     cd $ScriptRoot`n
-#     python3 media_agent.py`n
-# `n
-# Instructions for creating services for the agents can be found here:`n
-# https://github.com/rig0/hass-desktop-agent/`n
-# "@
 Write-Host "`nPress any key to exit..."
 $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
