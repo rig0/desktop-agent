@@ -153,7 +153,7 @@ token = $IGDB_TOKEN
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
 
-Write-Host "`n✅ Config file written to $CONFIG_FILE" -ForegroundColor Green
+Write-Host "`nConfig file written to $CONFIG_FILE" -ForegroundColor Green
 
 # ----------------------------
 # Commands JSON
@@ -164,8 +164,7 @@ $targetFile  = Join-Path $CONFIG_DIR "commands.json"
 
 if (-not (Test-Path $targetFile)) {
     Copy-Item -Path $exampleFile -Destination $targetFile
-    Write-Host "Created new commands.json from example."
-    Write-Host "`n✅ Commands file created at $targetFile`n" -ForegroundColor Green
+    Write-Host "`nCommands file created at $targetFile`n" -ForegroundColor Green
 } else {
     Write-Host "commands.json already exists skipping copy."
 }
