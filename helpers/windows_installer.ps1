@@ -44,8 +44,6 @@ if (-not (Test-Path $CONFIG_DIR)) {
 
 Write-Host "Using configuration file: $CONFIG_FILE"
 
-if (-not (Test-Path $CONFIG_DIR)) { New-Item -ItemType Directory -Path $CONFIG_DIR | Out-Null }
-
 # Device section
 $DEFAULT_DEVICE_NAME = $env:COMPUTERNAME
 $DEVICE_NAME = Read-Host "Device name [$DEFAULT_DEVICE_NAME]"
