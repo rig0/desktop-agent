@@ -25,7 +25,7 @@ Ensure-Admin
 # Desktop Agent Config Setup
 # ----------------------------
 Write-Host "=== Desktop Agent Config Setup ==="
-Write-Host ""
+Write-Host " "
 
 # Script folder (helpers)
 $ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
@@ -287,21 +287,21 @@ if ($MEDIA_ENABLED) {
 }
 
 Write-Host "All Python dependencies installed successfully."
-Write-Host ""
+Write-Host " "
 Write-Host "-------------------------------------------------"
-Write-Host ""
+Write-Host " "
 Write-Host "Installation complete!"
-Write-Host ""
+Write-Host " "
 Write-Host "To run the desktop agent:"
 Write-Host "    cd $ScriptRoot"
 Write-Host "    python3 main.py"
-Write-Host ""
+Write-Host " "
 Write-Host "To run the media agent:"
 Write-Host "    cd $ScriptPath"
 Write-Host "    python3 media_agent.py"
-Write-Host ""
+Write-Host " "
 Write-Host "Instructions for creating services for the agents can be found here:" 
 Write-Host "https://github.com/rig0/hass-desktop-agent/"
-Write-Host ""
+Write-Host " "
 Write-Host "`nPress any key to exit..."
 $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
