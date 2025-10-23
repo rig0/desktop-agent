@@ -245,6 +245,11 @@ else
     API_PORT=5555
 fi
 
+read -p "Enable commands module? [y/N]: " COMMANDS_CHOICE
+COMMANDS_CHOICE="$(echo -n "${COMMANDS_CHOICE:-N}" | xargs)"
+COMMANDS_ENABLED=false
+[[ "$COMMANDS_CHOICE" =~ ^[Yy]$ ]] && COMMANDS_ENABLED=true
+
 read -p "Enable updates module? [y/N]: " UPDATES_CHOICE
 UPDATES_CHOICE="$(echo -n "${UPDATES_CHOICE:-N}" | xargs)"
 if [[ "$UPDATES_CHOICE" =~ ^[Yy]$ ]]; then
@@ -294,6 +299,7 @@ password = $MQTT_PASS
 
 [modules]
 api = $API_ENABLED
+commands = $COMMANDS_ENABLED
 updates = $UPDATES_ENABLED
 media_agent = $MEDIA_ENABLED
 game_agent = $GAME_ENABLED

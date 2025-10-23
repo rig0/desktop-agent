@@ -42,8 +42,6 @@ if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-#Write-Host "Using configuration file: $CONFIG_FILE"
-
 # Device section
 $DEFAULT_DEVICE_NAME = $env:COMPUTERNAME
 $DEVICE_NAME = Read-Host "Device name [$DEFAULT_DEVICE_NAME]"
@@ -87,6 +85,10 @@ if ($API_CHOICE -eq "y") {
     $API_ENABLED = $false
     $API_PORT = 5555
 }
+
+$COMMANDS_CHOICE = Read-Host "Enable commands module? [y/N]"
+$COMMANDS_CHOICE = ($COMMANDS_CHOICE.Trim()).ToLower()
+$COMMANDS_ENABLED = $COMMANDS_CHOICE -eq "y"
 
 $UPDATES_CHOICE = Read-Host "Enable updates module? [y/N]"
 $UPDATES_CHOICE = ($UPDATES_CHOICE.Trim()).ToLower()
@@ -135,6 +137,7 @@ password = $MQTT_PASS
 
 [modules]
 api = $API_ENABLED
+commands = $COMMANDS_ENABLED
 updates = $UPDATES_ENABLED
 media_agent = $MEDIA_ENABLED
 game_agent = $GAME_ENABLED
