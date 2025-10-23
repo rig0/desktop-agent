@@ -27,7 +27,7 @@ def get_lutris_playtime(db_path, game_name):
         else:
             playtime, service = None, None
 
-        # If playtime is 0 and game is a steam game
+        # If playtime is 0 and game is a steam game use the service_games table
         if (playtime is None or playtime == 0) and service and service.lower() == 'steam':
             cursor.execute(
                 "SELECT details FROM service_games WHERE LOWER(name) = LOWER(?) AND LOWER(service) = LOWER(?)",
