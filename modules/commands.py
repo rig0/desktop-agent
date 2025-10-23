@@ -1,6 +1,6 @@
 import os, sys, subprocess, glob, re, json
 from pathlib import Path
-
+from .config import COMMANDS_MOD
 
 # ----------------------------
 # System commands
@@ -97,8 +97,13 @@ def run_system_power_command(action: str) -> dict:
 
 # Run predefined commands
 def run_predefined_command(command_key: str) -> dict:
+    if not COMMANDS_MOD:
+        print(f"[Commands] Module not enabled.")
+        return {"success": False, "output": f"[Commands] Module not enabled"}
+
     if command_key not in ALLOWED_COMMANDS:
-        return {"success": False, "output": f"Command '{command_key}' not allowed."}
+        print(f"[Commands] Command '{command_key}' not allowed.")
+        return {"success": False, "output": f"[Commands] Command '{command_key}' not allowed."}
 
     entry = ALLOWED_COMMANDS[command_key]
     if isinstance(entry, dict):
