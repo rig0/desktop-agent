@@ -10,7 +10,32 @@ def load_commands(filename="commands.json"):
     BASE_DIR = Path(__file__).parent.parent
     config_file = BASE_DIR / "data" / filename
     if not config_file.exists():
-        raise FileNotFoundError(f"{config_file} not found at {config_file}")
+        print(f"{config_file} not found. Creating now.")
+        default_data = {
+            "reboot": {
+                "cmd": "reboot",
+                "wait": False,
+                "platforms": ["linux", "win"]
+            },
+            "shutdown": {
+                "cmd": "shutdown",
+                "wait": False,
+                "platforms": ["linux", "win"]
+            },
+            "plexamp": {
+                "cmd": "flatpak run com.plexamp.Plexamp",
+                "wait": false,
+                "platforms": ["linux"]
+            },
+            "plexamp_windows": {
+                "cmd": "C:\\Users\\User\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
+                "wait": false,
+                "platforms": ["win"]
+            }
+        }
+        with open(config_file, "w", encoding="utf-8") as f:
+            json.dump(default_data, f, indent=2)
+        return default_data
     with open(config_file, "r", encoding="utf-8") as f:
         return json.load(f)
 
