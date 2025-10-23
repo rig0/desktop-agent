@@ -4,8 +4,6 @@ from .igdb import IGDBClient
 from .config import IGDB_CLIENT, IGDB_TOKEN, DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
 from .playtime import get_lutris_playtime
 
-LUTRIS_DB = os.path.expanduser("~/.local/share/lutris/pga.db")
-
 # ----------------------------
 # Game Agent
 # ----------------------------
@@ -30,7 +28,7 @@ def get_game_artwork(img_dir, img_url):
     except Exception as e:
         print(f"Failed to fetch cover: {e}")
         
-    return img_bytes
+    return img_bytes  
 
 def get_game_attrs(game_info):
     # Extracting the cover URL and replacing 't_thumb' with 't_cover_big'
@@ -62,7 +60,7 @@ def get_game_attrs(game_info):
 
     # Get playtime (only supports games launched through lutris for now)
     game_name = game_info.get("name", "Unknown")
-    playtime = get_lutris_playtime(LUTRIS_DB, game_name)
+    playtime = get_lutris_playtime(game_name)
     if playtime is None: playtime = "Unknown"
 
     attrs = {

@@ -5,8 +5,19 @@ import json
 # -------------------------------------
 # Lutris Playtime Parser
 # -------------------------------------
+def find_lutris_db():
+    possible_paths = [
+        os.path.expanduser("~/.local/share/lutris/pga.db"),
+        os.path.expanduser("~/.var/app/net.lutris.Lutris/data/lutris/pga.db"),  # Flatpak path
+    ]
 
-def get_lutris_playtime(db_path, game_name):
+    for path in possible_paths:
+        if os.path.isfile(path):
+            return path
+    return None  
+
+def get_lutris_playtime(game_name):
+    db_path = find_lutris_db()
     if not os.path.isfile(db_path):
         raise FileNotFoundError(f"Database not found: {db_path}")
 
@@ -48,11 +59,10 @@ def get_lutris_playtime(db_path, game_name):
         raise RuntimeError(f"SQLite error: {e}")
 
 
-# Example usage
 if __name__ == "__main__":
-    db = "./pga.db"
+    #db = "./pga.db"
     game = "My Summer Car"
-    playtime = get_lutris_playtime(db, game)
+    playtime = get_lutris_playtime(game)
 
     if playtime is not None:
         print(f"Playtime for '{game}': {playtime} hours")
