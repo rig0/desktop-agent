@@ -317,9 +317,6 @@ EOL
 echo
 echo "✅ Config file written to $CONFIG_FILE"
 
-# Copy commands example to commands.json
-DATA_DIR=$(realpath ../data)
-cp "$DATA_DIR/commands_example.json" "$DATA_DIR/commands.json"
 
 # ----------------------------
 # Install python dependencies
