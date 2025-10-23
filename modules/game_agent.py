@@ -1,23 +1,14 @@
 import os, json, time, threading
 import paho.mqtt.client as mqtt
-# Attempt relative import for use as a module within a package structure
-try:
-    from .igdb import IGDBClient
-    from .config import IGDB_CLIENT, IGDB_TOKEN, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, DEVICE_NAME, \
-                device_id, base_topic, discovery_prefix, device_info
-# Fall back to direct import which assumes the script is being ran standalone
-except ImportError:
-    from igdb import IGDBClient
-    from config import IGDB_CLIENT, IGDB_TOKEN, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, DEVICE_NAME, \
-                device_id, base_topic, discovery_prefix, device_info
+from .igdb import IGDBClient
+from .config import IGDB_CLIENT, IGDB_TOKEN, DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
+from .playtime import get_lutris_playtime
 
+LUTRIS_DB = os.path.expanduser("~/.local/share/lutris/pga.db")
 
 # ----------------------------
 # Game Agent
 # ----------------------------
-
-def on_connect(client, userdata, flags, rc):
-    print(f"[GameAgent] Connected with result code {str(rc)}")
 
 def get_game_info(game):
     igdb = IGDBClient(IGDB_CLIENT, IGDB_TOKEN)
@@ -69,9 +60,14 @@ def get_game_attrs(game_info):
     cover_bytes = get_game_artwork(cover_local, cover_full_url)
     artwork_bytes = get_game_artwork(artwork_local, artwork_full_url)
 
+    # Get playtime (only supports games launched through lutris for now)
+    game_name = game_info.get("name", "Unknown")
+    playtime = get_lutris_playtime(LUTRIS_DB, game_name)
+    if playtime is None: playtime = "Unknown"
+
     attrs = {
-        "name": game_info.get("name", "Unknown Game"),
-        "title": game_info.get("name", "Unknown Game"),
+        "name": game_info.get("name", "Unknown"),
+        "title": game_info.get("name", "Unknown"),
         "summary": game_info.get("summary", "No summary available."),
         "release_date": game_info.get("release_date", "Not available"),
         "genres": ', '.join(game_info.get("genres", [])),
@@ -80,7 +76,8 @@ def get_game_attrs(game_info):
         "total_rating": round(game_info.get("total_rating", 0), 2),
         "cover_url": cover_full_url or "Cover image not available",
         "artwork_url": artwork_full_url or "Artwork not available",
-        "url": game_info.get("url", "")
+        "url": game_info.get("url", ""),
+        "playtime": f"{playtime} hrs"
     }
 
     images = {
@@ -203,13 +200,3 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
 
     publish_discovery()
     threading.Thread(target=game_poller, daemon=True).start()
-
-# Setup MQTT client and start the agent
-if __name__ == "__main__":
-    client = mqtt.Client()
-    client.username_pw_set(MQTT_USER, MQTT_PASS)
-    client.on_connect = on_connect
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-    start_game_agent(client)
-    while True:
-        time.sleep(1)
