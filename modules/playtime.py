@@ -5,6 +5,7 @@ import json
 # -------------------------------------
 # Lutris Playtime Parser
 # -------------------------------------
+
 def find_lutris_db():
     possible_paths = [
         os.path.expanduser("~/.local/share/lutris/pga.db"),
@@ -58,9 +59,8 @@ def get_lutris_playtime(game_name):
     except sqlite3.Error as e:
         raise RuntimeError(f"SQLite error: {e}")
 
-
+# Standalone testing
 if __name__ == "__main__":
-    #db = "./pga.db"
     game = "My Summer Car"
     playtime = get_lutris_playtime(game)
 
