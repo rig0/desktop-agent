@@ -6,115 +6,57 @@ import json
 # Lutris Playtime Parser
 # -------------------------------------
 
-def get_lutris_game_playtime(db_path, game_name):
+def get_lutris_playtime(db_path, game_name):
     if not os.path.isfile(db_path):
         raise FileNotFoundError(f"Database not found: {db_path}")
 
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
+        # Try the 'games' table
         cursor.execute(
-            "SELECT playtime FROM games WHERE LOWER(name) = LOWER(?)",
+            "SELECT playtime, service FROM games WHERE LOWER(name) = LOWER(?)",
             (game_name,)
         )
-        result = cursor.fetchone()
-        conn.close()
+        row = cursor.fetchone()
 
-        if result:
-            return float(result[0])
+        if row:
+            playtime, service = row
+            playtime = round(float(playtime),2)
         else:
-            return None
+            playtime, service = None, None
 
-    except sqlite3.Error as e:
-        raise RuntimeError(f"SQLite error: {e}")
-
-
-def get_lutris_game_service(db_path, game_name):
-    if not os.path.isfile(db_path):
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT service FROM games WHERE LOWER(name) = LOWER(?)",
-            (game_name,)
-        )
-        result = cursor.fetchone()
-        conn.close()
-
-        if result:
-            return result[0]
-        else:
-            return None
-
-    except sqlite3.Error as e:
-        raise RuntimeError(f"SQLite error: {e}")
-
-
-def get_lutris_service_game_playtime(db_path, game_name, service=None):
-    if not os.path.isfile(db_path):
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        if service:
+        # If playtime is 0 and game is a steam game
+        if (playtime is None or playtime == 0) and service and service.lower() == 'steam':
             cursor.execute(
                 "SELECT details FROM service_games WHERE LOWER(name) = LOWER(?) AND LOWER(service) = LOWER(?)",
                 (game_name, service)
             )
-        else:
-            cursor.execute(
-                "SELECT details FROM service_games WHERE LOWER(name) = LOWER(?)",
-                (game_name,)
-            )
+            row = cursor.fetchone()
+            if row:
+                try:
+                    details = json.loads(row[0])
+                    playtime = round(float(details.get("playtime_forever", 0) / 60), 2)
+                except json.JSONDecodeError:
+                    playtime = None
 
-        result = cursor.fetchone()
         conn.close()
-
-        if not result:
-            return None
-
-        # Parse the JSON string
-        try:
-            details = json.loads(result[0])
-        except json.JSONDecodeError:
-            raise ValueError(f"Invalid JSON for game '{game_name}'")
-
-        # Extract playtime (in hours)
-        playtime = details.get("playtime_forever")
-        if playtime is None:
-            return None
-
-        return float(playtime / 60)
+        return playtime
 
     except sqlite3.Error as e:
         raise RuntimeError(f"SQLite error: {e}")
 
 
-def get_playtime(db, game_name):
-    playtime = get_lutris_game_playtime(db, game)
-    service = get_lutris_game_service(db, game)
-
-    print(f"Lutris playtime: {playtime} Hours")
-    print(f"Game Service: {service}")
-
-    if playtime == 0 and service == 'steam':
-        playtime = get_lutris_service_game_playtime(db, game, 'steam')
-        print(f"Steam playtime: {playtime} Hours")
-
-    return playtime
-
-
+# Example usage
 if __name__ == "__main__":
     db = "./pga.db"
     game = "My Summer Car"
-    playtime = get_playtime(db, game)
+    playtime = get_lutris_playtime(db, game)
 
     if playtime is not None:
-        print(f"Playtime for '{game}': {playtime:.2f} hours")
+        print(f"Playtime for '{game}': {playtime} hours")
     else:
         print(f"Game '{game}' not found in the database.")
+
 
