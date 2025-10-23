@@ -116,7 +116,7 @@ def start_game_agent(client: mqtt.Client, game_name_file_path):
                     game_name = None
                     print("[GameAgent] Game name file not found.")  # Debugging output
 
-                if game_name and game_name != last_known_game_name:
+                if game_name and game_name != last_known_game_name and game_name != "Unknown":
                     game_info = get_game_info(game_name)
                     attrs, images = get_game_attrs(game_info)
                     state = "playing"
