@@ -159,21 +159,6 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 Write-Host "`nConfig file written to $CONFIG_FILE" -ForegroundColor Green
 
 # ----------------------------
-# Commands JSON
-# ----------------------------
-
-$exampleFile = Join-Path $CONFIG_DIR "commands_example.json"
-$targetFile  = Join-Path $CONFIG_DIR "commands.json"
-
-if (-not (Test-Path $targetFile)) {
-    Copy-Item -Path $exampleFile -Destination $targetFile
-    Write-Host "`nCommands file created at $targetFile`n" -ForegroundColor Green
-} else {
-    Write-Host "commands.json already exists skipping copy."
-}
-
-
-# ----------------------------
 # Python Dependencies
 # ----------------------------
 Write-Host "`n=== Installing python and pip dependencies ===`n" -ForegroundColor Cyan
