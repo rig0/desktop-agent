@@ -166,9 +166,19 @@ elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
             echo
             echo "Skipping layering. Using toolbox for installation instead."
             echo 
-            toolbox create -c desktop-agent || true
-            toolbox run -c desktop-agent sudo dnf install -y "${ALL_PKGS[@]}"
-            toolbox run -c desktop-agent sudo hostname $HOSTNAME
+            
+            # Create toolbox if it doesn't already exist
+            toolbox list | grep -q "desktop-agent" || toolbox create -c desktop-agent
+
+            # Run install inside toolbox with privileged mounts
+            toolbox run --container desktop-agent --privileged \
+                --volume /dev:/dev \
+                --volume /sys:/sys \
+                --volume /run/udev:/run/udev \
+                sudo dnf install -y "${ALL_PKGS[@]}"
+
+            # Sync hostname inside toolbox
+            toolbox run --container desktop-agent sudo hostname "$HOSTNAME"
         else
             RPM_OSTREE=1
             sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
