@@ -160,7 +160,7 @@ def run_predefined_command(command_key: str) -> dict:
             process_cmd = cmd if isinstance(cmd, list) else cmd.split()
 
             try:
-                proc = subprocess.Popen(process_cmd, env=env, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 time.sleep(1)
                 if proc.poll() is not None:
                     return {"success": False, "output": f"Command '{command_key}' failed to start."}
