@@ -81,9 +81,13 @@ def create_default_config(config_path):
 
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
-    (f"[Config] Config file not found! \nCreating now...")
+    print(f"\n[Config] Config file not found! \nCreating now...")
+
     create_default_config(CONFIG_PATH)
-    raise FileNotFoundError(f"[Config] Edit config with required info!: {CONFIG_PATH}")
+
+    print(f"\n[Config] Edit config with required info!: {CONFIG_PATH}")
+
+    return
 
 DEVICE_NAME = config.get("device", "name")
 PUBLISH_INT = config.getint("device", "interval", fallback=15)
