@@ -160,9 +160,9 @@ def run_predefined_command(command_key: str) -> dict:
             env = get_linux_gui_env()
             #env["DISPLAY"] = env.get("DISPLAY", ":0")
             #env["QT_WAYLAND_RECONNECT"] = "1"
-            # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+
             try:
-                if wait:
+                if wait: # if you need result of command (ideal for scripts that return values)
                     cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
                     result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
                     return {
@@ -170,30 +170,27 @@ def run_predefined_command(command_key: str) -> dict:
                         "output": result.stdout.strip() if result.stdout else result.stderr.strip()
                     }
 
-                    # proc = subprocess.Popen(cmd_str, env=env, shell=True, text=True)
-                    # time.sleep(1)
-                    # if proc.poll() is not None:
-                    #     return {"success": False, "output": f"Command '{command_key}' failed to start."}
-                    # return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
-                else:
+                else: # if you just need to launch and close (ideal for gui apps)
                     cmd_arr = cmd if isinstance(cmd, list) else cmd.split()
                     proc = subprocess.Popen(cmd_arr, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     time.sleep(1)
                     if proc.poll() is not None:
                         return {"success": False, "output": f"Command '{command_key}' failed to start."}
                     return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+
             except Exception as e:
                 return {"success": False, "output": str(e)}
 
 
         elif platform_name == "win":
-            if wait:
+            if wait: # if you need result of command (ideal for scripts that return values)
                 result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
                 return {
                     "success": result.returncode == 0,
                     "output": result.stdout.strip() if result.stdout else result.stderr.strip()
                 }
-            else:
+                
+            else: # if you just need to launch and close (ideal for gui apps)
                 subprocess.Popen(cmd, shell=True)
                 return {"success": True, "output": f"Command '{command_key}' launched (Windows)."}
 
