@@ -141,25 +141,21 @@ def run_predefined_command(command_key: str) -> dict:
         if platform_name == "linux":
             env = get_linux_gui_env()
 
-            try:
-                if wait: # if you need result of command (ideal for scripts that return values)
-                    cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
-                    result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
-                    return {
-                        "success": result.returncode == 0,
-                        "output": result.stdout.strip() if result.stdout else result.stderr.strip()
-                    }
+            if wait: # if you need result of command (ideal for scripts that return values)
+                cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
+                result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
+                return {
+                    "success": result.returncode == 0,
+                    "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+                }
 
-                else: # if you just need to launch and close (ideal for gui apps)
-                    cmd_arr = cmd if isinstance(cmd, list) else cmd.split()
-                    proc = subprocess.Popen(cmd_arr, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    time.sleep(1)
-                    if proc.poll() is not None:
-                        return {"success": False, "output": f"Command '{command_key}' failed to start."}
-                    return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
-
-            except Exception as e:
-                return {"success": False, "output": str(e)}
+            else: # if you just need to launch and close (ideal for gui apps)
+                cmd_arr = cmd if isinstance(cmd, list) else cmd.split()
+                proc = subprocess.Popen(cmd_arr, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                time.sleep(1)
+                if proc.poll() is not None:
+                    return {"success": False, "output": f"Command '{command_key}' failed to start."}
+                return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
 
 
         elif platform_name == "win":
