@@ -200,8 +200,8 @@ DEFAULT_DEVICE_NAME=$(hostname)
 read -p "Device name [$DEFAULT_DEVICE_NAME]: " DEVICE_NAME
 DEVICE_NAME="$(echo -n "${DEVICE_NAME:-$DEFAULT_DEVICE_NAME}" | xargs)"
 
-read -p "Update interval in seconds [15]: " UPDATE_INTERVAL
-UPDATE_INTERVAL="$(echo -n "${UPDATE_INTERVAL:-15}" | xargs)"
+read -p "Update interval in seconds [10]: " UPDATE_INTERVAL
+UPDATE_INTERVAL="$(echo -n "${UPDATE_INTERVAL:-10}" | xargs)"
 
 # MQTT section (mandatory)
 echo "Enter MQTT settings (mandatory, installer will fail if empty)"
@@ -254,7 +254,7 @@ read -p "Enable updates module? [y/N]: " UPDATES_CHOICE
 UPDATES_CHOICE="$(echo -n "${UPDATES_CHOICE:-N}" | xargs)"
 if [[ "$UPDATES_CHOICE" =~ ^[Yy]$ ]]; then
     UPDATES_ENABLED=True
-    read -p "Update interval in hours [default 1h]: " UPDATES_HOURS
+    read -p "Update interval in hours [default 1]: " UPDATES_HOURS
     UPDATES_HOURS="$(echo -n "${UPDATES_HOURS:-1}" | xargs)"
     UPDATES_INTERVAL=$((UPDATES_HOURS * 3600))
 else
