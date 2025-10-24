@@ -81,7 +81,7 @@ def create_default_config(config_path):
 
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
-    print(f"\n[Config] Config file not found! \nCreating now...")
+    print(f"\n[Config] Config file not found! \nCreating now...\n")
 
     create_default_config(CONFIG_PATH)
 
