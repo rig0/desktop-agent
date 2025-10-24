@@ -8,7 +8,7 @@ from datetime import datetime
 
 # CONFIG
 POLL_INTERVAL = 5
-STARTUP_DELAY = 15
+STARTUP_DELAY = 30
 
 # Use SCRIPT_DIR as base for data files
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
