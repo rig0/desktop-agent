@@ -162,6 +162,7 @@ def run_predefined_command(command_key: str) -> dict:
             #process_cmd = cmd if isinstance(cmd, list) else cmd.split()
             # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)  # ensure string
+            wait = False #testing
             try:
                 if wait:
                     result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
