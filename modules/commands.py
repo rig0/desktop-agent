@@ -80,19 +80,19 @@ def get_linux_gui_env() -> dict:
 
 
 # Reboot / Shutdown handler
-def run_system_power_command(action: str) -> dict:
-    try:
-        if sys.platform.startswith("linux"):
-            cmd = "systemctl reboot" if action == "reboot" else "systemctl poweroff"
-        elif sys.platform.startswith("win"):
-            cmd = "shutdown /r /t 0" if action == "reboot" else "shutdown /s /t 0"
-        else:
-            return {"success": False, "output": f"Unsupported platform: {sys.platform}"}
+# def run_system_power_command(action: str) -> dict:
+#     try:
+#         if sys.platform.startswith("linux"):
+#             cmd = "systemctl reboot" if action == "reboot" else "systemctl poweroff"
+#         elif sys.platform.startswith("win"):
+#             cmd = "shutdown /r /t 0" if action == "reboot" else "shutdown /s /t 0"
+#         else:
+#             return {"success": False, "output": f"Unsupported platform: {sys.platform}"}
 
-        subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return {"success": True, "output": f"{action.capitalize()} command executed."}
-    except Exception as e:
-        return {"success": False, "output": str(e)}
+#         subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+#         return {"success": True, "output": f"{action.capitalize()} command executed."}
+#     except Exception as e:
+#         return {"success": False, "output": str(e)}
 
 # Reboot / Shutdown handler
 def run_system_power_command(action: str) -> dict:
@@ -189,7 +189,7 @@ def run_predefined_command(command_key: str) -> dict:
                     "success": result.returncode == 0,
                     "output": result.stdout.strip() if result.stdout else result.stderr.strip()
                 }
-                
+
             else: # if you just need to launch and close (ideal for gui apps)
                 subprocess.Popen(cmd, shell=True)
                 return {"success": True, "output": f"Command '{command_key}' launched (Windows)."}
