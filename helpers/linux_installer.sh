@@ -181,8 +181,7 @@ elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
 fi
 
 echo
-echo "✅ All dependencies installed."
-echo
+echo "All dependencies installed."
 
 # ----------------------------
 # Create configuration file
@@ -195,11 +194,12 @@ echo "You can configure the app now or manually fill in the config.ini after fir
 read -p "Configure now? [Y/n]: " CONFIG_CHOICE
 CONFIG_CHOICE="$(echo -n "${CONFIG_CHOICE:-Y}" | xargs)"
 if [[ "$CONFIG_CHOICE" =~ ^[Nn]$ ]]; then
+    echo
     echo "App config skipped..."
-    echo
+    
 else
-    echo "Creating config file..."
     echo
+    echo "Creating config file..."
 
     CONFIG_DIR="../data"
     CONFIG_FILE="$CONFIG_DIR/config.ini"
