@@ -158,9 +158,9 @@ def run_predefined_command(command_key: str) -> dict:
         if platform_name == "linux":
             env = get_linux_gui_env()
             process_cmd = cmd if isinstance(cmd, list) else cmd.split()
-
+            # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             try:
-                proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                proc = subprocess.Popen(process_cmd, env=env, shell=True)
                 time.sleep(1)
                 if proc.poll() is not None:
                     return {"success": False, "output": f"Command '{command_key}' failed to start."}
