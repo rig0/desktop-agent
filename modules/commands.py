@@ -150,12 +150,13 @@ def run_predefined_command(command_key: str) -> dict:
         return run_system_power_command(cmd)
 
     try:
+        # Only prepend dbus-launch if DBUS session is missing
         if platform_name == "linux":
             env = get_linux_gui_env()
             process_cmd = cmd if isinstance(cmd, list) else cmd.split()
 
-            # Prepend dbus-launch if no running DBUS session detected
-            if not env.get("USE_WAYLAND") and "unix:path=" in env.get("DBUS_SESSION_BUS_ADDRESS", ""):
+            # Prepend dbus-launch only if DBUS_SESSION_BUS_ADDRESS is missing
+            if not env.get("DBUS_SESSION_BUS_ADDRESS"):
                 process_cmd = ["dbus-launch"] + process_cmd
 
             subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
