@@ -94,7 +94,7 @@ $UPDATES_CHOICE = Read-Host "Enable updates module? [y/N]"
 $UPDATES_CHOICE = ($UPDATES_CHOICE.Trim()).ToLower()
 if ($UPDATES_CHOICE -eq "y") {
     $UPDATES_ENABLED = $true
-    $UPDATES_HOURS = Read-Host "Update interval in hours [default 1h]"
+    $UPDATES_HOURS = Read-Host "Update interval in hours [default 1]"
     if ([string]::IsNullOrWhiteSpace($UPDATES_HOURS)) { $UPDATES_HOURS = 1 }
     $UPDATES_INTERVAL = [int]$UPDATES_HOURS * 3600
 } else {

@@ -57,6 +57,12 @@ IGDB_TOKEN = config.get("igdb", "token")
 
 
 # ----------------------------
+# Create configuration
+# ----------------------------
+
+
+
+# ----------------------------
 # Device identifiers and topics
 # ----------------------------
 
