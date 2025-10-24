@@ -1,4 +1,4 @@
-import os, sys, subprocess, glob, re, json
+import os, sys, subprocess, glob, re, json, copy
 from pathlib import Path
 from .config import COMMANDS_MOD
 
@@ -41,38 +41,43 @@ def load_commands(filename="commands.json"):
 
 ALLOWED_COMMANDS = load_commands()
 
-def get_linux_gui_env():
-    env = os.environ.copy()
-    env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+import os
+import copy
 
-    # Ensure our wrapper is found first (move to config,make dynamic and conditional(in container?))
-    env["PATH"] = "/var/home/rambo/Apps/Agent/helpers:" + env.get("PATH", "")
+def get_linux_gui_env() -> dict:
+    # Return environment variables for launching GUI applications on Linux,
+    env = copy.deepcopy(os.environ)
 
-    # Detect display server
-    if "WAYLAND_DISPLAY" in env:
-        env["DISPLAY"] = ":0"  # Still needed for some apps via XWayland
-        env["USE_WAYLAND"] = "1"
-    else:
-        env.setdefault("DISPLAY", ":0")
-        env.pop("USE_WAYLAND", None)
+    # Detect Wayland
+    wayland_display = env.get("WAYLAND_DISPLAY")
+    use_wayland = bool(wayland_display)
 
-    # Detect DBUS session
-    for pid_path in glob.glob("/proc/*/environ"):
-        try:
-            with open(pid_path, "rb") as f:
-                data = f.read().decode(errors="ignore")
-                m = re.search(r"DBUS_SESSION_BUS_ADDRESS=([^\x00]+)", data)
-                if m:
-                    env["DBUS_SESSION_BUS_ADDRESS"] = m.group(1)
-                    break
-        except Exception:
-            continue
+    # Detect X11
+    x11_display = env.get("DISPLAY")
+    use_x11 = bool(x11_display)
 
+    env["USE_WAYLAND"] = str(use_wayland)
+
+    # If Wayland, ensure DISPLAY is also set for apps that require X11 fallback
+    if use_wayland and not x11_display:
+        env["DISPLAY"] = ":0"
+
+    # DBUS_SESSION_BUS_ADDRESS
     if "DBUS_SESSION_BUS_ADDRESS" not in env:
-        # Fallback: only use dbus-launch if no session bus found
-        env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={env['XDG_RUNTIME_DIR']}/bus"
+        # Fallback to launching dbus-session if missing
+        try:
+            from subprocess import check_output
+            dbus_address = check_output(["dbus-launch"], text=True).splitlines()
+            for line in dbus_address:
+                if line.startswith("DBUS_SESSION_BUS_ADDRESS="):
+                    env["DBUS_SESSION_BUS_ADDRESS"] = line.split("=", 1)[1].strip()
+                elif line.startswith("DBUS_SESSION_BUS_PID="):
+                    env["DBUS_SESSION_BUS_PID"] = line.split("=", 1)[1].strip()
+        except Exception:
+            pass  # Ignore failures; some systems may not have dbus-launch
 
     return env
+
 
 # Reboot / Shutdown handler
 def run_system_power_command(action: str) -> dict:
@@ -154,10 +159,6 @@ def run_predefined_command(command_key: str) -> dict:
         if platform_name == "linux":
             env = get_linux_gui_env()
             process_cmd = cmd if isinstance(cmd, list) else cmd.split()
-
-            # Prepend dbus-launch only if DBUS_SESSION_BUS_ADDRESS is missing
-            if not env.get("DBUS_SESSION_BUS_ADDRESS"):
-                process_cmd = ["dbus-launch"] + process_cmd
 
             subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
