@@ -87,7 +87,7 @@ if not config.read(CONFIG_PATH):
 
     print(f"\n[Config] Edit config with required info!: {CONFIG_PATH}\n")
 
-    raise FileNotFoundError(f"[Config] Edit config with required info!: {CONFIG_PATH}")
+    raise FileNotFoundError(f"Edit config with required info!: {CONFIG_PATH}")
 
 DEVICE_NAME = config.get("device", "name")
 PUBLISH_INT = config.getint("device", "interval", fallback=15)
