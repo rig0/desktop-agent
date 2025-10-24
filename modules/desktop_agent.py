@@ -101,7 +101,7 @@ def get_disk_info():
     # For Linux systems, focus on /var/home partition
     else:
         total = used = free = 0
-        target_partitions = ['/var/home', '/home']
+        target_partitions = ['/var/home', '/home', '/run/host/var/home']
         for partition in psutil.disk_partitions(all=False):
             if partition.mountpoint in target_partitions:
                 try:
