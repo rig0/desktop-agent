@@ -30,7 +30,9 @@ except FileNotFoundError:
 
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
-    raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
+    (f"[Config] Config file not found! \nCreating now...")
+    create_default_config(CONFIG_PATH)
+    raise FileNotFoundError(f"[Config] Edit config with required info!: {CONFIG_PATH}")
 
 DEVICE_NAME = config.get("device", "name")
 PUBLISH_INT = config.getint("device", "interval", fallback=15)
@@ -59,7 +61,53 @@ IGDB_TOKEN = config.get("igdb", "token")
 # ----------------------------
 # Create configuration
 # ----------------------------
+def create_default_config(config_path):
+    config_content = """# ================== DESKTOP AGENT CONFIG ==================
+    # These are the default values.
+    # Intervals are in seconds.
+    # Modules are disabled by default.
+    # Documentation: https://github.com/rig0/hass-desktop-agent
 
+    # If you enable the game agent, create an igdb.com account and fill your api credentials.
+    # Read more https://api-docs.igdb.com/#authentication (Access token, not client secret!)
+
+    [device]
+    name = Device-Name
+    interval = 10
+
+    # Required!
+    [mqtt]
+    broker = homeassistant-ip
+    port = 1883
+    username = username
+    password = password
+
+    # Optional
+    [modules]
+    api = false
+    commands = false
+    media_agent = false
+    game_agent = false
+    updates = false
+
+    # Module Options
+    [api]
+    port = 5555
+
+    [updates]
+    interval = 3600
+
+    # Required for game_agent
+    [igdb]
+    client_id = your_igdb_client_id
+    token = your_igdb_access_token
+    """
+
+    # Write to file
+    with open(config_path, "w") as f:
+        f.write(config_content)
+
+    print(f"[Config] Default config created at: {config_path}.")
 
 
 # ----------------------------
