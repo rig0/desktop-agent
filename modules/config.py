@@ -30,11 +30,10 @@ except FileNotFoundError:
 def create_default_config(config_path):
     config_content = """# ================== DESKTOP AGENT CONFIG ==================
 # These are the default values.
-# Intervals are in seconds.
-# Modules are disabled by default.
+# Intervals are in seconds. Modules are disabled by default.
 # Documentation: https://github.com/rig0/hass-desktop-agent
 
-# If you enable the game agent, create an igdb.com account and fill your api credentials.
+# If you enable the game_agent, create a igdb.com account and fill your api credentials.
 # Read more https://api-docs.igdb.com/#authentication (Access token, not client secret!)
 
 [device]
