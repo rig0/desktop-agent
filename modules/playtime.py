@@ -51,7 +51,7 @@ def get_lutris_playtime(game_name):
                     details = json.loads(row[0])
                     playtime = round(float(details.get("playtime_forever", 0) / 60), 2)
                 except json.JSONDecodeError:
-                    playtime = None
+                    playtime = 0
 
         conn.close()
         return playtime
