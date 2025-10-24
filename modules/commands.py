@@ -164,7 +164,8 @@ def run_predefined_command(command_key: str) -> dict:
             cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)  # ensure string
             
             try:
-                if wait:
+                print(wait)
+                if wait == True:
                     result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
                     return {
                         "success": result.returncode == 0,
