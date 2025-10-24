@@ -156,8 +156,7 @@ def run_predefined_command(command_key: str) -> dict:
 
     try:
         if platform_name == "linux":
-            #env = get_linux_gui_env()
-            env = dict(subprocess.check_output(["bash", "-lc", "env"]).decode().splitlines())
+            env = get_linux_gui_env()
             #env["DISPLAY"] = env.get("DISPLAY", ":0")
             #env["QT_WAYLAND_RECONNECT"] = "1"
             #process_cmd = cmd if isinstance(cmd, list) else cmd.split()
