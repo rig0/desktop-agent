@@ -155,13 +155,20 @@ def run_predefined_command(command_key: str) -> dict:
         return run_system_power_command(cmd)
 
     try:
-        # Only prepend dbus-launch if DBUS session is missing
         if platform_name == "linux":
             env = get_linux_gui_env()
             process_cmd = cmd if isinstance(cmd, list) else cmd.split()
 
-            subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+            #subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            #return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+            proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(1)  # give it a moment to fail immediately
+            if proc.poll() is not None:
+                # Process already exited = failure
+                return {"success": False, "output": f"Command '{command_key}' failed to start."}
+            else:
+                return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+
 
         elif platform_name == "win":
             if wait:
