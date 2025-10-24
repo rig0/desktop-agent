@@ -25,41 +25,7 @@ except FileNotFoundError:
 
 
 # ----------------------------
-# Load configuration
-# ----------------------------
-
-config = configparser.ConfigParser()
-if not config.read(CONFIG_PATH):
-    (f"[Config] Config file not found! \nCreating now...")
-    create_default_config(CONFIG_PATH)
-    raise FileNotFoundError(f"[Config] Edit config with required info!: {CONFIG_PATH}")
-
-DEVICE_NAME = config.get("device", "name")
-PUBLISH_INT = config.getint("device", "interval", fallback=15)
-
-MQTT_BROKER = config.get("mqtt", "broker")
-MQTT_PORT = config.getint("mqtt", "port")
-MQTT_USER = config.get("mqtt", "username")
-MQTT_PASS = config.get("mqtt", "password")
-
-API_MOD = config.getboolean("modules", "api", fallback=False)
-API_PORT = config.getint("api", "port", fallback=5555)
-
-UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
-UPDATES_INT = config.getint("updates", "interval", fallback=3600)
-
-MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
-
-COMMANDS_MOD = config.getboolean("modules", "commands", fallback=False)
-
-GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
-GAME_FILE = os.path.join(BASE_DIR, "data", "current_game.txt")
-IGDB_CLIENT = config.get("igdb", "client_id")
-IGDB_TOKEN = config.get("igdb", "token")
-
-
-# ----------------------------
-# Create configuration
+# Create configuration (first run)
 # ----------------------------
 def create_default_config(config_path):
     config_content = """# ================== DESKTOP AGENT CONFIG ==================
@@ -108,6 +74,39 @@ def create_default_config(config_path):
         f.write(config_content)
 
     print(f"[Config] Default config created at: {config_path}.")
+
+# ----------------------------
+# Load configuration
+# ----------------------------
+
+config = configparser.ConfigParser()
+if not config.read(CONFIG_PATH):
+    (f"[Config] Config file not found! \nCreating now...")
+    create_default_config(CONFIG_PATH)
+    raise FileNotFoundError(f"[Config] Edit config with required info!: {CONFIG_PATH}")
+
+DEVICE_NAME = config.get("device", "name")
+PUBLISH_INT = config.getint("device", "interval", fallback=15)
+
+MQTT_BROKER = config.get("mqtt", "broker")
+MQTT_PORT = config.getint("mqtt", "port")
+MQTT_USER = config.get("mqtt", "username")
+MQTT_PASS = config.get("mqtt", "password")
+
+API_MOD = config.getboolean("modules", "api", fallback=False)
+API_PORT = config.getint("api", "port", fallback=5555)
+
+UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
+UPDATES_INT = config.getint("updates", "interval", fallback=3600)
+
+MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
+
+COMMANDS_MOD = config.getboolean("modules", "commands", fallback=False)
+
+GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
+GAME_FILE = os.path.join(BASE_DIR, "data", "current_game.txt")
+IGDB_CLIENT = config.get("igdb", "client_id")
+IGDB_TOKEN = config.get("igdb", "token")
 
 
 # ----------------------------
