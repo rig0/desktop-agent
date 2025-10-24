@@ -138,7 +138,7 @@ def run_predefined_command(command_key: str) -> dict:
     entry = ALLOWED_COMMANDS[command_key]
     if isinstance(entry, dict):
         cmd = entry.get("cmd")
-        wait = entry.get("wait", True)
+        wait = entry.get("wait", False)
         platforms = entry.get("platforms", None)
     else:
         cmd = entry
