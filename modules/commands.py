@@ -14,12 +14,10 @@ def load_commands(filename="commands.json"):
         default_data = {
             "reboot": {
                 "cmd": "reboot",
-                "wait": False,
                 "platforms": ["linux", "win"]
             },
             "shutdown": {
                 "cmd": "shutdown",
-                "wait": False,
                 "platforms": ["linux", "win"]
             },
             "plexamp": {
@@ -142,7 +140,7 @@ def run_predefined_command(command_key: str) -> dict:
     try:
         if platform_name == "linux":
             env = get_linux_gui_env()
-            
+
             try:
                 if wait: # if you need result of command (ideal for scripts that return values)
                     cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
