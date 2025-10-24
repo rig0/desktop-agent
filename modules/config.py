@@ -81,7 +81,7 @@ token = your_igdb_access_token
 
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
-    print(f"\n[Config] Config file not found! \nCreating now...\n")
+    print(f"\n[Config] Config file not found! Creating now...\n")
 
     create_default_config(CONFIG_PATH)
 
