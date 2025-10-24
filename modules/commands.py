@@ -139,9 +139,7 @@ def run_predefined_command(command_key: str) -> dict:
     print(entry)
     if isinstance(entry, dict):
         cmd = entry.get("cmd")
-        #wait = entry.get("wait", False)
-        wait = entry.get("wait")
-        print(wait)
+        wait = entry.get("wait", False)
         platforms = entry.get("platforms", None)
     else:
         cmd = entry
@@ -162,13 +160,14 @@ def run_predefined_command(command_key: str) -> dict:
             env = get_linux_gui_env()
             #env["DISPLAY"] = env.get("DISPLAY", ":0")
             #env["QT_WAYLAND_RECONNECT"] = "1"
+
             #process_cmd = cmd if isinstance(cmd, list) else cmd.split()
-            # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)  # ensure string
+
+            # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             
             try:
-                if wait:
-                    print(wait)
+                # if wait:
                     # result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
                     # return {
                     #     "success": result.returncode == 0,
@@ -179,7 +178,7 @@ def run_predefined_command(command_key: str) -> dict:
                     # if proc.poll() is not None:
                     #     return {"success": False, "output": f"Command '{command_key}' failed to start."}
                     # return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
-                else:
+                # else:
                     proc = subprocess.Popen(cmd_str, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     time.sleep(1)
                     if proc.poll() is not None:
