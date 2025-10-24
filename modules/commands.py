@@ -165,12 +165,12 @@ def run_predefined_command(command_key: str) -> dict:
             
             try:
                 print(wait)
-                if wait == True:
-                    result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
-                    return {
-                        "success": result.returncode == 0,
-                        "output": result.stdout.strip() if result.stdout else result.stderr.strip()
-                    }
+                if wait:
+                    # result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
+                    # return {
+                    #     "success": result.returncode == 0,
+                    #     "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+                    # }
                     # proc = subprocess.Popen(cmd_str, env=env, shell=True, text=True)
                     # time.sleep(1)
                     # if proc.poll() is not None:
