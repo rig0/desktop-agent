@@ -48,9 +48,9 @@ $DEVICE_NAME = Read-Host "Device name [$DEFAULT_DEVICE_NAME]"
 if ([string]::IsNullOrWhiteSpace($DEVICE_NAME)) { $DEVICE_NAME = $DEFAULT_DEVICE_NAME }
 $DEVICE_NAME = $DEVICE_NAME.Trim()
 
-$UPDATE_INTERVAL = Read-Host "Update interval in seconds [15]"
+$UPDATE_INTERVAL = Read-Host "Update interval in seconds [10]"
 $UPDATE_INTERVAL = $UPDATE_INTERVAL.Trim()
-if ([string]::IsNullOrWhiteSpace($UPDATE_INTERVAL)) { $UPDATE_INTERVAL = 15 }
+if ([string]::IsNullOrWhiteSpace($UPDATE_INTERVAL)) { $UPDATE_INTERVAL = 10 }
 else { $UPDATE_INTERVAL = [int]$UPDATE_INTERVAL }
 
 # MQTT section (mandatory)
