@@ -296,41 +296,42 @@ else
         UPDATES_INTERVAL=3600
     fi
 
-    # Write config.ini
+        # Write config.ini
     cat > "$CONFIG_FILE" <<EOL
-    # ================== DESKTOP AGENT CONFIG ==================
-    # Documentation: https://github.com/rig0/hass-desktop-agent
-    [device]
-    name = $DEVICE_NAME
-    interval = $UPDATE_INTERVAL
+# ================== DESKTOP AGENT CONFIG ==================
+# Documentation: https://github.com/rig0/hass-desktop-agent
+[device]
+name = $DEVICE_NAME
+interval = $UPDATE_INTERVAL
 
-    [mqtt]
-    broker = $MQTT_BROKER
-    port = $MQTT_PORT
-    username = $MQTT_USER
-    password = $MQTT_PASS
+[mqtt]
+broker = $MQTT_BROKER
+port = $MQTT_PORT
+username = $MQTT_USER
+password = $MQTT_PASS
 
-    [modules]
-    api = $API_ENABLED
-    commands = $COMMANDS_ENABLED
-    media_agent = $MEDIA_ENABLED
-    game_agent = $GAME_ENABLED
-    updates = $UPDATES_ENABLED
+[modules]
+api = $API_ENABLED
+commands = $COMMANDS_ENABLED
+media_agent = $MEDIA_ENABLED
+game_agent = $GAME_ENABLED
+updates = $UPDATES_ENABLED
 
-    [api]
-    port = $API_PORT
+[api]
+port = $API_PORT
 
-    [updates]
-    interval = $UPDATES_INTERVAL
+[updates]
+interval = $UPDATES_INTERVAL
 
-    [igdb]
-    client_id = $IGDB_CLIENT_ID
-    token = $IGDB_TOKEN
-    # If you enable the game agent, create an igdb.com account and fill your api credentials.
-    # Read more https://api-docs.igdb.com/#authentication (Access token, not client secret!)
-    EOL
+[igdb]
+client_id = $IGDB_CLIENT_ID
+token = $IGDB_TOKEN
+# If you enable the game agent, create an igdb.com account and fill your api credentials.
+# Read more https://api-docs.igdb.com/#authentication (Access token, not client secret!)
+EOL
     echo
     echo "✅ Config file written to $CONFIG_FILE"
+fi
 
 # ----------------------------
 # Install python dependencies
