@@ -154,6 +154,7 @@ def run_predefined_command(command_key: str) -> dict:
     if cmd in ["reboot", "shutdown"]:
         return run_system_power_command(cmd)
 
+    wait = False #testing
     try:
         if platform_name == "linux":
             env = get_linux_gui_env()
@@ -162,7 +163,7 @@ def run_predefined_command(command_key: str) -> dict:
             #process_cmd = cmd if isinstance(cmd, list) else cmd.split()
             # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)  # ensure string
-            wait = False #testing
+            
             try:
                 if wait:
                     result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
