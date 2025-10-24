@@ -163,11 +163,23 @@ def run_predefined_command(command_key: str) -> dict:
             # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)  # ensure string
             try:
-                proc = subprocess.Popen(cmd_str, env=env, shell=True)
-                time.sleep(1)
-                if proc.poll() is not None:
-                    return {"success": False, "output": f"Command '{command_key}' failed to start."}
-                return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+                if wait:
+                    result = subprocess.run(cmd_str, env=env, shell=True, capture_output=True, text=True)
+                    return {
+                        "success": result.returncode == 0,
+                        "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+                    }
+                    # proc = subprocess.Popen(cmd_str, env=env, shell=True, capture_output=True, text=True)
+                    # time.sleep(1)
+                    # if proc.poll() is not None:
+                    #     return {"success": False, "output": f"Command '{command_key}' failed to start."}
+                    # return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+                else:
+                    proc = subprocess.Popen(cmd_str, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    time.sleep(1)
+                    if proc.poll() is not None:
+                        return {"success": False, "output": f"Command '{command_key}' failed to start."}
+                    return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
             except Exception as e:
                 return {"success": False, "output": str(e)}
 
