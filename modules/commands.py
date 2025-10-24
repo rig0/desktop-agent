@@ -169,7 +169,7 @@ def run_predefined_command(command_key: str) -> dict:
                     #     "success": result.returncode == 0,
                     #     "output": result.stdout.strip() if result.stdout else result.stderr.strip()
                     # }
-                    proc = subprocess.Popen(cmd_str, env=env, shell=True, capture_output=True, text=True)
+                    proc = subprocess.Popen(cmd_str, env=env, shell=True, text=True)
                     time.sleep(1)
                     if proc.poll() is not None:
                         return {"success": False, "output": f"Command '{command_key}' failed to start."}
