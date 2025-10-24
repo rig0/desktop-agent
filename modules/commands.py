@@ -142,7 +142,7 @@ def run_predefined_command(command_key: str) -> dict:
         platforms = entry.get("platforms", None)
     else:
         cmd = entry
-        wait = True
+        wait = False
         platforms = None
 
     platform_name = "linux" if sys.platform.startswith("linux") else "win" if sys.platform.startswith("win") else None
@@ -154,7 +154,6 @@ def run_predefined_command(command_key: str) -> dict:
     if cmd in ["reboot", "shutdown"]:
         return run_system_power_command(cmd)
 
-    wait = False #testing
     try:
         if platform_name == "linux":
             env = get_linux_gui_env()
