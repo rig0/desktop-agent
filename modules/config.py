@@ -85,9 +85,9 @@ if not config.read(CONFIG_PATH):
 
     create_default_config(CONFIG_PATH)
 
-    print(f"\n[Config] Edit config with required info!: {CONFIG_PATH}\n")
+    print(f"\n[Config] Edit config.ini with required info! Exiting...\n")
 
-    raise FileNotFoundError(f"Edit config with required info! Exiting...")
+    raise FileNotFoundError(f"Config file was missing. Created at: {CONFIG_PATH}")
 
 DEVICE_NAME = config.get("device", "name")
 PUBLISH_INT = config.getint("device", "interval", fallback=15)
