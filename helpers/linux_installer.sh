@@ -237,40 +237,40 @@ done
 read -p "Enable API module? [y/N]: " API_CHOICE
 API_CHOICE="$(echo -n "${API_CHOICE:-N}" | xargs)"
 if [[ "$API_CHOICE" =~ ^[Yy]$ ]]; then
-    API_ENABLED=true
+    API_ENABLED=True
     read -p "Override API port? [default 5555]: " API_PORT
     API_PORT="$(echo -n "${API_PORT:-5555}" | xargs)"
 else
-    API_ENABLED=false
+    API_ENABLED=False
     API_PORT=5555
 fi
 
 read -p "Enable commands module? [y/N]: " COMMANDS_CHOICE
 COMMANDS_CHOICE="$(echo -n "${COMMANDS_CHOICE:-N}" | xargs)"
-COMMANDS_ENABLED=false
-[[ "$COMMANDS_CHOICE" =~ ^[Yy]$ ]] && COMMANDS_ENABLED=true
+COMMANDS_ENABLED=False
+[[ "$COMMANDS_CHOICE" =~ ^[Yy]$ ]] && COMMANDS_ENABLED=True
 
 read -p "Enable updates module? [y/N]: " UPDATES_CHOICE
 UPDATES_CHOICE="$(echo -n "${UPDATES_CHOICE:-N}" | xargs)"
 if [[ "$UPDATES_CHOICE" =~ ^[Yy]$ ]]; then
-    UPDATES_ENABLED=true
+    UPDATES_ENABLED=True
     read -p "Update interval in hours [default 1h]: " UPDATES_HOURS
     UPDATES_HOURS="$(echo -n "${UPDATES_HOURS:-1}" | xargs)"
     UPDATES_INTERVAL=$((UPDATES_HOURS * 3600))
 else
-    UPDATES_ENABLED=false
+    UPDATES_ENABLED=False
     UPDATES_INTERVAL=3600
 fi
 
 read -p "Enable media agent module? [y/N]: " MEDIA_CHOICE
 MEDIA_CHOICE="$(echo -n "${MEDIA_CHOICE:-N}" | xargs)"
-MEDIA_ENABLED=false
-[[ "$MEDIA_CHOICE" =~ ^[Yy]$ ]] && MEDIA_ENABLED=true
+MEDIA_ENABLED=False
+[[ "$MEDIA_CHOICE" =~ ^[Yy]$ ]] && MEDIA_ENABLED=True
 
 read -p "Enable game agent module? [y/N]: " GAME_CHOICE
 GAME_CHOICE="$(echo -n "${GAME_CHOICE:-N}" | xargs)"
 if [[ "$GAME_CHOICE" =~ ^[Yy]$ ]]; then
-    GAME_ENABLED=true
+    GAME_ENABLED=True
     echo
     echo "To use the IGDB API, you need a client ID and access token."
     echo "Read more: https://api-docs.igdb.com/#authentication"
@@ -280,7 +280,7 @@ if [[ "$GAME_CHOICE" =~ ^[Yy]$ ]]; then
     read -p "IGDB Access Token: " IGDB_TOKEN
     IGDB_TOKEN="$(echo -n "$IGDB_TOKEN" | xargs)"
 else
-    GAME_ENABLED=false
+    GAME_ENABLED=False
     IGDB_CLIENT_ID=None
     IGDB_TOKEN=None
 fi

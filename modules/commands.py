@@ -24,12 +24,12 @@ def load_commands(filename="commands.json"):
             },
             "plexamp": {
                 "cmd": "flatpak run com.plexamp.Plexamp",
-                "wait": false,
+                "wait": False,
                 "platforms": ["linux"]
             },
             "plexamp_windows": {
                 "cmd": "C:\\Users\\User\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
-                "wait": false,
+                "wait": False,
                 "platforms": ["win"]
             }
         }
