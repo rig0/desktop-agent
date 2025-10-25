@@ -1,4 +1,4 @@
-import os, sys, subprocess, glob, re, json, copy, time
+import os, sys, subprocess, glob, re, json, copy, time, configparser, shutil
 from pathlib import Path
 from .config import COMMANDS_MOD
 
@@ -6,41 +6,40 @@ from .config import COMMANDS_MOD
 # System commands
 # ----------------------------
 
-def load_commands(filename="commands.json"):
+def load_commands(filename="commands.ini"):
     BASE_DIR = Path(__file__).parent.parent
-    config_file = BASE_DIR / "data" / filename
-    if not config_file.exists():
-        print(f"{config_file} not found. Creating now.")
-        default_data = {
-            "reboot": {
-                "cmd": "reboot",
-                "platforms": ["linux", "win"]
-            },
-            "shutdown": {
-                "cmd": "shutdown",
-                "platforms": ["linux", "win"]
-            },
-            "plexamp": {
-                "cmd": "flatpak run com.plexamp.Plexamp",
-                "wait": False,
-                "platforms": ["linux"]
-            },
-            "plexamp_windows": {
-                "cmd": "C:\\Users\\User\\AppData\\Local\\Programs\\Plexamp\\Plexamp.exe",
-                "wait": False,
-                "platforms": ["win"]
-            }
+    commands_file = BASE_DIR / "data" / filename
+    src = BASE_DIR / "resources" / "commands_example.ini"
+
+    # Create data dir if needed
+    commands_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Create default if missing
+    if not commands_file.exists():
+        shutil.copy(src, commands_file)
+        print(f"[Commands] Created default commands config at {commands_file}")
+
+    # Parse file
+    parser = configparser.ConfigParser()
+    parser.optionxform = str  # preserve key case
+    parser.read(commands_file, encoding="utf-8")
+
+    commands = {}
+    for section in parser.sections():
+        cmd = parser.get(section, "cmd", fallback=None)
+        wait = parser.getboolean(section, "wait", fallback=False)
+        platforms = parser.get(section, "platforms", fallback=None)
+        platforms = [p.strip() for p in platforms.split(",")] if platforms else None
+
+        commands[section] = {
+            "cmd": cmd,
+            "wait": wait,
+            "platforms": platforms,
         }
-        with open(config_file, "w", encoding="utf-8") as f:
-            json.dump(default_data, f, indent=2)
-        return default_data
-    with open(config_file, "r", encoding="utf-8") as f:
-        return json.load(f)
 
-ALLOWED_COMMANDS = load_commands()
+    return commands
 
-import os
-import copy
+ALLOWED_COMMANDS = load_commands() if COMMANDS_MOD else {}
 
 def get_linux_gui_env() -> dict:
     # Return environment variables for launching GUI applications on Linux,
