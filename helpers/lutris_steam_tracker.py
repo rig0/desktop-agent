@@ -5,7 +5,7 @@ import psutil
 import signal
 import sys
 from datetime import datetime
-from .config import GAME_FILE
+from ..modules.config import GAME_FILE
 
 # CONFIG
 POLL_INTERVAL = 5
@@ -13,10 +13,11 @@ STARTUP_DELAY = 30
 
 # Use SCRIPT_DIR as base for data files
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+#TRACK_FILE = os.path.join(SCRIPT_DIR, "../data/game_agent/current_game")
 LOG_FILE = os.path.join(SCRIPT_DIR, "../data/game_agent/lutris_steam_tracker.log")
 
 # Normalize paths (resolve ../)
-#TRACK_FILE = os.path.abspath(GAME_FILE)
+#TRACK_FILE = os.path.abspath(TRACK_FILE)
 TRACK_FILE = GAME_FILE
 LOG_FILE = os.path.abspath(LOG_FILE)
 

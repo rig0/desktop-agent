@@ -9,7 +9,7 @@ class IGDBClient:
     def __init__(self, client_id, access_token, cache_db="igdb_cache.sqlite"):
         self.client_id = client_id
         self.access_token = access_token
-        base_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'game_agent')
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'game_agent'))
         os.makedirs(base_dir, exist_ok=True)
         self.cache_db = os.path.join(base_dir, cache_db)
         self._init_cache()
@@ -57,7 +57,7 @@ class IGDBClient:
         if not url:
             return None
         
-        base_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'game_agent')
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'game_agent'))
 
         full_folder_path = os.path.join(base_dir, folder)
 
