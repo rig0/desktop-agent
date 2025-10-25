@@ -33,7 +33,7 @@ def create_default_config(config_path: Path):
 
     if not config_path.exists():
         shutil.copy(src, config_path)
-        print(f"\n[Config] Created default config at {config_path}")
+        print(f"[Config] Created default config at {config_path}")
 
 
 # ----------------------------
