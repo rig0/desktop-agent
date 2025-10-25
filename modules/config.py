@@ -28,51 +28,12 @@ except FileNotFoundError:
 # Create configuration (first run)
 # ----------------------------
 def create_default_config(config_path):
-    config_content = """# ================== DESKTOP AGENT CONFIG ==================
-# These are the default values.
-# Intervals are in seconds. Modules are disabled by default.
-# Documentation: https://github.com/rig0/hass-desktop-agent
+    src = os.path.join(BASE_DIR, "resources", "config_example.ini")
+    config_path.parent.mkdir(parents=True, exist_ok=True)
 
-# If you enable the game_agent, create a igdb.com account and fill your api credentials.
-# Read more https://api-docs.igdb.com/#authentication (Access token, not client secret!)
-
-[device]
-name = Device-Name
-interval = 10
-
-# Required!
-[mqtt]
-broker = homeassistant-ip
-port = 1883
-username = username
-password = password
-
-# Optional
-[modules]
-api = false
-commands = false
-media_agent = false
-game_agent = false
-updates = false
-
-# Module Options
-[api]
-port = 5555
-
-[updates]
-interval = 3600
-
-# Required for game_agent
-[igdb]
-client_id = your_igdb_client_id
-token = your_igdb_access_token
-"""
-
-    # Write to file
-    with open(config_path, "w") as f:
-        f.write(config_content)
-
-    print(f"[Config] Default config created at: {config_path}.")
+    if not config_path.exists():
+        shutil.copy(src, config_path)
+        print(f"Created default config at {config_path}")
 
 # ----------------------------
 # Load configuration
