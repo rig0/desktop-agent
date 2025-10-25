@@ -26,105 +26,133 @@ Ensure-Admin
 # ----------------------------
 Write-Host "`n=== Desktop Agent Setup ===`n" -ForegroundColor Cyan
 
-# Script folder (helpers)
+# Paths
 $ScriptPath = Resolve-Path $MyInvocation.MyCommand.Definition
 $ScriptRoot = Split-Path -Parent $ScriptPath
-
-# Project root (../)
 $ProjectRoot = Split-Path -Parent $ScriptRoot
 
 # Absolute path to data/config.ini (project_root/data/config.ini)
 $CONFIG_DIR  = Join-Path $ProjectRoot "data"
 $CONFIG_FILE = Join-Path $CONFIG_DIR "config.ini"
+$RES_DIR     = Join-Path $ProjectRoot "resources"
+$EXAMPLE_CONFIG = Join-Path $RES_DIR "config_example.ini"
 
 # Ensure data directory exists
 if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-# Device section
-$DEFAULT_DEVICE_NAME = $env:COMPUTERNAME
-$DEVICE_NAME = Read-Host "Device name [$DEFAULT_DEVICE_NAME]"
-if ([string]::IsNullOrWhiteSpace($DEVICE_NAME)) { $DEVICE_NAME = $DEFAULT_DEVICE_NAME }
-$DEVICE_NAME = $DEVICE_NAME.Trim()
+Write-Host "You can configure the app now or manually edit the default config.ini ($CONFIG_FILE)"
+$CONFIG_CHOICE = Read-Host "Configure now? [Y/n]"
+$CONFIG_CHOICE = ($CONFIG_CHOICE.Trim())
+if ([string]::IsNullOrWhiteSpace($CONFIG_CHOICE)) { $CONFIG_CHOICE = "Y" }
 
-$UPDATE_INTERVAL = Read-Host "Update interval in seconds [10]"
-$UPDATE_INTERVAL = $UPDATE_INTERVAL.Trim()
-if ([string]::IsNullOrWhiteSpace($UPDATE_INTERVAL)) { $UPDATE_INTERVAL = 10 }
-else { $UPDATE_INTERVAL = [int]$UPDATE_INTERVAL }
+if ($CONFIG_CHOICE -match '^[Nn]$') {
+    Write-Host "`nApp config skipped. Copying example config to $CONFIG_FILE"
+    Write-Host "Make sure to edit with valid values or app will fail!" -ForegroundColor Yellow
 
-# MQTT section (mandatory)
-do {
-    $MQTT_BROKER = Read-Host "MQTT broker IP/hostname"
-    $MQTT_BROKER = $MQTT_BROKER.Trim()
-} while ([string]::IsNullOrWhiteSpace($MQTT_BROKER))
+    Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
-do {
-    $MQTT_PORT = Read-Host "MQTT port [1883]"
-    if ([string]::IsNullOrWhiteSpace($MQTT_PORT)) { $MQTT_PORT = 1883 }
-} while (-not ($MQTT_PORT -as [int] -and $MQTT_PORT -gt 0))
-
-do {
-    $MQTT_USER = Read-Host "MQTT username"
-    $MQTT_USER = $MQTT_USER.Trim()
-} while ([string]::IsNullOrWhiteSpace($MQTT_USER))
-
-do {
-    $MQTT_PASS = Read-Host "MQTT password"
-    $MQTT_PASS = $MQTT_PASS.Trim()
-} while ([string]::IsNullOrWhiteSpace($MQTT_PASS))
-
-# Modules section
-$API_CHOICE = Read-Host "Enable API module? [y/N]"
-$API_CHOICE = ($API_CHOICE.Trim()).ToLower()
-if ($API_CHOICE -eq "y") {
-    $API_ENABLED = $true
-    $API_PORT = Read-Host "Override API port? [default 5555]"
-    if ([string]::IsNullOrWhiteSpace($API_PORT)) { $API_PORT = 5555 }
-} else {
-    $API_ENABLED = $false
-    $API_PORT = 5555
+    Write-Host "`nConfig file copied successfully.`n" -ForegroundColor Green
 }
+else {
+    Write-Host "`nCreating config file...`n" -ForegroundColor Cyan
 
-$COMMANDS_CHOICE = Read-Host "Enable commands module? [y/N]"
-$COMMANDS_CHOICE = ($COMMANDS_CHOICE.Trim()).ToLower()
-$COMMANDS_ENABLED = $COMMANDS_CHOICE -eq "y"
+    # Device section
+    $DEFAULT_DEVICE_NAME = $env:COMPUTERNAME
+    $DEVICE_NAME = Read-Host "Device name [$DEFAULT_DEVICE_NAME]"
+    if ([string]::IsNullOrWhiteSpace($DEVICE_NAME)) { $DEVICE_NAME = $DEFAULT_DEVICE_NAME }
+    $DEVICE_NAME = $DEVICE_NAME.Trim()
 
-$UPDATES_CHOICE = Read-Host "Enable updates module? [y/N]"
-$UPDATES_CHOICE = ($UPDATES_CHOICE.Trim()).ToLower()
-if ($UPDATES_CHOICE -eq "y") {
-    $UPDATES_ENABLED = $true
-    $UPDATES_HOURS = Read-Host "Update interval in hours [default 1]"
-    if ([string]::IsNullOrWhiteSpace($UPDATES_HOURS)) { $UPDATES_HOURS = 1 }
-    $UPDATES_INTERVAL = [int]$UPDATES_HOURS * 3600
-} else {
-    $UPDATES_ENABLED = $false
-    $UPDATES_INTERVAL = 3600
-}
+    $UPDATE_INTERVAL = Read-Host "Update interval in seconds [10]"
+    if ([string]::IsNullOrWhiteSpace($UPDATE_INTERVAL)) { $UPDATE_INTERVAL = 10 }
+    else { $UPDATE_INTERVAL = [int]$UPDATE_INTERVAL }
 
-$MEDIA_CHOICE = Read-Host "Enable media agent module? [y/N]"
-$MEDIA_CHOICE = ($MEDIA_CHOICE.Trim()).ToLower()
-$MEDIA_ENABLED = $MEDIA_CHOICE -eq "y"
+    # MQTT section (mandatory)
+    Write-Host "Enter MQTT settings (mandatory, installer will fail if empty)"
+    do {
+        $MQTT_BROKER = Read-Host "MQTT broker IP/hostname"
+        $MQTT_BROKER = $MQTT_BROKER.Trim()
+        if (-not [string]::IsNullOrWhiteSpace($MQTT_BROKER)) { break }
+        Write-Host "MQTT broker cannot be empty!" -ForegroundColor Yellow
+    } while ($true)
 
-$GAME_CHOICE = Read-Host "Enable game agent module? [y/N]"
-$GAME_CHOICE = ($GAME_CHOICE.Trim()).ToLower()
-if ($GAME_CHOICE -eq "y") {
-    $GAME_ENABLED = $true
-    Write-Host "`nTo use the IGDB API, you need a client ID and access token."
-    Write-Host "Read more: https://api-docs.igdb.com/#authentication"
-    Write-Host "Reminder: access token, not client secret!`n"
-    $IGDB_CLIENT_ID = Read-Host "IGDB Client ID"
-    $IGDB_CLIENT_ID = $IGDB_CLIENT_ID.Trim()
-    $IGDB_TOKEN = Read-Host "IGDB Access Token"
-    $IGDB_TOKEN = $IGDB_TOKEN.Trim()
-} else {
-    $GAME_ENABLED = $false
-    $IGDB_CLIENT_ID = "None"
-    $IGDB_TOKEN = "None"
-}
+    do {
+        $MQTT_PORT = Read-Host "MQTT port [1883]"
+        if ([string]::IsNullOrWhiteSpace($MQTT_PORT)) { $MQTT_PORT = 1883 }
+        if (($MQTT_PORT -as [int]) -and ($MQTT_PORT -gt 0)) { break }
+        Write-Host "MQTT port must be a positive number" -ForegroundColor Yellow
+    } while ($true)
 
-# Write config.ini
-$content = @"
+    do {
+        $MQTT_USER = Read-Host "MQTT username"
+        $MQTT_USER = $MQTT_USER.Trim()
+        if (-not [string]::IsNullOrWhiteSpace($MQTT_USER)) { break }
+        Write-Host "MQTT username cannot be empty!" -ForegroundColor Yellow
+    } while ($true)
+
+    do {
+        $MQTT_PASS = Read-Host "MQTT password"
+        $MQTT_PASS = $MQTT_PASS.Trim()
+        if (-not [string]::IsNullOrWhiteSpace($MQTT_PASS)) { break }
+        Write-Host "MQTT password cannot be empty!" -ForegroundColor Yellow
+    } while ($true)
+
+    # Modules section
+    $API_CHOICE = Read-Host "Enable API? [y/N]"
+    $API_CHOICE = ($API_CHOICE.Trim()).ToLower()
+    if ($API_CHOICE -eq "y") {
+        $API_ENABLED = $true
+        $API_PORT = Read-Host "Override API port? [default 5555]"
+        if ([string]::IsNullOrWhiteSpace($API_PORT)) { $API_PORT = 5555 }
+    } else {
+        $API_ENABLED = $false
+        $API_PORT = 5555
+    }
+
+    $COMMANDS_CHOICE = Read-Host "Enable commands? [y/N]"
+    $COMMANDS_CHOICE = ($COMMANDS_CHOICE.Trim()).ToLower()
+    $COMMANDS_ENABLED = $COMMANDS_CHOICE -eq "y"
+
+    $MEDIA_CHOICE = Read-Host "Enable media agent? [y/N]"
+    $MEDIA_CHOICE = ($MEDIA_CHOICE.Trim()).ToLower()
+    $MEDIA_ENABLED = $MEDIA_CHOICE -eq "y"
+
+    $GAME_CHOICE = Read-Host "Enable game agent? [y/N]"
+    $GAME_CHOICE = ($GAME_CHOICE.Trim()).ToLower()
+    if ($GAME_CHOICE -eq "y") {
+        $GAME_ENABLED = $true
+        Write-Host "`nTo use the IGDB API, you need a client ID and access token."
+        Write-Host "Read more: https://api-docs.igdb.com/#authentication"
+        Write-Host "Reminder: access token, not client secret!`n"
+        $IGDB_CLIENT_ID = Read-Host "IGDB Client ID"
+        $IGDB_CLIENT_ID = $IGDB_CLIENT_ID.Trim()
+        $IGDB_TOKEN = Read-Host "IGDB Access Token"
+        $IGDB_TOKEN = $IGDB_TOKEN.Trim()
+    } else {
+        $GAME_ENABLED = $false
+        $IGDB_CLIENT_ID = "None"
+        $IGDB_TOKEN = "None"
+    }
+
+    $UPDATES_CHOICE = Read-Host "Enable updates? [y/N]"
+    $UPDATES_CHOICE = ($UPDATES_CHOICE.Trim()).ToLower()
+    if ($UPDATES_CHOICE -eq "y") {
+        $UPDATES_ENABLED = $true
+        $UPDATES_HOURS = Read-Host "Update interval in hours [default 1]"
+        if ([string]::IsNullOrWhiteSpace($UPDATES_HOURS)) { $UPDATES_HOURS = 1 }
+        $UPDATES_INTERVAL = [int]$UPDATES_HOURS * 3600
+    } else {
+        $UPDATES_ENABLED = $false
+        $UPDATES_INTERVAL = 3600
+    }
+
+    # Write config.ini
+    $content = @"
+# ================== DESKTOP AGENT CONFIG ==================
+# Documentation: https://github.com/rig0/hass-desktop-agent
+# Generated by windows_installer.ps1
+
 [device]
 name = $DEVICE_NAME
 interval = $UPDATE_INTERVAL
@@ -138,9 +166,9 @@ password = $MQTT_PASS
 [modules]
 api = $API_ENABLED
 commands = $COMMANDS_ENABLED
-updates = $UPDATES_ENABLED
 media_agent = $MEDIA_ENABLED
 game_agent = $GAME_ENABLED
+updates = $UPDATES_ENABLED
 
 [api]
 port = $API_PORT
@@ -151,12 +179,17 @@ interval = $UPDATES_INTERVAL
 [igdb]
 client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
+
+# If you enable the game agent, create an igdb.com account and fill your api credentials.
+# Read more https://api-docs.igdb.com/#authentication (Access token, not client secret!)
 "@
 
-$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
 
-Write-Host "`nConfig file written to $CONFIG_FILE" -ForegroundColor Green
+    Write-Host "`nConfig file written to $CONFIG_FILE`n" -ForegroundColor Green
+}
+
 
 # ----------------------------
 # Python Dependencies
