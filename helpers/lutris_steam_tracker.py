@@ -12,8 +12,8 @@ STARTUP_DELAY = 30
 
 # Use SCRIPT_DIR as base for data files
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TRACK_FILE = os.path.join(SCRIPT_DIR, "../data/current_game.txt")
-LOG_FILE = os.path.join(SCRIPT_DIR, "../data/lutris_steam_tracker.log")
+TRACK_FILE = os.path.join(SCRIPT_DIR, "../data/game_agent/current_game.txt")
+LOG_FILE = os.path.join(SCRIPT_DIR, "../data/game_agent/lutris_steam_tracker.log")
 
 # Normalize paths (resolve ../)
 TRACK_FILE = os.path.abspath(TRACK_FILE)
