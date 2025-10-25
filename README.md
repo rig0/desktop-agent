@@ -21,6 +21,8 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 - **Auto Updater**: Optional auto updates
 
 ---
+# -------- OUTDATED DOCUMENTATION --------
+Updated documentation will be released with 1.0
 
 ## Requirements
 
