@@ -1,5 +1,5 @@
-import os
 import sys
+import shutil
 import configparser
 from pathlib import Path
 
@@ -8,9 +8,9 @@ from pathlib import Path
 # Paths
 # ----------------------------
 
-BASE_DIR = Path(__file__).parent.parent
-CONFIG_PATH = os.path.join(BASE_DIR, "data", "config.ini")
-VERSION_PATH = os.path.join(BASE_DIR, "VERSION")
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONFIG_PATH = BASE_DIR / "data" / "config.ini"
+VERSION_PATH = BASE_DIR / "VERSION"
 
 
 # ----------------------------
@@ -18,7 +18,7 @@ VERSION_PATH = os.path.join(BASE_DIR, "VERSION")
 # ----------------------------
 
 try:
-    with open(VERSION_PATH, "r", encoding="utf-8") as f:
+    with VERSION_PATH.open("r", encoding="utf-8") as f:
         VERSION = f.read().strip()
 except FileNotFoundError:
     VERSION = "0.0.0"  # fallback if VERSION file is missing
@@ -27,13 +27,14 @@ except FileNotFoundError:
 # ----------------------------
 # Create configuration (first run)
 # ----------------------------
-def create_default_config(config_path):
-    src = os.path.join(BASE_DIR, "resources", "config_example.ini")
-    #config_path.parent.mkdir(parents=True, exist_ok=True)
+def create_default_config(config_path: Path):
+    src = BASE_DIR / "resources" / "config_example.ini"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not config_path.exists():
         shutil.copy(src, config_path)
-        print(f"Created default config at {config_path}")
+        print(f"\n[Config] Created default config at {config_path}")
+
 
 # ----------------------------
 # Load configuration
@@ -46,8 +47,12 @@ if not config.read(CONFIG_PATH):
     create_default_config(CONFIG_PATH)
 
     print(f"\n[Config] Edit config.ini with required info! Exiting...\n")
-
     raise FileNotFoundError("Config file was missing. One was generated with default values.")
+
+
+# ----------------------------
+# Configuration values
+# ----------------------------
 
 DEVICE_NAME = config.get("device", "name")
 PUBLISH_INT = config.getint("device", "interval", fallback=15)
@@ -60,18 +65,16 @@ MQTT_PASS = config.get("mqtt", "password")
 API_MOD = config.getboolean("modules", "api", fallback=False)
 API_PORT = config.getint("api", "port", fallback=5555)
 
-UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
-UPDATES_INT = config.getint("updates", "interval", fallback=3600)
-
-MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
-
 COMMANDS_MOD = config.getboolean("modules", "commands", fallback=False)
-
+MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
 GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
-GAME_FILE = os.path.join(BASE_DIR, "data", "current_game.txt")
+
+GAME_FILE = BASE_DIR / "data" / "current_game.txt"
 IGDB_CLIENT = config.get("igdb", "client_id")
 IGDB_TOKEN = config.get("igdb", "token")
 
+UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
+UPDATES_INT = config.getint("updates", "interval", fallback=3600)
 
 # ----------------------------
 # Device identifiers and topics
