@@ -42,7 +42,7 @@ if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-Write-Host "You can configure the app now or manually edit the default config.ini ($CONFIG_FILE)"
+Write-Host "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
 $CONFIG_CHOICE = Read-Host "Configure now? [Y/n]"
 $CONFIG_CHOICE = ($CONFIG_CHOICE.Trim())
 if ([string]::IsNullOrWhiteSpace($CONFIG_CHOICE)) { $CONFIG_CHOICE = "Y" }

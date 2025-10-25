@@ -193,7 +193,7 @@ echo
 DATA_DIR=$(realpath ../data)
 CONFIG_FILE="$DATA_DIR/config.ini"
 
-echo "You can configure the app now or manually edit the default config.ini ($CONFIG_FILE)"
+echo "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
 read -p "Configure now? [Y/n]: " CONFIG_CHOICE
 CONFIG_CHOICE="$(echo -n "${CONFIG_CHOICE:-Y}" | xargs)"
 
