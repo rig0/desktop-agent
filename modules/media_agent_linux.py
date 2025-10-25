@@ -75,6 +75,7 @@ def start_media_agent(client: mqtt.Client):
         last_image = None
         BASE_DIR = Path(__file__).parent.parent
         placeholder_path = BASE_DIR / "resources" / "media_thumb.png"
+        placeholder_path_custom = BASE_DIR / "data" / "media_agent" / "media_thumb.png"
 
         while True:
             try:
@@ -98,13 +99,23 @@ def start_media_agent(client: mqtt.Client):
 
                     # Thumbnail or placeholder
                     thumbnail_bytes = info.get("thumbnail_bytes")
-                    if not thumbnail_bytes and placeholder_path.exists():
-                        try:
-                            with open(placeholder_path, "rb") as f:
-                                thumbnail_bytes = f.read()
-                        except Exception as e:
-                            print("[MediaAgent] Failed to load placeholder:", e)
-                            thumbnail_bytes = None
+                    if not thumbnail_bytes:
+                        # Try custom placeholder first
+                        if placeholder_path_custom.exists():
+                            try:
+                                with open(placeholder_path_custom, "rb") as f:
+                                    thumbnail_bytes = f.read()
+                            except Exception as e:
+                                print("[MediaAgent] No custom thumbnail detected. Moving on with default:", e)
+                        
+                        # Fallback to default placeholder if needed
+                        if not thumbnail_bytes and placeholder_path.exists():
+                            try:
+                                with open(placeholder_path, "rb") as f:
+                                    thumbnail_bytes = f.read()
+                            except Exception as e:
+                                print("[MediaAgent] Failed to load default placeholder thumbnail:", e)
+                                thumbnail_bytes = None
 
                     # Only publish if image changed
                     if thumbnail_bytes and thumbnail_bytes != last_image:
