@@ -54,7 +54,7 @@ if ($CONFIG_CHOICE -match '^[Nn]$') {
 
     Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
-    Write-Host "`nConfig file copied successfully.`n" -ForegroundColor Green
+    Write-Host "`nConfig file copied successfully." -ForegroundColor Green
 }
 else {
     Write-Host "`nCreating config file...`n" -ForegroundColor Cyan
