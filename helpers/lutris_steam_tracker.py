@@ -16,7 +16,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(SCRIPT_DIR, "../data/game_agent/lutris_steam_tracker.log")
 
 # Normalize paths (resolve ../)
-TRACK_FILE = os.path.abspath(GAME_FILE)
+#TRACK_FILE = os.path.abspath(GAME_FILE)
+TRACK_FILE = GAME_FILE
 LOG_FILE = os.path.abspath(LOG_FILE)
 
 # Processes to monitor
