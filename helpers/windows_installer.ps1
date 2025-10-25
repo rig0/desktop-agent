@@ -48,6 +48,7 @@ $CONFIG_CHOICE = ($CONFIG_CHOICE.Trim())
 if ([string]::IsNullOrWhiteSpace($CONFIG_CHOICE)) { $CONFIG_CHOICE = "Y" }
 
 if ($CONFIG_CHOICE -match '^[Nn]$') {
+    $CONFIG_SKIPPED = $true
     Write-Host "`nApp config skipped. Copying example config to $CONFIG_FILE"
     Write-Host "Make sure to edit with valid values or app will fail!" -ForegroundColor Yellow
 
@@ -281,8 +282,9 @@ python -m pip install -r requirements-windows.txt
 # ----------------------------
 # Media Agent Dependencies
 # ----------------------------
-if ($MEDIA_ENABLED) {
-    Write-Host "`nMedia Agent enabled. Installing Windows SDK dependencies..."
+if ( ($MEDIA_ENABLED) -or ($CONFIG_SKIPPED) ) {
+    if ($MEDIA_ENABLED) { Write-Host "`nMedia Agent enabled. Installing Windows SDK dependencies..." }
+    if ($CONFIG_SKIPPED) { Write-Host "`nInstalling Windows SDK dependencies for media_agent..." }
 
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
         $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
