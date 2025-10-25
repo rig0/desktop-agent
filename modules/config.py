@@ -67,9 +67,10 @@ API_PORT = config.getint("api", "port", fallback=5555)
 
 COMMANDS_MOD = config.getboolean("modules", "commands", fallback=False)
 MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
-GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
 
-GAME_FILE = BASE_DIR / "data" / "current_game.txt"
+GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
+GAME_FILE = BASE_DIR / "data" / "game_agent" / "current_game"
+
 IGDB_CLIENT = config.get("igdb", "client_id")
 IGDB_TOKEN = config.get("igdb", "token")
 
