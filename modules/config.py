@@ -29,7 +29,7 @@ except FileNotFoundError:
 # ----------------------------
 def create_default_config(config_path):
     src = os.path.join(BASE_DIR, "resources", "config_example.ini")
-    config_path.parent.mkdir(parents=True, exist_ok=True)
+    #config_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not config_path.exists():
         shutil.copy(src, config_path)
