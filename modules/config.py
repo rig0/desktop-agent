@@ -76,6 +76,7 @@ IGDB_TOKEN = config.get("igdb", "token")
 
 UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
 UPDATES_INT = config.getint("updates", "interval", fallback=3600)
+UPDATES_CH = config.get("updates", "channel", fallback="stable")
 
 # ----------------------------
 # Device identifiers and topics

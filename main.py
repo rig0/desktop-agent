@@ -6,7 +6,7 @@ from modules.commands import run_predefined_command
 from modules.desktop_agent import get_system_info, publish_discovery, start_desktop_agent
 from modules.game_agent import start_game_agent
 from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
-                    API_MOD, API_PORT, MEDIA_AGENT, GAME_AGENT, GAME_FILE, UPDATES_MOD, UPDATES_INT, \
+                    API_MOD, API_PORT, MEDIA_AGENT, GAME_AGENT, GAME_FILE, UPDATES_MOD, UPDATES_INT, UPDATES_CH, \
                     device_id, base_topic, discovery_prefix, device_info
 
 
@@ -56,7 +56,7 @@ def media_agent(client):
 
 def updater():
     while True:
-        update_repo()
+        update_repo(UPDATES_CH)
         time.sleep(UPDATES_INT)
 
 
