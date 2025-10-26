@@ -1,4 +1,4 @@
-import json, threading, time, os
+import json, threading, time, os, sys
 import paho.mqtt.client as mqtt
 from modules.api import start_api
 from modules.updater import update_repo
@@ -126,10 +126,12 @@ def main():
     # Keep main thread alive
     print("[Main] Agent running. Press Ctrl+C to exit.")
     try:
-        while True:
+        while not exit_flag.is_set():
             time.sleep(1)
     except KeyboardInterrupt:
         print("[Main] Shutting down...")
+        client.disconnect()
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
