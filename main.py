@@ -22,14 +22,14 @@ exit_flag = threading.Event()
 
 def on_connect(client, userdata, flags, rc):
     messages = {
-        0: "[MQTT] Connected successfully.",
-        1: "[MQTT] Connection refused - incorrect protocol version.",
-        2: "[MQTT] Connection refused - invalid client identifier.",
-        3: "[MQTT] Connection refused - server unavailable.",
-        4: "[MQTT] Connection refused - bad username or password.",
-        5: "[MQTT] Connection refused - not authorized.",
+        0: "\n[Main] MQTT connected successfully.",
+        1: "\n[Main] MQTT connection refused - incorrect protocol version.",
+        2: "\n[Main] MQTT connection refused - invalid client identifier.",
+        3: "\n[Main] MQTT connection refused - server unavailable.",
+        4: "\n[Main] MQTT connection refused - bad username or password.",
+        5: "\n[Main] MQTT connection refused - not authorized.",
     }
-    print(messages.get(rc, f"[MQTT] Connection failed with unknown error (code {rc})."))
+    print(messages.get(rc, f"\n[Main] MQTT connection failed with unknown error (code {rc})."))
 
     if rc != 0:
         exit_flag.set()  # signal main thread to exit
@@ -52,7 +52,7 @@ def on_mqtt_message(client, userdata, msg):
         result = run_predefined_command(command_key)
         client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
     except Exception as e:
-        print(f"[Main] MQTT Error handling run command: {e}")
+        print(f"[Main] Error handling MQTT command: {e}")
 
 
 # ----------------------------
@@ -91,7 +91,7 @@ def main():
     try:
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
     except Exception as e:
-        print(f"[MQTT] Could not connect to broker: {e}")
+        print(f"\n[Main] Could not connect to MQTT broker: {e}")
         sys.exit(1)
 
     # Start MQTT loop
@@ -100,7 +100,7 @@ def main():
     # Wait briefly to see if connection fails
     for _ in range(20):  # up to ~2 seconds
         if exit_flag.is_set():
-            print("[MQTT] Exiting due to connection failure.")
+            print("[Main] Exiting due to MQTT connection failure.")
             sys.exit(1)
         time.sleep(0.1)
 
