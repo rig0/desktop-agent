@@ -27,13 +27,17 @@ except FileNotFoundError:
 # ----------------------------
 # Create configuration (first run)
 # ----------------------------
-def create_default_config(config_path: Path):
-    src = BASE_DIR / "resources" / "config_example.ini"
+def create_config(config_path: Path): 
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not config_path.exists():
+        print(f"\n[Config] Config file not found! Creating now...")
+        
+        src = BASE_DIR / "resources" / "config_example.ini"
         shutil.copy(src, config_path)
-        print(f"[Config] Created default config at {config_path}")
+
+        print(f"\n[Config] Created default config at {config_path}")
+        print(f"\n[Config] Edit config.ini with required info! Exiting...\n")        
 
 
 # ----------------------------
@@ -42,11 +46,7 @@ def create_default_config(config_path: Path):
 
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
-    print(f"\n[Config] Config file not found! Creating now...\n")
-
-    create_default_config(CONFIG_PATH)
-
-    print(f"\n[Config] Edit config.ini with required info! Exiting...\n")
+    create_config(CONFIG_PATH)
     raise FileNotFoundError("Config file was missing. One was generated with default values.")
 
 
