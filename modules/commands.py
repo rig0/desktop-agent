@@ -117,7 +117,6 @@ def run_predefined_command(command_key: str) -> dict:
         return {"success": False, "output": f"[Commands] Command '{command_key}' not allowed."}
 
     entry = ALLOWED_COMMANDS[command_key]
-    print(f"[Commands] Received command: {entry}")
 
     if isinstance(entry, dict):
         cmd = entry.get("cmd")
@@ -128,6 +127,8 @@ def run_predefined_command(command_key: str) -> dict:
         wait = False
         platforms = None
 
+    print(f"[Commands] Received command: {cmd}")
+    
     platform_name = "linux" if sys.platform.startswith("linux") else "win" if sys.platform.startswith("win") else None
 
     if platforms and platform_name not in platforms:
