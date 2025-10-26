@@ -37,7 +37,8 @@ def create_config(config_path: Path):
         shutil.copy(src, config_path)
 
         print(f"\n[Config] Created default config at {config_path}")
-        print(f"\n[Config] Edit config.ini with required info! Exiting...\n")        
+        print(f"\n[Config] Edit config.ini with required info! Exiting...\n")   
+        exit(1)    
 
 
 # ----------------------------
@@ -47,7 +48,7 @@ def create_config(config_path: Path):
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
     create_config(CONFIG_PATH)
-    raise FileNotFoundError("Config file was missing. One was generated with default values.")
+    # raise FileNotFoundError("Config file was missing. One was generated with default values.")
 
 
 # ----------------------------

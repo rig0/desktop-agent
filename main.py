@@ -15,14 +15,29 @@ from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH
 # ----------------------------
 
 client = mqtt.Client()
+exit_flag = threading.Event()
 
 def on_connect(client, userdata, flags, rc):
-    print(f"[Main] Connected to MQTT broker with result code {rc}")
+    messages = {
+        0: "[MQTT] Connected successfully.",
+        1: "[MQTT] Connection refused - incorrect protocol version.",
+        2: "[MQTT] Connection refused - invalid client identifier.",
+        3: "[MQTT] Connection refused - server unavailable.",
+        4: "[MQTT] Connection refused - bad username or password.",
+        5: "[MQTT] Connection refused - not authorized.",
+    }
+    print(messages.get(rc, f"[MQTT] Connection failed with unknown error (code {rc})."))
+
+    if rc != 0:
+        exit_flag.set()  # signal main thread to exit
+        client.disconnect()
+        return
+
     publish_discovery(client, device_id, base_topic, discovery_prefix, device_info)
 
 
 # ----------------------------
-# Command Handler
+# MQTT Command Handler
 # ----------------------------
 
 def on_mqtt_message(client, userdata, msg):
@@ -68,7 +83,23 @@ def main():
     # Connect to MQTT Broker
     client.username_pw_set(MQTT_USER, MQTT_PASS)
     client.on_connect = on_connect
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+
+    # Cleanly handle MQTT connection errors
+    try:
+        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    except Exception as e:
+        print(f"[MQTT] Could not connect to broker: {e}")
+        sys.exit(1)
+
+    # Start MQTT loop
+    threading.Thread(target=client.loop_forever, daemon=True).start()
+
+    # Wait briefly to see if connection fails
+    for _ in range(20):  # up to ~2 seconds
+        if exit_flag.is_set():
+            print("[MQTT] Exiting due to connection failure.")
+            sys.exit(1)
+        time.sleep(0.1)
 
     # Listen for commands called via MQTT
     client.subscribe(f"{base_topic}/run")
