@@ -14,7 +14,7 @@ from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH
 # MQTT Client
 # ----------------------------
 
-client = mqtt.Client()
+client = mqtt.Client(callback_api_version=5)
 exit_flag = threading.Event()
 
 def on_connect(client, userdata, flags, rc):
