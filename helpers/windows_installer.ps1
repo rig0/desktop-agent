@@ -285,27 +285,27 @@ python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements-windows.txt
 
 # ----------------------------
-# Media Agent Dependencies
+# Media Agent Dependencies (obsolete)
 # ----------------------------
-if ( ($MEDIA_ENABLED) -or ($CONFIG_SKIPPED) ) {
-    if ($MEDIA_ENABLED) { Write-Host "`nMedia Agent enabled. Installing Windows SDK dependencies..." }
-    if ($CONFIG_SKIPPED) { Write-Host "`nInstalling Windows SDK dependencies for media_agent..." }
+# if ( ($MEDIA_ENABLED) -or ($CONFIG_SKIPPED) ) {
+#     if ($MEDIA_ENABLED) { Write-Host "`nMedia Agent enabled. Installing Windows SDK dependencies..." }
+#     if ($CONFIG_SKIPPED) { Write-Host "`nInstalling Windows SDK dependencies for media_agent..." }
 
-    if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
-        $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
-        #$buildToolsURL = "https://files.rigslab.com/-ZLKF9UpEm9/vs_BuildTools.exe"
-        $installerPath = "$env:TEMP\vs_BuildTools.exe"
-        Write-Host "`nDownloading Microsoft Build Tools..."
-        Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
-        Write-Host "`nInstalling Microsoft Build Tools. This could take some time..." -ForegroundColor Yellow
-        Start-Process -FilePath $installerPath -ArgumentList "--quiet", "--wait", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended" -Wait
-        Write-Host "`nBuild tools installed successfully.`n" -ForegroundColor Green
-    } else {
-        Write-Host "Build tools already present."
-    }
+#     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
+#         $buildToolsURL = "https://aka.ms/vs/17/release/vs_BuildTools.exe"
+#         #$buildToolsURL = "https://files.rigslab.com/-ZLKF9UpEm9/vs_BuildTools.exe"
+#         $installerPath = "$env:TEMP\vs_BuildTools.exe"
+#         Write-Host "`nDownloading Microsoft Build Tools..."
+#         Invoke-WebRequest -Uri $buildToolsURL -OutFile $installerPath
+#         Write-Host "`nInstalling Microsoft Build Tools. This could take some time..." -ForegroundColor Yellow
+#         Start-Process -FilePath $installerPath -ArgumentList "--quiet", "--wait", "--norestart", "--add", "Microsoft.VisualStudio.Workload.VCTools", "--includeRecommended" -Wait
+#         Write-Host "`nBuild tools installed successfully.`n" -ForegroundColor Green
+#     } else {
+#         Write-Host "Build tools already present."
+#     }
 
-    python -m pip install winsdk
-}
+#     python -m pip install winsdk
+# }
 
 Write-Host "`nAll Python dependencies installed successfully.`n" -ForegroundColor Green
 

@@ -3,3 +3,4 @@ psutil
 paho-mqtt
 GPUtil
 requests
+winsdk
