@@ -202,6 +202,7 @@ if [[ "$CONFIG_CHOICE" =~ ^[Nn]$ ]]; then
     echo "App config skipped. Copying example config to $CONFIG_FILE"
     echo "Make sure to edit with valid values or app will fail!"
     
+    mkdir -p "$DATA_DIR"
     RES_DIR=$(realpath ../resources)
     cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
 
