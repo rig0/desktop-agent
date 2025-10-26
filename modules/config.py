@@ -48,7 +48,6 @@ def create_config(config_path: Path):
 config = configparser.ConfigParser()
 if not config.read(CONFIG_PATH):
     create_config(CONFIG_PATH)
-    # raise FileNotFoundError("Config file was missing. One was generated with default values.")
 
 
 # ----------------------------
