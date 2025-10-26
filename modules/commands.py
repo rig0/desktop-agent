@@ -117,7 +117,8 @@ def run_predefined_command(command_key: str) -> dict:
         return {"success": False, "output": f"[Commands] Command '{command_key}' not allowed."}
 
     entry = ALLOWED_COMMANDS[command_key]
-    print(entry)
+    print(f"[Commands] Received command: {entry}")
+
     if isinstance(entry, dict):
         cmd = entry.get("cmd")
         wait = entry.get("wait", False)
