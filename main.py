@@ -1,4 +1,4 @@
-import json, threading, time, os, sys
+import json, threading, time, os, sys, warnings
 import paho.mqtt.client as mqtt
 from modules.api import start_api
 from modules.updater import update_repo
@@ -14,7 +14,10 @@ from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH
 # MQTT Client
 # ----------------------------
 
-client = mqtt.Client(callback_api_version=5)
+# Ignore depreceated mqtt callback version
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+client = mqtt.Client()
 exit_flag = threading.Event()
 
 def on_connect(client, userdata, flags, rc):
