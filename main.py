@@ -94,6 +94,10 @@ def main():
         print(f"\n[Main] Could not connect to MQTT broker: {e}")
         sys.exit(1)
 
+    # Listen for commands called via MQTT
+    client.subscribe(f"{base_topic}/run")
+    client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
+
     # Start MQTT loop
     threading.Thread(target=client.loop_forever, daemon=True).start()
 
@@ -104,12 +108,6 @@ def main():
             sys.exit(1)
         time.sleep(0.1)
 
-    # Listen for commands called via MQTT
-    client.subscribe(f"{base_topic}/run")
-    client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
-
-    # Start MQTT loop
-    threading.Thread(target=client.loop_forever, daemon=True).start()
 
     # Start desktop agent
     threading.Thread(target=start_desktop_agent, args=(client, base_topic, PUBLISH_INT), daemon=True).start()
