@@ -1,25 +1,35 @@
-# Desktop Agent for Home Assistant
+# Overview
 
 A lightweight desktop agent that integrates your PC with [Home Assistant](https://www.home-assistant.io/) using **MQTT**.  
 It publishes live system metrics, exposes a simple API, and lets you run custom commands remotely.
 
-***Fully functional on both windows and linux but still under development. Updates may have breaking changes. Documentation is a WIP***
-
-*Consider the current state and [Tagged](https://github.com/rig0/hass-desktop-agent/tags) versions as nightly builds.*
-
-*Stable builds will be found in [Releases](https://github.com/rig0/hass-desktop-agent/releases)*
+***Fully functional on both windows and linux but still under development. Updates may have breaking changes.***
 
 ---
 
 ## Features
 
-- **System monitoring**: CPU, memory, and other stats sent to Home Assistant via MQTT.
+- **System monitoring**: CPU, memory, storage, and other stats sent to Home Assistant via MQTT.
+- **Remote commands**: Define and trigger your own scripts/commands remotely.
+- **Built-in API**: Fetch system info or run commands via HTTP.
 - **Media agent**: Now playing info. Title, artist, album and thumbnail via MQTT.
+- **Game agent**: Current game info. Cover, artwork, playtime and game details via MQTT.
+- **Auto updater**: Optional auto updates
 - **Home Assistant auto-discovery**: Device and sensors show up automatically if MQTT discovery is enabled.
-- **Built-in API**: Fetch system info over HTTP.
-- **Custom commands**: Define and trigger your own scripts/commands remotely.
-- **Auto Updater**: Optional auto updates
 
 ---
 
-### Wiki is a work in progress.
+## Preview 
+(add example screenshots)
+
+---
+
+## Supported operating systems
+- Windows
+- Linux
+
+---
+
+## Requirements
+- Computer (or server) to monitor
+- Home Assistant instance to send stats to
