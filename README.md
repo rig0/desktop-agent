@@ -1,9 +1,8 @@
-# Overview
+# Desktop Agent
 
+## About
 A lightweight desktop agent that integrates your PC with [Home Assistant](https://www.home-assistant.io/) using **MQTT**.  
 It publishes live system metrics, exposes a simple API, and lets you run custom commands remotely.
-
-***Fully functional on both windows and linux but still under development. Updates may have breaking changes.***
 
 ---
 
@@ -24,15 +23,16 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 ---
 
-## Supported operating systems
-- Windows
-- Linux
+## Requirements
+- **Computer** to monitor and send commands to.
+- **Home Assistant** instance with **MQTT broker** running to receive info.
 
 ---
 
-## Requirements
-- Computer (or server) to monitor
-- Home Assistant instance to send stats to
+## Supported OS
+- Windows
+- Linux
+
 
 
 ## Notes
