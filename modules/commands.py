@@ -110,11 +110,11 @@ def run_system_power_command(action: str) -> dict:
 def run_predefined_command(command_key: str) -> dict:
     if not COMMANDS_MOD:
         print(f"[Commands] Module not enabled.")
-        return {"success": False, "output": f"[Commands] Module not enabled"}
+        return {"success": False, "output": f"Module not enabled"}
 
     if command_key not in ALLOWED_COMMANDS:
         print(f"[Commands] Command '{command_key}' not allowed.")
-        return {"success": False, "output": f"[Commands] Command '{command_key}' not allowed."}
+        return {"success": False, "output": f"Command '{command_key}' not allowed."}
 
     entry = ALLOWED_COMMANDS[command_key]
 
@@ -156,7 +156,7 @@ def run_predefined_command(command_key: str) -> dict:
                 time.sleep(1)
                 if proc.poll() is not None:
                     return {"success": False, "output": f"Command '{command_key}' failed to start."}
-                return {"success": True, "output": f"Command '{command_key}' launched (Linux GUI)."}
+                return {"success": True, "output": f"Command '{command_key}' launched."}
 
 
         elif platform_name == "win":
