@@ -33,3 +33,9 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 ## Requirements
 - Computer (or server) to monitor
 - Home Assistant instance to send stats to
+
+
+## Notes
+
+- The Wiki section is being actively worked on.
+- App is currently getting ready for release and has alot of moving parts. Hold for a release (soon tm)
