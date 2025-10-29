@@ -9,8 +9,8 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 ## Features
 
 - **System monitoring**: CPU, memory, storage, and other stats sent to Home Assistant via MQTT.
-- **Remote commands**: Define and trigger your own scripts/commands remotely.
 - **Built-in API**: Fetch system info or run commands via HTTP.
+- **Remote commands**: Define and trigger your own scripts/commands remotely.
 - **Media agent**: Now playing info. Title, artist, album and thumbnail via MQTT.
 - **Game agent**: Current game info. Cover, artwork, playtime and game details via MQTT.
 - **Auto updater**: Optional auto updates
