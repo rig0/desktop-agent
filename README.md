@@ -38,4 +38,4 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 ## Notes
 
 - The Wiki section is being actively worked on.
-- App is currently getting ready for release and has alot of moving parts. Hold for a release (soon tm)
+- App is currently getting ready for release and has a lot of moving parts. Hold for a release (soon tm)
