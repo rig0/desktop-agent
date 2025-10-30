@@ -72,6 +72,12 @@ GAME_FILE = BASE_DIR / "data" / "game_agent" / "current_game"
 IGDB_CLIENT = config.get("igdb", "client_id")
 IGDB_TOKEN = config.get("igdb", "token")
 
+# Validate IGDB credentials if game agent is enabled
+if GAME_AGENT and (not IGDB_CLIENT or not IGDB_TOKEN):
+    print("[Config] WARNING: Game agent is enabled but IGDB credentials are not configured!")
+    print("[Config] Please add your IGDB client_id and token to config.ini")
+    print("[Config] The game agent will not function properly without valid credentials.")
+
 UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
 UPDATES_INT = config.getint("updates", "interval", fallback=3600)
 UPDATES_CH = config.get("updates", "channel", fallback="stable")
