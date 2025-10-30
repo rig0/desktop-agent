@@ -1,6 +1,4 @@
-import sys
-import shutil
-import configparser
+import sys, shutil, configparser
 from pathlib import Path
 
 

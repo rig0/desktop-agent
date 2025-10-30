@@ -1,8 +1,4 @@
-import os
-import sqlite3
-import time
-import requests
-import json
+import os, sqlite3, time, requests, json
 from datetime import datetime, timezone
 
 class IGDBClient:
