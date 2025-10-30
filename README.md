@@ -7,7 +7,6 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 ---
 
 ## Features
-
 - **System monitoring**: CPU, memory, storage, and other stats sent to Home Assistant via MQTT.
 - **Built-in API**: Fetch system info or run commands via HTTP.
 - **Remote commands**: Define and trigger your own scripts/commands remotely.
