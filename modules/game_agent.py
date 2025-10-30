@@ -1,4 +1,4 @@
-import os, json, time, threading
+import os, json, time, threading, requests
 import paho.mqtt.client as mqtt
 from .igdb import IGDBClient
 from .config import IGDB_CLIENT, IGDB_TOKEN, DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
