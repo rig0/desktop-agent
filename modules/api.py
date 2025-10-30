@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import logging
 
 app = Flask(__name__)
 
@@ -18,4 +19,6 @@ def run_command():
     return jsonify(result), 200 if result["success"] else 400
 
 def start_api(port):
-    app.run(host="0.0.0.0", port=port)
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
