@@ -1,3 +1,5 @@
+modules/__pycache__/
+__pycache__/
 .legacy/
+.claude/
 data/
-old.md
