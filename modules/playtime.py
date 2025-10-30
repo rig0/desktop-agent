@@ -17,8 +17,13 @@ def find_lutris_db():
 
 def get_lutris_playtime(game_name):
     db_path = find_lutris_db()
+    if db_path is None:
+        print("[Playtime] Lutris database not found")
+        return None
+
     if not os.path.isfile(db_path):
-        raise FileNotFoundError(f"Database not found: {db_path}")
+        print(f"[Playtime] Database file does not exist: {db_path}")
+        return None
 
     try:
         conn = sqlite3.connect(db_path)
@@ -55,7 +60,8 @@ def get_lutris_playtime(game_name):
         return playtime
 
     except sqlite3.Error as e:
-        raise RuntimeError(f"SQLite error: {e}")
+        print(f"[Playtime] SQLite error: {e}")
+        return None
 
 # Standalone testing
 if __name__ == "__main__":
