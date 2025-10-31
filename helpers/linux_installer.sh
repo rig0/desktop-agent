@@ -2,10 +2,18 @@
 set -e
 
 # ----------------------------
+# Repository Configuration
+# ----------------------------
+REPO_OWNER="rig0"
+REPO_NAME="hass-desktop-agent"
+REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}"
+REPO_WIKI_URL="${REPO_URL}/wiki/Home"
+
+# ----------------------------
 # Prepare
 # ----------------------------
 
-# Default: don’t install GPU extras. NVIDIA cards get detected automatically.
+# Default: don't install GPU extras. NVIDIA cards get detected automatically.
 INSTALL_AMD=false
 INSTALL_INTEL=false
 
@@ -305,7 +313,7 @@ else
         # Write config.ini
     cat > "$CONFIG_FILE" <<EOL
 ; ================== DESKTOP AGENT CONFIG ==================
-; Documentation: https://github.com/rig0/hass-desktop-agent
+; Documentation: ${REPO_WIKI_URL}
 
 ; Intervals are in seconds. Modules are disabled by default.
 

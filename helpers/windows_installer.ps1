@@ -1,4 +1,12 @@
 # ----------------------------
+# Repository Configuration
+# ----------------------------
+$REPO_OWNER = "rig0"
+$REPO_NAME = "hass-desktop-agent"
+$REPO_URL = "https://github.com/$REPO_OWNER/$REPO_NAME"
+$REPO_WIKI_URL = "$REPO_URL/wiki/Home"
+
+# ----------------------------
 # Self-Elevate to Administrator
 # ----------------------------
 function Ensure-Admin {
@@ -151,7 +159,7 @@ else {
     # Write config.ini
     $content = @"
 ; ================== DESKTOP AGENT CONFIG ==================
-; Documentation: https://github.com/rig0/hass-desktop-agent
+; Documentation: $REPO_WIKI_URL
 
 ; Intervals are in seconds. Modules are disabled by default.
 
@@ -320,7 +328,7 @@ Write-Host "`nTo run the media agent:"
 Write-Host "    cd $ScriptRoot"
 Write-Host "    python3 media_agent.py"
 Write-Host "`nInstructions for creating services for the agents can be found here:" -ForegroundColor Yellow
-Write-Host "https://github.com/rig0/hass-desktop-agent/" -ForegroundColor Yellow
+Write-Host "$REPO_WIKI_URL" -ForegroundColor Yellow
 
 Write-Host "`nPress any key to exit..."
 $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
