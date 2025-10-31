@@ -33,5 +33,6 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 ## Quick Start
 - [Documentation](https://github.com/rig0/desktop-agent/wiki)
 - [Getting Started](https://github.com/rig0/desktop-agent/wiki/Getting-Started)
+- [Installation](/wiki/Installation)
 - [Configuration Guide](https://github.com/rig0/desktop-agent/wiki/Configuration)
 - [Modules Overview](https://github.com/rig0/desktop-agent/wiki/Modules)
