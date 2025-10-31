@@ -1,7 +1,8 @@
 import os, shutil, tempfile, requests, zipfile, io, time, hashlib, sys, stat
+from modules.config import REPO_OWNER, REPO_NAME
 
 # Config
-REPO = "rig0/hass-desktop-agent"
+REPO = f"{REPO_OWNER}/{REPO_NAME}"
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPDATER_DIR = os.path.join(AGENT_DIR, "data", "updater")
 

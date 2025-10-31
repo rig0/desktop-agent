@@ -23,6 +23,17 @@ except FileNotFoundError:
 
 
 # ----------------------------
+# Repository Information
+# ----------------------------
+
+REPO_OWNER = "rig0"
+REPO_NAME = "hass-desktop-agent"
+#REPO_FULL = f"{REPO_OWNER}/{REPO_NAME}"  # Format: "owner/repo"
+REPO_URL = f"https://github.com/{REPO_OWNER}/{REPO_NAME}"
+REPO_WIKI_URL = f"{REPO_URL}/wiki/"
+
+
+# ----------------------------
 # Create configuration (first run)
 # ----------------------------
 def create_config(config_path: Path): 
@@ -101,5 +112,5 @@ device_info = {
     "manufacturer": "Rigo Sotomayor",
     "model": "Desktop Agent",
     "sw_version": VERSION,
-    "configuration_url": "https://github.com/rig0/hass-desktop-agent",
+    "configuration_url": REPO_URL,
 }
