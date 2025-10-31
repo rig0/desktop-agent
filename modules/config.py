@@ -27,8 +27,7 @@ except FileNotFoundError:
 # ----------------------------
 
 REPO_OWNER = "rig0"
-REPO_NAME = "hass-desktop-agent"
-#REPO_FULL = f"{REPO_OWNER}/{REPO_NAME}"  # Format: "owner/repo"
+REPO_NAME = "desktop-agent"
 REPO_URL = f"https://github.com/{REPO_OWNER}/{REPO_NAME}"
 REPO_WIKI_URL = f"{REPO_URL}/wiki/"
 

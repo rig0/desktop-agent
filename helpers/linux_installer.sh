@@ -5,7 +5,7 @@ set -e
 # Repository Configuration
 # ----------------------------
 REPO_OWNER="rig0"
-REPO_NAME="hass-desktop-agent"
+REPO_NAME="desktop-agent"
 REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}"
 REPO_WIKI_URL="${REPO_URL}/wiki/Home"
 
