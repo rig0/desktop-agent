@@ -1,73 +1,73 @@
-# name: Update Version
+name: Update Version
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   update-version:
-#     runs-on: CodeServer
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v2
+jobs:
+  update-version:
+    runs-on: CodeServer
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-#       - name: Capture logs
-#         run: |
-#           # Redirect all stdout/stderr to a log file and console
-#           exec > >(tee -a job.log) 2>&1
+      - name: Capture logs
+        run: |
+          # Redirect all stdout/stderr to a log file and console
+          exec > >(tee -a job.log) 2>&1
 
-#       - name: Update VERSION File
-#         run: |
-#           # Get current version from the VERSION file
-#           current_version=$(cat VERSION)
-#           IFS='.' read -ra VERSION <<< "$current_version"
+      - name: Update VERSION File
+        run: |
+          # Get current version from the VERSION file
+          current_version=$(cat VERSION)
+          IFS='.' read -ra VERSION <<< "$current_version"
 
-#           # Increment patch version
-#           new_version="${VERSION[0]}.${VERSION[1]}.$((VERSION[2]+1))"
+          # Increment patch version
+          new_version="${VERSION[0]}.${VERSION[1]}.$((VERSION[2]+1))"
 
-#           # Update the VERSION file
-#           echo "$new_version" > VERSION
-#           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+          # Update the VERSION file
+          echo "$new_version" > VERSION
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
 
-#           # Get last commit info
-#           last_commit_msg=$(git log -1 --pretty=%B)
-#           last_commit_hash=$(git rev-parse --short HEAD)
+          # Get last commit info
+          last_commit_msg=$(git log -1 --pretty=%B)
+          last_commit_hash=$(git rev-parse --short HEAD)
 
-#           echo "LAST_COMMIT_MSG=$last_commit_msg" >> $GITHUB_ENV
-#           echo "LAST_COMMIT_HASH=$last_commit_hash" >> $GITHUB_ENV
+          echo "LAST_COMMIT_MSG=$last_commit_msg" >> $GITHUB_ENV
+          echo "LAST_COMMIT_HASH=$last_commit_hash" >> $GITHUB_ENV
 
-#           # Commit version bump using last commit as message
-#           git add VERSION
-#           git commit -m "$last_commit_msg ($last_commit_hash)"
+          # Commit version bump using last commit as message
+          git add VERSION
+          git commit -m "$last_commit_msg ($last_commit_hash)"
 
-#           # Annotated tag with description
-#           git tag -a "v$new_version" -m "Nightly build v$new_version
+          # Annotated tag with description
+          git tag -a "v$new_version" -m "Nightly build v$new_version
 
-#           Based on commit: $last_commit_hash
+          Based on commit: $last_commit_hash
 
-#           $last_commit_msg
-#           "
+          $last_commit_msg
+          "
 
-#           # Push changes and the new tag
-#           git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git main
-#           git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/hass-desktop-agent.git "v$new_version"
+          # Push changes and the new tag
+          git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/desktop-agent.git main
+          git push https://rambo:${{ secrets.GITEA_PAT }}@rigslab.com/Rambo/desktop-agent.git "v$new_version"
 
-#       - name: Send notification on success
-#         if: success()
-#         run: |
-#           /home/rambo/app-updated.sh "✅ Desktop Agent $NEW_VERSION
-#           [$LAST_COMMIT_HASH] $LAST_COMMIT_MSG"
+      - name: Send notification on success
+        if: success()
+        run: |
+          /home/rambo/app-updated.sh "✅ Desktop Agent $NEW_VERSION
+          [$LAST_COMMIT_HASH] $LAST_COMMIT_MSG"
 
-#       - name: Send notification on failure
-#         if: failure()
-#         run: |
-#           # Get last 10 lines of captured log file
-#           tail -n 10 job.log > lastlog.txt || echo "No log available" > lastlog.txt
+      - name: Send notification on failure
+        if: failure()
+        run: |
+          # Get last 10 lines of captured log file
+          tail -n 10 job.log > lastlog.txt || echo "No log available" > lastlog.txt
 
-#           msg="❌ Desktop Agent Build $NEW_VERSION FAILED
-#           [$LAST_COMMIT_HASH] $LAST_COMMIT_MSG
+          msg="❌ Desktop Agent Build $NEW_VERSION FAILED
+          [$LAST_COMMIT_HASH] $LAST_COMMIT_MSG
 
-#           $(cat lastlog.txt)"
+          $(cat lastlog.txt)"
 
-#           /home/rambo/app-updated.sh "$msg"
+          /home/rambo/app-updated.sh "$msg"
