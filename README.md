@@ -4,7 +4,6 @@
 A lightweight desktop agent that integrates your PC with [Home Assistant](https://www.home-assistant.io/) using **MQTT**.  
 It publishes live system metrics, exposes a simple API, and lets you run custom commands remotely.
 
----
 
 ## Features
 - **System monitoring**: CPU, memory, storage, and other stats sent to Home Assistant via MQTT.
@@ -15,26 +14,24 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 - **Auto updater**: Optional auto updates
 - **Home Assistant auto-discovery**: Device and sensors show up automatically if MQTT discovery is enabled.
 
----
 
 ## Preview 
-(add example screenshots)
+<img src="https://files.rigslab.com/-pDCgGegpYb/Desktop_Agent_Dash_Example-1.png" alt="Preview-1" width="700">
 
----
+<img src="https://files.rigslab.com/-twQu8mtTei/Desktop_Agent_Dash_Example-2.png" alt="Preview-2" width="700">
+
 
 ## Requirements
 - **Computer** to monitor and send commands to.
 - **Home Assistant** instance with **MQTT broker** running to receive info.
 
----
 
 ## Supported OS
 - Windows
 - Linux
 
-
-
-## Notes
-
-- The Wiki section is being actively worked on.
-- App is currently getting ready for release and has a lot of moving parts. Hold for a release (soon tm)
+## Quick Start
+- [Documentation](/wiki/Home)
+- [Getting Started](/wiki/Getting-Started)
+- [Configuration Guide](/wiki/Configuration)
+- [Modules Overview](/wiki/Modules)
