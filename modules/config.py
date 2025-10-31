@@ -86,7 +86,8 @@ IGDB_TOKEN = config.get("igdb", "token")
 if GAME_AGENT and (not IGDB_CLIENT or not IGDB_TOKEN):
     print("[Config] WARNING: Game agent is enabled but IGDB credentials are not configured!")
     print("[Config] Please add your IGDB client_id and token to config.ini")
-    print("[Config] The game agent will not function properly without valid credentials.")
+    print("[Config] The game agent will be disabled for this run.")
+    GAME_AGENT = False
 
 UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
 UPDATES_INT = config.getint("updates", "interval", fallback=3600)
