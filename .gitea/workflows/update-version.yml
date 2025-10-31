@@ -71,3 +71,4 @@
 #           $(cat lastlog.txt)"
 
 #           /home/rambo/app-updated.sh "$msg"
+# testing
