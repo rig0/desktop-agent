@@ -16,9 +16,9 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 
 ## Preview 
-![Preview-1](https://files.rigslab.com/-erdT25Y4Qp/Desktop_Agent_Dash_Example-1-rs.png) 
+![Preview-1](https://i.imgur.com/I1aVpah.png) 
 
-![Preview-2](https://files.rigslab.com/-z6CLA92Fao/Desktop_Agent_Dash_Example-2-rs.png)
+![Preview-2](https://i.imgur.com/TPpXODN.png)
 
 
 ## Requirements
