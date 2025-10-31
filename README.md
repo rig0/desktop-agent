@@ -16,9 +16,9 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 
 ## Preview 
-<img src="https://files.rigslab.com/-pDCgGegpYb/Desktop_Agent_Dash_Example-1.png" alt="Preview-1" width="700">
+![Preview-1](https://files.rigslab.com/-erdT25Y4Qp/Desktop_Agent_Dash_Example-1-rs.png) 
 
-<img src="https://files.rigslab.com/-twQu8mtTei/Desktop_Agent_Dash_Example-2.png" alt="Preview-2" width="700">
+![Preview-2](https://files.rigslab.com/-z6CLA92Fao/Desktop_Agent_Dash_Example-2-rs.png)
 
 
 ## Requirements
@@ -31,7 +31,7 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 - Linux
 
 ## Quick Start
-- [Documentation](/wiki/Home)
-- [Getting Started](/wiki/Getting-Started)
-- [Configuration Guide](/wiki/Configuration)
-- [Modules Overview](/wiki/Modules)
+- [Documentation](https://github.com/rig0/desktop-agent/wiki)
+- [Getting Started](https://github.com/rig0/desktop-agent/wiki/Getting-Started)
+- [Configuration Guide](https://github.com/rig0/desktop-agent/wiki/Configuration)
+- [Modules Overview](https://github.com/rig0/desktop-agent/wiki/Modules)
