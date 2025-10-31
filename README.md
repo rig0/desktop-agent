@@ -20,6 +20,7 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 
 ![Preview-2](https://i.imgur.com/TPpXODN.png)
 
+> These dashboards were created using apexcharts-card, vertical-stack-in-card, mushroom-template-card, mushroom-chips-card, mini-graph-card and home assistant native cards. 
 
 ## Requirements
 - **Computer** to monitor and send commands to.
@@ -29,6 +30,7 @@ It publishes live system metrics, exposes a simple API, and lets you run custom 
 ## Supported OS
 - Windows
 - Linux
+
 
 ## Quick Start
 - [Documentation](https://github.com/rig0/desktop-agent/wiki)
