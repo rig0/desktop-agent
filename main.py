@@ -1,12 +1,12 @@
 import json, threading, time, os, sys, warnings
 import paho.mqtt.client as mqtt
 from modules.api import start_api
-from modules.updater import update_repo
+from modules.updater import UpdateManager
 from modules.commands import run_predefined_command
 from modules.desktop_agent import get_system_info, publish_discovery, start_desktop_agent
 from modules.game_agent import start_game_agent
 from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
-                    API_MOD, API_PORT, MEDIA_AGENT, GAME_AGENT, GAME_FILE, UPDATES_MOD, UPDATES_INT, UPDATES_CH, \
+                    API_MOD, API_PORT, MEDIA_AGENT, GAME_AGENT, GAME_FILE, UPDATES_MOD, UPDATES_INT, UPDATES_CH, UPDATES_AUTO, \
                     device_id, base_topic, discovery_prefix, device_info
 
 
@@ -14,7 +14,7 @@ from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH
 # MQTT Client
 # ----------------------------
 
-# Ignore depreceated mqtt callback version
+# Ignore deprecated mqtt callback version
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 client = mqtt.Client()
@@ -64,19 +64,10 @@ def media_agent(client):
     if sysinfo["os"] == "Linux":
         from modules.media_agent_linux import start_media_agent
         start_media_agent(client)
-    #elif sysinfo["os"] == "Windows":
+    elif sysinfo["os"] == "Windows":
+        print("[Main] Media agent is enabled but must be ran standalone on Windows.")
         #from modules.media_agent import start_media_agent
     
-
-# ----------------------------
-# Updater
-# ----------------------------
-
-def updater():
-    while True:
-        update_repo(UPDATES_CH)
-        time.sleep(UPDATES_INT)
-
 
 # ----------------------------
 # Main
@@ -121,8 +112,28 @@ def main():
     # Start game agent
     if GAME_AGENT: threading.Thread(target=start_game_agent, args=(client, GAME_FILE,), daemon=True).start()
 
-    # Start updater
-    if UPDATES_MOD: threading.Thread(target=updater, daemon=True).start()
+    # Start updater monitor
+    update_manager = None
+    if UPDATES_MOD:
+        update_manager = UpdateManager(
+            client=client,
+            base_topic=base_topic,
+            discovery_prefix=discovery_prefix,
+            device_id=device_id,
+            device_info=device_info,
+            channel=UPDATES_CH,
+            interval=UPDATES_INT,
+            auto_install=UPDATES_AUTO,
+        )
+
+        install_topic = f"{base_topic}/update/install"
+
+        def on_update_install(client, userdata, msg):
+            update_manager.handle_install_request(msg.payload)
+
+        client.subscribe(install_topic)
+        client.message_callback_add(install_topic, on_update_install)
+        update_manager.start()
 
     # Keep main thread alive
     print("[Main] Agent running. Press Ctrl+C to exit.")
