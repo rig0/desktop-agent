@@ -4,6 +4,7 @@
 A lightweight desktop agent that integrates your PC with [Home Assistant](https://www.home-assistant.io/) using **MQTT**.  
 It publishes live system metrics, exposes a simple API, and lets you run custom commands remotely.
 
+> ***Actively being developed. Expect breaking changes until release.***
 
 ## Features
 - **System monitoring**: CPU, memory, storage, and other stats sent to Home Assistant via MQTT.
