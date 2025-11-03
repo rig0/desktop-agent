@@ -136,8 +136,8 @@ def make_helpers_executable():
 # Release information
 # ----------------------------
 
-def fetch_release_info(channel: str = "stable") -> dict:
-    channel = channel or "stable"
+def fetch_release_info(channel: str = "beta") -> dict:
+    channel = channel or "beta"
 
     if channel == "stable":
         data = _github_get(f"{GITHUB_API}/repos/{REPO}/releases/latest")
