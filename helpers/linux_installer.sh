@@ -345,7 +345,7 @@ port = $API_PORT
 
 [updates]
 interval = $UPDATES_INTERVAL
-channel = stable
+channel = beta
 
 [igdb]
 client_id = $IGDB_CLIENT_ID
