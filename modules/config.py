@@ -92,7 +92,7 @@ if GAME_AGENT and (not IGDB_CLIENT or not IGDB_TOKEN):
 UPDATES_MOD = config.getboolean("modules", "updates", fallback=False)
 UPDATES_INT = config.getint("updates", "interval", fallback=3600)
 UPDATES_AUTO = config.getboolean("updates", "auto_install", fallback=False)
-UPDATES_CH = config.get("updates", "channel", fallback="stable")
+UPDATES_CH = config.get("updates", "channel", fallback="beta")
 
 # ----------------------------
 # Device identifiers and topics
