@@ -95,7 +95,7 @@ UPDATES_AUTO = config.getboolean("updates", "auto_install", fallback=False)
 UPDATES_CH = config.get("updates", "channel", fallback="beta")
 
 # Force 'beta' if set to 'release' until there's an actual release
-if UPDATES_CH == "release": UPDATES_CH = "beta"
+if UPDATES_CH == "stable": UPDATES_CH = "beta"
 
 # ----------------------------
 # Device identifiers and topics
