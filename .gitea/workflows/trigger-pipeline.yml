@@ -19,7 +19,7 @@ jobs:
       - name: Trigger Jenkins Pipeline - Desktop Agent
         run: |
           JENKINS_JOB="Desktop-Agent"
-          JENKINS_TRIGGER_TOKEN="trigger-flow
+          JENKINS_TRIGGER_TOKEN="trigger-flow"
           
           echo "Triggering Jenkins build via REST API..."
 
