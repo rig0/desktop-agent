@@ -3,4 +3,3 @@ __pycache__/
 .legacy/
 .claude/
 data/
-AGENTS.md
