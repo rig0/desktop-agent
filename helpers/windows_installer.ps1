@@ -84,12 +84,26 @@ if ($Silent) {
 
     # Set device name to hostname (only in [device] section)
     $SYSTEM_HOSTNAME = $env:COMPUTERNAME
-    # Escape special regex characters
-    $ESCAPED_HOSTNAME = [regex]::Escape($SYSTEM_HOSTNAME)
-    # Read config file and replace name in [device] section only
-    $content = Get-Content $CONFIG_FILE -Raw
-    $content = $content -replace '(?s)(\[device\].*?)^name = .*?$', "`$1name = $SYSTEM_HOSTNAME"
-    Set-Content -Path $CONFIG_FILE -Value $content -NoNewline
+    # Read config as lines
+    $lines = Get-Content $CONFIG_FILE
+    $inDeviceSection = $false
+    $newLines = foreach ($line in $lines) {
+        if ($line -match '^\[device\]') {
+            $inDeviceSection = $true
+            $line
+        }
+        elseif ($line -match '^\[') {
+            $inDeviceSection = $false
+            $line
+        }
+        elseif ($inDeviceSection -and $line -match '^name\s*=') {
+            "name = $SYSTEM_HOSTNAME"
+        }
+        else {
+            $line
+        }
+    }
+    $newLines | Set-Content $CONFIG_FILE
 
     Write-Host "`nConfig file copied successfully." -ForegroundColor Green
     Write-Host "Device name set to: $SYSTEM_HOSTNAME" -ForegroundColor Green
@@ -110,12 +124,26 @@ else {
 
         # Set device name to hostname (only in [device] section)
         $SYSTEM_HOSTNAME = $env:COMPUTERNAME
-        # Escape special regex characters
-        $ESCAPED_HOSTNAME = [regex]::Escape($SYSTEM_HOSTNAME)
-        # Read config file and replace name in [device] section only
-        $content = Get-Content $CONFIG_FILE -Raw
-        $content = $content -replace '(?s)(\[device\].*?)^name = .*?$', "`$1name = $SYSTEM_HOSTNAME"
-        Set-Content -Path $CONFIG_FILE -Value $content -NoNewline
+        # Read config as lines
+        $lines = Get-Content $CONFIG_FILE
+        $inDeviceSection = $false
+        $newLines = foreach ($line in $lines) {
+            if ($line -match '^\[device\]') {
+                $inDeviceSection = $true
+                $line
+            }
+            elseif ($line -match '^\[') {
+                $inDeviceSection = $false
+                $line
+            }
+            elseif ($inDeviceSection -and $line -match '^name\s*=') {
+                "name = $SYSTEM_HOSTNAME"
+            }
+            else {
+                $line
+            }
+        }
+        $newLines | Set-Content $CONFIG_FILE
 
         Write-Host "`nConfig file copied successfully." -ForegroundColor Green
         Write-Host "Device name set to: $SYSTEM_HOSTNAME" -ForegroundColor Green
