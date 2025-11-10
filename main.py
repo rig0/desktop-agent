@@ -137,7 +137,9 @@ def main():
         update_manager.start()
 
     # Trigger jenkins pipeline if deploying
-    if '--deploy' in sys.argv: notify_pipeline("Build Successful")
+    if '--deploy' in sys.argv: 
+        time.sleep(60)
+        notify_pipeline("Build Successful")
 
     # Keep main thread alive
     print("[Main] Agent running. Press Ctrl+C to exit.")
