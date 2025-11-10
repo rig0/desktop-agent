@@ -7,6 +7,25 @@ $REPO_URL = "https://github.com/$REPO_OWNER/$REPO_NAME"
 $REPO_WIKI_URL = "$REPO_URL/wiki/Home"
 
 # ----------------------------
+# Parse Command Line Arguments
+# ----------------------------
+param(
+    [switch]$Silent,
+    [switch]$Help
+)
+
+if ($Help) {
+    Write-Host "Desktop Agent Windows Installer"
+    Write-Host ""
+    Write-Host "Usage: .\windows_installer.ps1 [-Silent] [-Help]"
+    Write-Host ""
+    Write-Host "Options:"
+    Write-Host "  -Silent    Non-interactive mode: skip config dialogue and use example config"
+    Write-Host "  -Help      Show this help message"
+    exit 0
+}
+
+# ----------------------------
 # Self-Elevate to Administrator
 # ----------------------------
 function Ensure-Admin {
@@ -16,7 +35,13 @@ function Ensure-Admin {
         Write-Host "Elevating to Administrator..."
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = "powershell.exe"
-        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+
+        # Preserve command line arguments when elevating
+        $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        if ($Silent) {
+            $arguments += " -Silent"
+        }
+        $psi.Arguments = $arguments
         $psi.Verb = "runas"
         try {
             [System.Diagnostics.Process]::Start($psi) | Out-Null
@@ -50,21 +75,32 @@ if (-not (Test-Path $CONFIG_DIR)) {
     New-Item -ItemType Directory -Path $CONFIG_DIR -Force | Out-Null
 }
 
-Write-Host "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
-$CONFIG_CHOICE = Read-Host "Configure now? [Y/n]"
-$CONFIG_CHOICE = ($CONFIG_CHOICE.Trim())
-if ([string]::IsNullOrWhiteSpace($CONFIG_CHOICE)) { $CONFIG_CHOICE = "Y" }
-
-if ($CONFIG_CHOICE -match '^[Nn]$') {
-    $CONFIG_SKIPPED = $true
-    Write-Host "`nApp config skipped. Copying example config to $CONFIG_FILE"
+# In silent mode, skip config dialogue and copy example config
+if ($Silent) {
+    Write-Host "Silent mode: Copying example config to $CONFIG_FILE"
     Write-Host "Make sure to edit with valid values or app will fail!" -ForegroundColor Yellow
 
     Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
     Write-Host "`nConfig file copied successfully." -ForegroundColor Green
+    $CONFIG_SKIPPED = $true
 }
 else {
+    Write-Host "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
+    $CONFIG_CHOICE = Read-Host "Configure now? [Y/n]"
+    $CONFIG_CHOICE = ($CONFIG_CHOICE.Trim())
+    if ([string]::IsNullOrWhiteSpace($CONFIG_CHOICE)) { $CONFIG_CHOICE = "Y" }
+
+    if ($CONFIG_CHOICE -match '^[Nn]$') {
+        $CONFIG_SKIPPED = $true
+        Write-Host "`nApp config skipped. Copying example config to $CONFIG_FILE"
+        Write-Host "Make sure to edit with valid values or app will fail!" -ForegroundColor Yellow
+
+        Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
+
+        Write-Host "`nConfig file copied successfully." -ForegroundColor Green
+    }
+    else {
     Write-Host "`nCreating config file...`n" -ForegroundColor Cyan
 
     # Device section
@@ -198,10 +234,11 @@ client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
 "@
 
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+        [System.IO.File]::WriteAllText($CONFIG_FILE, $content, $utf8NoBom)
 
-    Write-Host "`nConfig file written to $CONFIG_FILE`n" -ForegroundColor Green
+        Write-Host "`nConfig file written to $CONFIG_FILE`n" -ForegroundColor Green
+    }
 }
 
 
@@ -330,5 +367,10 @@ Write-Host "    python3 media_agent.py"
 Write-Host "`nInstructions for creating services for the agents can be found here:" -ForegroundColor Yellow
 Write-Host "$REPO_WIKI_URL" -ForegroundColor Yellow
 
-Write-Host "`nPress any key to exit..."
-$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
+if (-not $Silent) {
+    Write-Host "`nPress any key to exit..."
+    $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
+}
+else {
+    Write-Host "`nInstallation completed in silent mode."
+}

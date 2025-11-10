@@ -16,6 +16,7 @@ REPO_WIKI_URL="${REPO_URL}/wiki/Home"
 # Default: don't install GPU extras. NVIDIA cards get detected automatically.
 INSTALL_AMD=false
 INSTALL_INTEL=false
+SILENT=false
 
 # Parse flags
 while [[ $# -gt 0 ]]; do
@@ -23,8 +24,16 @@ while [[ $# -gt 0 ]]; do
     --with-amd) INSTALL_AMD=true ;;
     --with-intel) INSTALL_INTEL=true ;;
     --with-all-gpus) INSTALL_AMD=true; INSTALL_INTEL=true ;;
+    --silent) SILENT=true ;;
     -h|--help)
-      echo "Usage: $0 [--with-amd] [--with-intel] [--with-all-gpus]"
+      echo "Usage: $0 [--with-amd] [--with-intel] [--with-all-gpus] [--silent]"
+      echo ""
+      echo "Options:"
+      echo "  --with-amd        Install AMD GPU monitoring tools"
+      echo "  --with-intel      Install Intel GPU monitoring tools"
+      echo "  --with-all-gpus   Install both AMD and Intel GPU monitoring tools"
+      echo "  --silent          Non-interactive mode: skip config dialogue and use example config"
+      echo "  -h, --help        Show this help message"
       exit 0
       ;;
   esac
@@ -74,12 +83,16 @@ fi
 IMMUTABLE=false
 if [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]] && command -v rpm-ostree >/dev/null 2>&1; then
     IMMUTABLE=true
-    echo
-    echo "Immutable OS detected: $DISTRO"
+    if [ "$SILENT" = false ]; then
+        echo
+        echo "Immutable OS detected: $DISTRO"
+    fi
 else
-    echo
-    echo "Detected distro: $DISTRO"
-    echo
+    if [ "$SILENT" = false ]; then
+        echo
+        echo "Detected distro: $DISTRO"
+        echo
+    fi
 fi
 
 # ----------------------------
@@ -161,27 +174,35 @@ if [[ " ${DEBIAN_BASED[@]} " =~ " ${DISTRO} " ]]; then
 
 elif [[ " ${FEDORA_BASED[@]} " =~ " ${DISTRO} " ]]; then
     if [ "$IMMUTABLE" = true ]; then
-        echo
-        echo "⚠️  Immutable Fedora detected. You can layer packages with rpm-ostree or use a toolbox (container)."
-        echo "Given the nature of this software, It's recommended to layer the packages with rpm-ostree."
-        echo "Running in a toolbox currently requires some workarounds for some sensors."
-        echo
-        read -p "Do you want to layer packages into the system? (Y/n): " choice
-        echo
-        if [[ "$choice" =~ ^[Nn]$ ]]; then
-            TOOLBOX=1
-            HOSTNAME=$(hostname)
-            echo
-            echo "Skipping layering. Using toolbox for installation instead."
-            echo 
-            toolbox create -c desktop-agent || true
-            toolbox run -c desktop-agent sudo dnf install -y "${ALL_PKGS[@]}"
-            toolbox run -c desktop-agent sudo hostname $HOSTNAME
-        else
+        if [ "$SILENT" = true ]; then
+            # Silent mode: default to layering packages with rpm-ostree
             RPM_OSTREE=1
             sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
             echo
             echo "Reboot required to apply changes!"
+        else
+            echo
+            echo "⚠️  Immutable Fedora detected. You can layer packages with rpm-ostree or use a toolbox (container)."
+            echo "Given the nature of this software, It's recommended to layer the packages with rpm-ostree."
+            echo "Running in a toolbox currently requires some workarounds for some sensors."
+            echo
+            read -p "Do you want to layer packages into the system? (Y/n): " choice
+            echo
+            if [[ "$choice" =~ ^[Nn]$ ]]; then
+                TOOLBOX=1
+                HOSTNAME=$(hostname)
+                echo
+                echo "Skipping layering. Using toolbox for installation instead."
+                echo
+                toolbox create -c desktop-agent || true
+                toolbox run -c desktop-agent sudo dnf install -y "${ALL_PKGS[@]}"
+                toolbox run -c desktop-agent sudo hostname $HOSTNAME
+            else
+                RPM_OSTREE=1
+                sudo rpm-ostree install --allow-inactive "${ALL_PKGS[@]}"
+                echo
+                echo "Reboot required to apply changes!"
+            fi
         fi
     else
         sudo dnf install -y "${ALL_PKGS[@]}"
@@ -201,20 +222,32 @@ echo
 DATA_DIR=$(realpath ../data)
 CONFIG_FILE="$DATA_DIR/config.ini"
 
-echo "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
-read -p "Configure now? [Y/n]: " CONFIG_CHOICE
-CONFIG_CHOICE="$(echo -n "${CONFIG_CHOICE:-Y}" | xargs)"
-
-if [[ "$CONFIG_CHOICE" =~ ^[Nn]$ ]]; then
-    echo
-    echo "App config skipped. Copying example config to $CONFIG_FILE"
+# In silent mode, skip config dialogue and copy example config
+if [ "$SILENT" = true ]; then
+    echo "Silent mode: Copying example config to $CONFIG_FILE"
     echo "Make sure to edit with valid values or app will fail!"
-    
+
     mkdir -p "$DATA_DIR"
     RES_DIR=$(realpath ../resources)
     cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
+    echo
+    echo "Config file copied to $CONFIG_FILE"
 
 else
+    echo "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
+    read -p "Configure now? [Y/n]: " CONFIG_CHOICE
+    CONFIG_CHOICE="$(echo -n "${CONFIG_CHOICE:-Y}" | xargs)"
+
+    if [[ "$CONFIG_CHOICE" =~ ^[Nn]$ ]]; then
+        echo
+        echo "App config skipped. Copying example config to $CONFIG_FILE"
+        echo "Make sure to edit with valid values or app will fail!"
+
+        mkdir -p "$DATA_DIR"
+        RES_DIR=$(realpath ../resources)
+        cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
+
+    else
     echo
     echo "Creating config file..."
 
@@ -351,8 +384,9 @@ channel = beta
 client_id = $IGDB_CLIENT_ID
 token = $IGDB_TOKEN
 EOL
-    echo
-    echo "✅ Config file written to $CONFIG_FILE"
+        echo
+        echo "✅ Config file written to $CONFIG_FILE"
+    fi
 fi
 
 # ----------------------------
