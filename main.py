@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 from modules.api import start_api
 from modules.updater import UpdateManager
 from modules.commands import run_predefined_command
+from modules.deployment import notify_pipeline
 from modules.desktop_agent import get_system_info, publish_discovery, start_desktop_agent
 from modules.game_agent import start_game_agent
 from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
@@ -134,6 +135,9 @@ def main():
         client.subscribe(install_topic)
         client.message_callback_add(install_topic, on_update_install)
         update_manager.start()
+
+    # Trigger jenkins pipeline if deploying
+    if '--deploy' in sys.argv: notify_pipeline("Build Successful")
 
     # Keep main thread alive
     print("[Main] Agent running. Press Ctrl+C to exit.")
