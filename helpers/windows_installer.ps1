@@ -82,7 +82,12 @@ if ($Silent) {
 
     Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
+    # Set device name to hostname
+    $SYSTEM_HOSTNAME = $env:COMPUTERNAME
+    (Get-Content $CONFIG_FILE) -replace '^name = .*$', "name = $SYSTEM_HOSTNAME" | Set-Content $CONFIG_FILE
+
     Write-Host "`nConfig file copied successfully." -ForegroundColor Green
+    Write-Host "Device name set to: $SYSTEM_HOSTNAME" -ForegroundColor Green
     $CONFIG_SKIPPED = $true
 }
 else {
@@ -98,7 +103,12 @@ else {
 
         Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
+        # Set device name to hostname
+        $SYSTEM_HOSTNAME = $env:COMPUTERNAME
+        (Get-Content $CONFIG_FILE) -replace '^name = .*$', "name = $SYSTEM_HOSTNAME" | Set-Content $CONFIG_FILE
+
         Write-Host "`nConfig file copied successfully." -ForegroundColor Green
+        Write-Host "Device name set to: $SYSTEM_HOSTNAME" -ForegroundColor Green
     }
     else {
     Write-Host "`nCreating config file...`n" -ForegroundColor Cyan

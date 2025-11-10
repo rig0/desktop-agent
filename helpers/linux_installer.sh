@@ -230,8 +230,14 @@ if [ "$SILENT" = true ]; then
     mkdir -p "$DATA_DIR"
     RES_DIR=$(realpath ../resources)
     cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
+
+    # Set device name to hostname
+    SYSTEM_HOSTNAME=$(hostname)
+    sed -i "s/^name = .*$/name = $SYSTEM_HOSTNAME/" "$CONFIG_FILE"
+
     echo
     echo "Config file copied to $CONFIG_FILE"
+    echo "Device name set to: $SYSTEM_HOSTNAME"
 
 else
     echo "You can configure the app now or manually edit the default config.ini later ($CONFIG_FILE)"
@@ -246,6 +252,13 @@ else
         mkdir -p "$DATA_DIR"
         RES_DIR=$(realpath ../resources)
         cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
+
+        # Set device name to hostname
+        SYSTEM_HOSTNAME=$(hostname)
+        sed -i "s/^name = .*$/name = $SYSTEM_HOSTNAME/" "$CONFIG_FILE"
+
+        echo
+        echo "Device name set to: $SYSTEM_HOSTNAME"
 
     else
     echo
