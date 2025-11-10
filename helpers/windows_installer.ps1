@@ -82,9 +82,14 @@ if ($Silent) {
 
     Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
-    # Set device name to hostname
+    # Set device name to hostname (only in [device] section)
     $SYSTEM_HOSTNAME = $env:COMPUTERNAME
-    (Get-Content $CONFIG_FILE) -replace '^name = .*$', "name = $SYSTEM_HOSTNAME" | Set-Content $CONFIG_FILE
+    # Escape special regex characters
+    $ESCAPED_HOSTNAME = [regex]::Escape($SYSTEM_HOSTNAME)
+    # Read config file and replace name in [device] section only
+    $content = Get-Content $CONFIG_FILE -Raw
+    $content = $content -replace '(?s)(\[device\].*?)^name = .*?$', "`$1name = $SYSTEM_HOSTNAME"
+    Set-Content -Path $CONFIG_FILE -Value $content -NoNewline
 
     Write-Host "`nConfig file copied successfully." -ForegroundColor Green
     Write-Host "Device name set to: $SYSTEM_HOSTNAME" -ForegroundColor Green
@@ -103,9 +108,14 @@ else {
 
         Copy-Item -Force $EXAMPLE_CONFIG $CONFIG_FILE
 
-        # Set device name to hostname
+        # Set device name to hostname (only in [device] section)
         $SYSTEM_HOSTNAME = $env:COMPUTERNAME
-        (Get-Content $CONFIG_FILE) -replace '^name = .*$', "name = $SYSTEM_HOSTNAME" | Set-Content $CONFIG_FILE
+        # Escape special regex characters
+        $ESCAPED_HOSTNAME = [regex]::Escape($SYSTEM_HOSTNAME)
+        # Read config file and replace name in [device] section only
+        $content = Get-Content $CONFIG_FILE -Raw
+        $content = $content -replace '(?s)(\[device\].*?)^name = .*?$', "`$1name = $SYSTEM_HOSTNAME"
+        Set-Content -Path $CONFIG_FILE -Value $content -NoNewline
 
         Write-Host "`nConfig file copied successfully." -ForegroundColor Green
         Write-Host "Device name set to: $SYSTEM_HOSTNAME" -ForegroundColor Green

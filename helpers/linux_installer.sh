@@ -231,9 +231,12 @@ if [ "$SILENT" = true ]; then
     RES_DIR=$(realpath ../resources)
     cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
 
-    # Set device name to hostname
+    # Set device name to hostname (only in [device] section)
     SYSTEM_HOSTNAME=$(hostname)
-    sed -i "s/^name = .*$/name = $SYSTEM_HOSTNAME/" "$CONFIG_FILE"
+    # Escape special characters for sed
+    ESCAPED_HOSTNAME=$(printf '%s\n' "$SYSTEM_HOSTNAME" | sed 's/[&/\]/\\&/g')
+    # Replace name in [device] section only
+    sed -i '/^\[device\]/,/^\[/{s/^name = .*$/name = '"$ESCAPED_HOSTNAME"'/}' "$CONFIG_FILE"
 
     echo
     echo "Config file copied to $CONFIG_FILE"
@@ -253,9 +256,12 @@ else
         RES_DIR=$(realpath ../resources)
         cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
 
-        # Set device name to hostname
+        # Set device name to hostname (only in [device] section)
         SYSTEM_HOSTNAME=$(hostname)
-        sed -i "s/^name = .*$/name = $SYSTEM_HOSTNAME/" "$CONFIG_FILE"
+        # Escape special characters for sed
+        ESCAPED_HOSTNAME=$(printf '%s\n' "$SYSTEM_HOSTNAME" | sed 's/[&/\]/\\&/g')
+        # Replace name in [device] section only
+        sed -i '/^\[device\]/,/^\[/{s/^name = .*$/name = '"$ESCAPED_HOSTNAME"'/}' "$CONFIG_FILE"
 
         echo
         echo "Device name set to: $SYSTEM_HOSTNAME"
