@@ -2,6 +2,14 @@
 set -e
 
 # ----------------------------
+# Script Directory Detection
+# ----------------------------
+# Get the absolute path to the directory where this script is located
+# This ensures all relative paths work regardless of where the script is called from
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# ----------------------------
 # Repository Configuration
 # ----------------------------
 REPO_OWNER="rig0"
@@ -219,7 +227,7 @@ echo
 echo "=== Desktop Agent Config Setup ==="
 echo
 
-DATA_DIR=$(realpath ../data)
+DATA_DIR="$PROJECT_ROOT/data"
 CONFIG_FILE="$DATA_DIR/config.ini"
 
 # In silent mode, skip config dialogue and copy example config
@@ -228,7 +236,7 @@ if [ "$SILENT" = true ]; then
     echo "Make sure to edit with valid values or app will fail!"
 
     mkdir -p "$DATA_DIR"
-    RES_DIR=$(realpath ../resources)
+    RES_DIR="$PROJECT_ROOT/resources"
     cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
 
     # Set device name to hostname (only in [device] section)
@@ -253,7 +261,7 @@ else
         echo "Make sure to edit with valid values or app will fail!"
 
         mkdir -p "$DATA_DIR"
-        RES_DIR=$(realpath ../resources)
+        RES_DIR="$PROJECT_ROOT/resources"
         cp "$RES_DIR/config_example.ini" "$CONFIG_FILE"
 
         # Set device name to hostname (only in [device] section)
@@ -415,8 +423,7 @@ echo
 echo "=== Desktop Agent python dependency installer ==="
 echo
 
-SCRIPT_DIR=$(dirname "$0")
-cd "$SCRIPT_DIR/.." || exit 1
+cd "$PROJECT_ROOT" || exit 1
 
 # Check python3 exists
 if ! command -v python3 >/dev/null 2>&1; then
@@ -433,7 +440,7 @@ if [ "$RPM_OSTREE" = 1 ]; then
     echo "Layered installation detected."
     echo "Reboot then install the python requirements like so:"
     echo
-    echo "  cd $(realpath ./)"
+    echo "  cd $PROJECT_ROOT"
     echo "  python3 -m pip install --upgrade pip setuptools wheel"
     echo "  python3 -m pip install -r requirements-linux.txt"
     echo
@@ -444,19 +451,19 @@ if [ "$RPM_OSTREE" = 1 ]; then
 elif [ "$TOOLBOX" = 1 ]; then
     echo "Installing python dependencies in toolbox desktop-agent..."
     echo
-    cd $(realpath ./)
+    cd "$PROJECT_ROOT"
     toolbox run -c desktop-agent python3 -m pip install --upgrade pip setuptools wheel
     toolbox run -c desktop-agent python3 -m pip install -r requirements-linux.txt
     echo
-    cd $(realpath ./)
+    cd "$PROJECT_ROOT"
     echo "✅ Python dependencies installed"
     echo
     echo "Run Desktop Agent by running:"
     echo
-    echo "  cd $(realpath ./)"
+    echo "  cd $PROJECT_ROOT"
     echo "  toolbox run -c desktop-agent python3 main.py"
     echo
-    echo "A service (toolbox_service) script can be found in $(realpath ./helpers)"
+    echo "A service (toolbox_service) script can be found in $PROJECT_ROOT/helpers"
     echo
 
 # Check if system is externally managed and create virtual environment
@@ -479,11 +486,11 @@ elif [ "$EXTERNALLY_MANAGED" = true ]; then
     echo
     echo "Since your system Python is externally managed, a virtual environment was created at:"
     echo
-    echo "  $(realpath ./.venv)"
+    echo "  $PROJECT_ROOT/.venv"
     echo
     echo "To activate the virtual environment and run the Desktop Agent:"
     echo
-    echo "  cd $(realpath ./)"
+    echo "  cd $PROJECT_ROOT"
     echo "  source ./.venv/bin/activate"
     echo "  python3 main.py"
     echo
@@ -503,7 +510,7 @@ else
     echo
     echo "Run Desktop Agent by running:"
     echo
-    echo "  cd $(realpath ./)"
+    echo "  cd $PROJECT_ROOT"
     echo "  python3 main.py"
     echo
 fi
