@@ -430,7 +430,7 @@ class UpdateManager:
     def _publish_state(self, available: bool, info: Optional[dict], status: str = "idle", error: Optional[str] = None) -> None:
         info = self._safe_info(info)
 
-        self.client.publish(self.state_topic, "ON" if available else "OFF", qos=1, retain=True)
+        self.client.publish(self.state_topic, "Yes" if available else "No", qos=1, retain=True)
 
         attrs = {
             "channel": self.channel,
