@@ -283,8 +283,8 @@ class UpdateManager:
         sensor_payload = {
             "name": f"{self.device_info.get('name', 'Desktop Agent')} Update Available",
             "state_topic": self.state_topic,
-            "payload_on": "Yes",
-            "payload_off": "No",
+            "payload_on": "ON",
+            "payload_off": "OFF",
             "json_attributes_topic": self.attrs_topic,
             "unique_id": f"{self.device_id}_update_available",
             "device": self.device_info,
@@ -308,7 +308,7 @@ class UpdateManager:
         button_topic = f"{self.discovery_prefix}/button/{self.device_id}/install_update/config"
         self.client.publish(button_topic, json.dumps(button_payload), retain=True)
 
-        self.client.publish(self.state_topic, "No", retain=True)
+        self.client.publish(self.state_topic, "OFF", retain=True)
         self.client.publish(
             self.attrs_topic,
             json.dumps(
@@ -430,7 +430,7 @@ class UpdateManager:
     def _publish_state(self, available: bool, info: Optional[dict], status: str = "idle", error: Optional[str] = None) -> None:
         info = self._safe_info(info)
 
-        self.client.publish(self.state_topic, "Yes" if available else "No", qos=1, retain=True)
+        self.client.publish(self.state_topic, "ON" if available else "OFF", qos=1, retain=True)
 
         attrs = {
             "channel": self.channel,
