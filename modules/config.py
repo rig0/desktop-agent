@@ -1,8 +1,12 @@
 # Standard library imports
 import configparser
+import logging
 import shutil
 import sys
 from pathlib import Path
+
+# Configure logger for config module
+logger = logging.getLogger(__name__)
 
 
 # ----------------------------
@@ -75,6 +79,17 @@ MQTT_PASS = config.get("mqtt", "password")
 
 API_MOD = config.getboolean("modules", "api", fallback=False)
 API_PORT = config.getint("api", "port", fallback=5555)
+API_AUTH_TOKEN = config.get("api", "auth_token", fallback="").strip()
+
+# Validate API authentication configuration
+if API_MOD and not API_AUTH_TOKEN:
+    logger.warning("=" * 70)
+    logger.warning("WARNING: API is enabled but auth_token is NOT configured!")
+    logger.warning("Your API endpoints are accessible without authentication.")
+    logger.warning("This is a SECURITY RISK if your system is exposed to network.")
+    logger.warning("Please add an auth_token to [api] section in config.ini")
+    logger.warning("Generate token: python -c \"import secrets; print(secrets.token_urlsafe(32))\"")
+    logger.warning("=" * 70)
 
 COMMANDS_MOD = config.getboolean("modules", "commands", fallback=False)
 MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)

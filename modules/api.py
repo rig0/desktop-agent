@@ -1,18 +1,102 @@
 # Standard library imports
 import logging
+import secrets
 import signal
 import sys
+from functools import wraps
 
 # Third-party imports
 from flask import Flask, jsonify, request
+
+# Local imports
+from modules.config import API_AUTH_TOKEN
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+
+# ----------------------------
+# Authentication decorator
+# ----------------------------
+
+def require_auth(f):
+    """
+    Authentication decorator for API endpoints.
+
+    Supports two authentication methods:
+    1. Bearer token in Authorization header: Authorization: Bearer <token>
+    2. Query parameter: ?auth_token=<token>
+
+    If API_AUTH_TOKEN is not configured, allows access but logs a warning.
+    This provides backward compatibility for existing installations.
+
+    Security features:
+    - Constant-time token comparison to prevent timing attacks
+    - Logs failed authentication attempts with IP address
+    - Returns standard 401 Unauthorized response
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # If no auth token configured, allow access (backward compatibility)
+        if not API_AUTH_TOKEN:
+            logger.warning(f"API endpoint '{request.path}' accessed without authentication - auth_token not configured")
+            return f(*args, **kwargs)
+
+        provided_token = None
+
+        # Check Authorization header (preferred method)
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            provided_token = auth_header[7:]  # Remove 'Bearer ' prefix
+
+        # Check query parameter (alternative method)
+        if not provided_token:
+            provided_token = request.args.get('auth_token')
+
+        # Validate token using constant-time comparison
+        if provided_token and secrets.compare_digest(provided_token, API_AUTH_TOKEN):
+            logger.debug(f"Successful authentication for '{request.path}' from {request.remote_addr}")
+            return f(*args, **kwargs)
+
+        # Authentication failed
+        logger.warning(f"Unauthorized API access attempt to '{request.path}' from {request.remote_addr}")
+        return jsonify({
+            "error": "Unauthorized",
+            "message": "Valid authentication token required. Use 'Authorization: Bearer <token>' header or '?auth_token=<token>' query parameter."
+        }), 401
+
+    return decorated_function
+
+
+# ----------------------------
+# Security headers middleware
+# ----------------------------
+
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to all responses."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # Note: Consider adding rate limiting in the future for additional security
+    return response
+
+
+# ----------------------------
+# API endpoints
+# ----------------------------
+
 @app.route("/status")
+@require_auth
 def status():
+    """
+    GET /status
+    Returns current system information.
+
+    Authentication required if auth_token is configured.
+    """
     try:
         from modules.desktop_agent import get_system_info
         return jsonify(get_system_info())
@@ -21,7 +105,19 @@ def status():
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/run", methods=["POST"])
+@require_auth
 def run_command():
+    """
+    POST /run
+    Executes a predefined command.
+
+    Authentication required if auth_token is configured.
+
+    Request body:
+    {
+        "command": "command_key"
+    }
+    """
     try:
         from modules.commands import run_predefined_command
         data = request.json
