@@ -264,7 +264,7 @@ def main():
         update_manager.start()
         logger.info("Update manager started")
 
-    # Trigger jenkins pipeline if deploying
+    # Trigger Jenkins pipeline if deploying
     if '--deploy' in sys.argv:
         logger.info("Deploy mode detected, waiting 60s before notifying pipeline")
         time.sleep(60)
