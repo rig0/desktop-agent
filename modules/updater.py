@@ -525,13 +525,13 @@ class UpdateManager:
 
 
 if __name__ == "__main__":
-    channel = "stable"
+    channel = "beta"
     if len(sys.argv) > 1:
         arg = sys.argv[1].lower()
         if arg in ["stable", "beta", "nightly"]:
             channel = arg
         else:
-            print(f"Invalid channel '{arg}', defaulting to stable.")
+            print(f"Invalid channel '{arg}', defaulting to beta.")
 
     try:
         while True:
