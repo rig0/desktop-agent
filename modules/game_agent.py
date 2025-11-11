@@ -1,5 +1,6 @@
 # Standard library imports
 import json
+import logging
 import os
 import threading
 import time
@@ -20,6 +21,9 @@ from .config import (
 )
 from .igdb import IGDBClient
 from .playtime import get_lutris_playtime
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # ----------------------------
 # Game Agent
@@ -42,9 +46,13 @@ def get_game_artwork(img_dir, img_url):
             if resp.ok:
                 img_bytes = resp.content
 
+    except (IOError, OSError) as e:
+        logger.error(f"Failed to read cover image from file: {e}")
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch cover image from URL: {e}")
     except Exception as e:
-        print(f"Failed to fetch cover: {e}")
-        
+        logger.error(f"Unexpected error fetching cover: {e}", exc_info=True)
+
     return img_bytes  
 
 def get_game_attrs(game_info):
@@ -103,115 +111,124 @@ def get_game_attrs(game_info):
     return attrs, images
 
 
-def start_game_agent(client: mqtt.Client, game_name_file_path):
+def start_game_agent(client: mqtt.Client, game_name_file_path, stop_event):
     def game_poller():
-        print("[GameAgent] Game poller thread started")
+        logger.info("Game Agent poller thread started")
         last_attrs = None
         last_known_game_name = None
         last_cover = None
         last_artwork = None
 
-        while True:
-            try:
-                # Check if the file exists, and if not, create an empty file
-                if not os.path.exists(game_name_file_path):
-                    os.makedirs(os.path.dirname(game_name_file_path), exist_ok=True)
-                    with open(game_name_file_path, 'w') as f:
-                        pass  # Create an empty file
-                    client.publish(f"{base_topic}/game/state", "idle", retain=True)
-
-                # Read game name from file
+        try:
+            while not stop_event.is_set():
                 try:
-                    with open(game_name_file_path, 'r') as f:
-                        game_name = f.readline().strip()
-                except FileNotFoundError:
-                    game_name = None
-                    print("[GameAgent] Game name file not found.")  # Debugging output
-
-                if game_name and game_name != last_known_game_name and game_name != "Unknown":
-                    game_info = get_game_info(game_name)
-                    attrs, images = get_game_attrs(game_info)
-                    state = "playing"
-
-                    # Publish state
-                    client.publish(f"{base_topic}/game/state", state, retain=True)
-
-                    # Publish attributes if changed
-                    if attrs != last_attrs:
-                        client.publish(f"{base_topic}/game/attrs", json.dumps(attrs), retain=True)
-                        last_attrs = attrs
-
-                    # Publish cover image if changed
-                    cover_bytes = images["cover"]
-                    if cover_bytes and cover_bytes != last_cover:
-                        client.publish(f"{base_topic}/game/cover", cover_bytes, retain=True)
-                        last_cover = cover_bytes
-
-                    # Publish artwork image if changed
-                    artwork_bytes = images["artwork"]
-                    if artwork_bytes and artwork_bytes != last_artwork:
-                        client.publish(f"{base_topic}/game/artwork", artwork_bytes, retain=True)
-                        last_artwork = artwork_bytes
-
-                    last_known_game_name = game_name
-
-                elif not game_name:
-                    # If GAME_NAME is empty, the game is no longer running.
-                    if last_known_game_name is not None:
+                    # Check if the file exists, and if not, create an empty file
+                    if not os.path.exists(game_name_file_path):
+                        os.makedirs(os.path.dirname(game_name_file_path), exist_ok=True)
+                        with open(game_name_file_path, 'w') as f:
+                            pass  # Create an empty file
                         client.publish(f"{base_topic}/game/state", "idle", retain=True)
-                        last_attrs = None  # Resetting last_attrs
-                        last_cover = None  # Resetting last_cover
-                        last_artwork = None  # Resetting last_artwork
-                        last_known_game_name = None
 
-            except Exception as e:
-                print("[GameAgent] Game poller error:", e)
+                    # Read game name from file
+                    try:
+                        with open(game_name_file_path, 'r') as f:
+                            game_name = f.readline().strip()
+                    except FileNotFoundError:
+                        game_name = None
+                        logger.debug("Game name file not found")
 
-            # Check for new game every 3 seconds
-            time.sleep(3)
+                    if game_name and game_name != last_known_game_name and game_name != "Unknown":
+                        game_info = get_game_info(game_name)
+                        attrs, images = get_game_attrs(game_info)
+                        state = "playing"
+
+                        # Publish state
+                        client.publish(f"{base_topic}/game/state", state, retain=True)
+
+                        # Publish attributes if changed
+                        if attrs != last_attrs:
+                            client.publish(f"{base_topic}/game/attrs", json.dumps(attrs), retain=True)
+                            last_attrs = attrs
+
+                        # Publish cover image if changed
+                        cover_bytes = images["cover"]
+                        if cover_bytes and cover_bytes != last_cover:
+                            client.publish(f"{base_topic}/game/cover", cover_bytes, retain=True)
+                            last_cover = cover_bytes
+
+                        # Publish artwork image if changed
+                        artwork_bytes = images["artwork"]
+                        if artwork_bytes and artwork_bytes != last_artwork:
+                            client.publish(f"{base_topic}/game/artwork", artwork_bytes, retain=True)
+                            last_artwork = artwork_bytes
+
+                        last_known_game_name = game_name
+
+                    elif not game_name:
+                        # If GAME_NAME is empty, the game is no longer running.
+                        if last_known_game_name is not None:
+                            client.publish(f"{base_topic}/game/state", "idle", retain=True)
+                            last_attrs = None  # Resetting last_attrs
+                            last_cover = None  # Resetting last_cover
+                            last_artwork = None  # Resetting last_artwork
+                            last_known_game_name = None
+
+                except Exception as e:
+                    logger.error(f"Error in game poller: {e}", exc_info=True)
+
+                # Check for new game every 3 seconds, but allow interruption
+                stop_event.wait(3)
+        except Exception as e:
+            logger.critical(f"Fatal error in Game Agent poller thread: {e}", exc_info=True)
+        finally:
+            logger.info("Game Agent poller thread stopped")
 
     def publish_discovery():
-        sensor_payload = {
-            "name": f"{DEVICE_NAME} Game Status",
-            "state_topic": f"{base_topic}/game/state",
-            "json_attributes_topic": f"{base_topic}/game/attrs",
-            "icon": "mdi:gamepad-variant",
-            "unique_id": f"{device_id}_game_status",
-            "device": device_info,
-            "availability_topic": f"{base_topic}/availability"
-        }
+        try:
+            sensor_payload = {
+                "name": f"{DEVICE_NAME} Game Status",
+                "state_topic": f"{base_topic}/game/state",
+                "json_attributes_topic": f"{base_topic}/game/attrs",
+                "icon": "mdi:gamepad-variant",
+                "unique_id": f"{device_id}_game_status",
+                "device": device_info,
+                "availability_topic": f"{base_topic}/availability"
+            }
 
-        topic = f"{discovery_prefix}/sensor/{device_id}/game_status/config"
-        client.publish(topic, json.dumps(sensor_payload), retain=True)
-        print("[GameAgent] Published discovery for game status")
+            topic = f"{discovery_prefix}/sensor/{device_id}/game_status/config"
+            client.publish(topic, json.dumps(sensor_payload), retain=True)
+            logger.debug("Published discovery for game status")
 
-        cover_payload = {
-            "platform": "mqtt",
-            "name": f"{DEVICE_NAME} Game Cover",
-            "unique_id": f"{device_id}_game_cover",
-            "device": device_info,
-            "availability_topic": f"{base_topic}/availability",
-            "topic": f"{base_topic}/game/cover",
-            "icon": "mdi:gamepad-variant"
-        }
+            cover_payload = {
+                "platform": "mqtt",
+                "name": f"{DEVICE_NAME} Game Cover",
+                "unique_id": f"{device_id}_game_cover",
+                "device": device_info,
+                "availability_topic": f"{base_topic}/availability",
+                "topic": f"{base_topic}/game/cover",
+                "icon": "mdi:gamepad-variant"
+            }
 
-        topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
-        client.publish(topic, json.dumps(cover_payload), retain=True)
-        print("[GameAgent] Published discovery for game cover")
+            topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
+            client.publish(topic, json.dumps(cover_payload), retain=True)
+            logger.debug("Published discovery for game cover")
 
-        artwork_payload = {
-            "platform": "mqtt",
-            "name": f"{DEVICE_NAME} Game Art",
-            "unique_id": f"{device_id}_game_artwork",
-            "device": device_info,
-            "availability_topic": f"{base_topic}/availability",
-            "topic": f"{base_topic}/game/artwork",
-            "icon": "mdi:gamepad-variant"
-        }
+            artwork_payload = {
+                "platform": "mqtt",
+                "name": f"{DEVICE_NAME} Game Art",
+                "unique_id": f"{device_id}_game_artwork",
+                "device": device_info,
+                "availability_topic": f"{base_topic}/availability",
+                "topic": f"{base_topic}/game/artwork",
+                "icon": "mdi:gamepad-variant"
+            }
 
-        topic = f"{discovery_prefix}/camera/{device_id}_game_artwork/config"
-        client.publish(topic, json.dumps(artwork_payload), retain=True)
-        print("[GameAgent] Published discovery for game artwork") 
+            topic = f"{discovery_prefix}/camera/{device_id}_game_artwork/config"
+            client.publish(topic, json.dumps(artwork_payload), retain=True)
+            logger.debug("Published discovery for game artwork")
+            logger.info("Published discovery for game agent entities")
+        except Exception as e:
+            logger.error(f"Error publishing game agent discovery: {e}", exc_info=True)
 
     publish_discovery()
-    threading.Thread(target=game_poller, daemon=True).start()
+    threading.Thread(target=game_poller, name="GameAgent-Poller", daemon=True).start()

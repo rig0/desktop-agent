@@ -1,6 +1,7 @@
 # Standard library imports
 import asyncio
 import json
+import logging
 import os
 import sys
 import threading
@@ -12,6 +13,9 @@ import paho.mqtt.client as mqtt
 from winsdk.windows.media.control import (
     GlobalSystemMediaTransportControlsSessionManager as MediaManager,
 )
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # Local imports
 # Attempt relative import for use as a module within a package structure
@@ -75,7 +79,7 @@ async def _get_media_info_async():
                 DataReader.from_buffer(buffer).read_bytes(byte_array)
                 thumbnail_bytes = bytes(byte_array)
         except Exception as e:
-            print("[MediaAgent] Failed to read thumbnail:", e)
+            logger.error(f"Failed to read thumbnail: {e}", exc_info=True)
 
     playback = current.get_playback_info()
     status = int(playback.playback_status)
@@ -95,103 +99,112 @@ def get_media_info():
     try:
         return asyncio.run(_get_media_info_async())
     except Exception as e:
-        print("[MediaAgent] Error getting media info:", e)
+        logger.error(f"Error getting media info: {e}", exc_info=True)
         return None
 
 
-def start_media_agent(client: mqtt.Client):
+def start_media_agent(client: mqtt.Client, stop_event):
     # Starts the media polling thread and publishes discovery.
     def media_poller():
-        print("[MediaAgent] Media agent thread started")
+        logger.info("Media Agent poller thread started")
         last_attrs = None
         last_image = None
         BASE_DIR = Path(__file__).parent.parent
         placeholder_path = BASE_DIR / "resources" / "media_thumb.png"
         placeholder_path_custom = BASE_DIR / "data" / "media_agent" / "media_thumb.png"
 
-        while True:
-            try:
-                info = get_media_info()
-                if info:
-                    state = "playing" if info["is_playing"] else "paused" if info["playback_status"] == 5 else "idle"
-                    attrs = {
-                        "title": info["title"],
-                        "artist": info["artist"],
-                        "album": info["album"],
-                        "status": state
-                    }
+        try:
+            while not stop_event.is_set():
+                try:
+                    info = get_media_info()
+                    if info:
+                        state = "playing" if info["is_playing"] else "paused" if info["playback_status"] == 5 else "idle"
+                        attrs = {
+                            "title": info["title"],
+                            "artist": info["artist"],
+                            "album": info["album"],
+                            "status": state
+                        }
 
-                    client.publish(f"{base_topic}/media/state", state, retain=True)
+                        client.publish(f"{base_topic}/media/state", state, retain=True)
 
-                    if attrs != last_attrs:
-                        client.publish(f"{base_topic}/media/attrs", json.dumps(attrs), retain=True)
-                        last_attrs = attrs
+                        if attrs != last_attrs:
+                            client.publish(f"{base_topic}/media/attrs", json.dumps(attrs), retain=True)
+                            last_attrs = attrs
 
-                    # Thumbnail or placeholder
-                    thumbnail_bytes = info.get("thumbnail_bytes")
-                    if not thumbnail_bytes:
-                        # Try custom placeholder first
-                        if placeholder_path_custom.exists():
-                            try:
-                                with open(placeholder_path_custom, "rb") as f:
-                                    thumbnail_bytes = f.read()
-                            except Exception as e:
-                                print("[MediaAgent] No custom thumbnail detected. Moving on with default:", e)
-                        
-                        # Fallback to default placeholder if needed
-                        if not thumbnail_bytes and placeholder_path.exists():
-                            try:
-                                with open(placeholder_path, "rb") as f:
-                                    thumbnail_bytes = f.read()
-                            except Exception as e:
-                                print("[MediaAgent] Failed to load default placeholder thumbnail:", e)
-                                thumbnail_bytes = None
+                        # Thumbnail or placeholder
+                        thumbnail_bytes = info.get("thumbnail_bytes")
+                        if not thumbnail_bytes:
+                            # Try custom placeholder first
+                            if placeholder_path_custom.exists():
+                                try:
+                                    with open(placeholder_path_custom, "rb") as f:
+                                        thumbnail_bytes = f.read()
+                                except (IOError, OSError) as e:
+                                    logger.debug(f"No custom thumbnail detected: {e}")
 
-                    if thumbnail_bytes and thumbnail_bytes != last_image:
-                        client.publish(f"{base_topic}/media/thumbnail", thumbnail_bytes, retain=True)
-                        last_image = thumbnail_bytes
+                            # Fallback to default placeholder if needed
+                            if not thumbnail_bytes and placeholder_path.exists():
+                                try:
+                                    with open(placeholder_path, "rb") as f:
+                                        thumbnail_bytes = f.read()
+                                except (IOError, OSError) as e:
+                                    logger.error(f"Failed to load default placeholder thumbnail: {e}")
+                                    thumbnail_bytes = None
 
-            except Exception as e:
-                print("[MediaAgent] Media poller error:", e)
+                        if thumbnail_bytes and thumbnail_bytes != last_image:
+                            client.publish(f"{base_topic}/media/thumbnail", thumbnail_bytes, retain=True)
+                            last_image = thumbnail_bytes
 
-            time.sleep(5)
+                except Exception as e:
+                    logger.error(f"Error in media poller: {e}", exc_info=True)
+
+                # Sleep but allow interruption
+                stop_event.wait(5)
+        except Exception as e:
+            logger.critical(f"Fatal error in Media Agent poller thread: {e}", exc_info=True)
+        finally:
+            logger.info("Media Agent poller thread stopped")
 
     def publish_discovery():
-        # Simple media state sensor
-        sensor_payload = {
-            "name": "Media Status",
-            "state_topic": f"{base_topic}/media/state",
-            "icon": "mdi:multimedia",
-            "unique_id": f"{device_id}_media_status",
-            "device": device_info,
-            "availability_topic": f"{base_topic}/availability",
-            "json_attributes_topic": f"{base_topic}/media/attrs",
-        }
+        try:
+            # Simple media state sensor
+            sensor_payload = {
+                "name": "Media Status",
+                "state_topic": f"{base_topic}/media/state",
+                "icon": "mdi:multimedia",
+                "unique_id": f"{device_id}_media_status",
+                "device": device_info,
+                "availability_topic": f"{base_topic}/availability",
+                "json_attributes_topic": f"{base_topic}/media/attrs",
+            }
 
-        topic = f"{discovery_prefix}/sensor/{device_id}/media_status/config"
-        client.publish(topic, json.dumps(sensor_payload), retain=True)
-        print("[MediaAgent] Published discovery for media status")
+            topic = f"{discovery_prefix}/sensor/{device_id}/media_status/config"
+            client.publish(topic, json.dumps(sensor_payload), retain=True)
+            logger.debug("Published discovery for media status")
 
-        # Camera-style media thumbnail
-        camera_payload = {
-            "platform": "mqtt",
-            "name": f"{DEVICE_NAME} Media",
-            "unique_id": f"{device_id}_media",
-            "device": device_info,
-            "availability_topic": f"{base_topic}/availability",
-            "topic": f"{base_topic}/media/thumbnail",
-            "icon": "mdi:music"
-        }
-        topic = f"{discovery_prefix}/camera/{device_id}_media/config"
-        client.publish(topic, json.dumps(camera_payload), retain=True)
-        print("[MediaAgent] Published discovery for media camera")
+            # Camera-style media thumbnail
+            camera_payload = {
+                "platform": "mqtt",
+                "name": f"{DEVICE_NAME} Media",
+                "unique_id": f"{device_id}_media",
+                "device": device_info,
+                "availability_topic": f"{base_topic}/availability",
+                "topic": f"{base_topic}/media/thumbnail",
+                "icon": "mdi:music"
+            }
+            topic = f"{discovery_prefix}/camera/{device_id}_media/config"
+            client.publish(topic, json.dumps(camera_payload), retain=True)
+            logger.debug("Published discovery for media camera")
+            logger.info("Published discovery for media agent entities")
+        except Exception as e:
+            logger.error(f"Error publishing media agent discovery: {e}", exc_info=True)
 
     publish_discovery()
-    threading.Thread(target=media_poller, daemon=True).start()
+    threading.Thread(target=media_poller, name="MediaAgent-Poller", daemon=True).start()
 
 def on_connect(client, userdata, flags, rc):
-    print(f"[MediaAgent] Connected to MQTT broker with result code {rc}")
-    publish_discovery()
+    logger.info(f"Connected to MQTT broker with result code {rc}")
     
 if __name__ == "__main__":
     client = mqtt.Client()

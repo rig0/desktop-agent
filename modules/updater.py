@@ -2,6 +2,7 @@
 import hashlib
 import io
 import json
+import logging
 import os
 import shutil
 import stat
@@ -18,6 +19,9 @@ import requests
 
 # Local imports
 from modules.config import REPO_OWNER, REPO_NAME, VERSION_PATH
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # ----------------------------
 # Config
@@ -133,8 +137,8 @@ def make_helpers_executable():
                 try:
                     st = os.stat(path)
                     os.chmod(path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-                except PermissionError:
-                    print(f"[Updater] Warning: Cannot chmod {path}, permission denied")
+                except PermissionError as e:
+                    logger.warning(f"Cannot chmod {path}, permission denied: {e}")
 
 
 # ----------------------------
@@ -200,7 +204,7 @@ def update_repo(channel: str = "stable", release_info: Optional[dict] = None) ->
     checksum_file = os.path.join(UPDATER_DIR, f".last_checksum_{channel}")
     signature = release_info.get("signature")
 
-    print(f"[Updater] Checking for {channel} updates...")
+    logger.info(f"Checking for {channel} updates...")
     response = requests.get(zip_url, timeout=30)
     response.raise_for_status()
     content = response.content
@@ -211,12 +215,12 @@ def update_repo(channel: str = "stable", release_info: Optional[dict] = None) ->
         with open(checksum_file, "r", encoding="utf-8") as f:
             old_checksum = f.read().strip()
         if new_checksum == old_checksum:
-            print("[Updater] No changes detected, skipping update.")
+            logger.info("No changes detected, skipping update")
             if signature:
                 write_installed_signature(channel, signature)
             return False
 
-    print("[Updater] Update found, applying...")
+    logger.info("Update found, applying...")
     tmp_dir = tempfile.mkdtemp(dir=UPDATER_DIR)
     try:
         with zipfile.ZipFile(io.BytesIO(content)) as z:
@@ -234,7 +238,7 @@ def update_repo(channel: str = "stable", release_info: Optional[dict] = None) ->
         if signature:
             write_installed_signature(channel, signature)
 
-        print("[Updater] Update complete.")
+        logger.info("Update complete")
         return True
 
     finally:
@@ -253,6 +257,7 @@ class UpdateManager:
         channel: str = "stable",
         interval: int = 3600,
         auto_install: bool = True,
+        stop_event: Optional[threading.Event] = None,
     ):
         self.client = client
         self.base_topic = base_topic
@@ -262,6 +267,7 @@ class UpdateManager:
         self.channel = channel or "stable"
         self.interval = max(60, int(interval))
         self.auto_install = auto_install
+        self.stop_event = stop_event or threading.Event()
 
         self.state_topic = f"{self.base_topic}/update/state"
         self.attrs_topic = f"{self.base_topic}/update/attrs"
@@ -281,8 +287,9 @@ class UpdateManager:
         self.publish_discovery()
         self._poll_once(initial=True)
 
-        self.poll_thread = threading.Thread(target=self._poll_loop, name="UpdateMonitor", daemon=True)
+        self.poll_thread = threading.Thread(target=self._poll_loop, name="UpdateManager-Poll", daemon=True)
         self.poll_thread.start()
+        logger.info("Update manager poll thread started")
 
     def publish_discovery(self) -> None:
         # Update entity configuration for Home Assistant
@@ -359,13 +366,25 @@ class UpdateManager:
         return False
 
     def _poll_loop(self) -> None:
-        while True:
-            time.sleep(self.interval)
-            try:
-                self._poll_once()
-            except Exception as exc:
-                self.last_error = str(exc)
-                self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
+        logger.info("Update manager poll loop started")
+        try:
+            while not self.stop_event.is_set():
+                # Sleep but allow interruption
+                self.stop_event.wait(self.interval)
+
+                if self.stop_event.is_set():
+                    break
+
+                try:
+                    self._poll_once()
+                except Exception as exc:
+                    self.last_error = str(exc)
+                    logger.error(f"Error in update poll: {exc}", exc_info=True)
+                    self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
+        except Exception as e:
+            logger.critical(f"Fatal error in update poll loop: {e}", exc_info=True)
+        finally:
+            logger.info("Update manager poll loop stopped")
 
     def _poll_once(self, initial: bool = False) -> None:
         if self.installing:
@@ -412,10 +431,11 @@ class UpdateManager:
         thread = threading.Thread(
             target=self._install_worker,
             args=(info, manual),
-            name="UpdateInstaller",
+            name="UpdateManager-Installer",
             daemon=True,
         )
         thread.start()
+        logger.info("Update installer thread started")
         return True
 
     def _install_worker(self, info: dict, manual: bool) -> None:
@@ -508,12 +528,13 @@ class UpdateManager:
         self.available = available
 
     def _delayed_refresh(self) -> None:
-        time.sleep(5)
+        self.stop_event.wait(5)
         try:
-            if not self.installing:
+            if not self.installing and not self.stop_event.is_set():
                 self._poll_once()
         except Exception as exc:
             self.last_error = str(exc)
+            logger.error(f"Error in delayed refresh: {exc}", exc_info=True)
             self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
 
     def _safe_info(self, info: Optional[dict]) -> dict:
@@ -530,17 +551,25 @@ class UpdateManager:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
     channel = "beta"
     if len(sys.argv) > 1:
         arg = sys.argv[1].lower()
         if arg in ["stable", "beta", "nightly"]:
             channel = arg
         else:
-            print(f"Invalid channel '{arg}', defaulting to beta.")
+            logger.warning(f"Invalid channel '{arg}', defaulting to beta")
+
+    stop_event = threading.Event()
 
     try:
-        while True:
+        while not stop_event.is_set():
             update_repo(channel)
-            time.sleep(3600)
+            stop_event.wait(3600)
     except KeyboardInterrupt:
-        print("[Updater] Exiting.")
+        logger.info("Keyboard interrupt received, exiting")
+        stop_event.set()

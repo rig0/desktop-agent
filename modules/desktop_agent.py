@@ -1,6 +1,7 @@
 # Standard library imports
 import glob
 import json
+import logging
 import math
 import os
 import platform
@@ -15,6 +16,9 @@ import time
 # Third-party imports
 import GPUtil
 import psutil
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # ----------------------------
 # System Info Helpers
@@ -69,7 +73,8 @@ def get_os_version():
                     distro_name = data.get("NAME", "Linux")
                     distro_version = data.get("VERSION_ID", "")
             return f"{distro_name} {distro_version}".strip()
-        except:
+        except (IOError, OSError, ValueError) as e:
+            logger.warning(f"Error reading OS version: {e}")
             return platform.version()
     elif sys.platform.startswith("win"):
         return platform.version()
@@ -84,8 +89,8 @@ def get_cpu_model():
                 lines = [line.strip() for line in output.decode().splitlines() if line.strip()]
                 if len(lines) >= 2:
                     return lines[1]
-            except:
-                pass
+            except (subprocess.CalledProcessError, OSError, UnicodeDecodeError) as e:
+                logger.debug(f"Error getting CPU model via wmic: {e}")
         # fallback to registry
         try:
             import winreg
@@ -93,7 +98,8 @@ def get_cpu_model():
                                  r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
             cpu, _ = winreg.QueryValueEx(key, "ProcessorNameString")
             return cpu
-        except:
+        except (ImportError, OSError, WindowsError) as e:
+            logger.warning(f"Error getting CPU model from registry: {e}")
             return "Unknown CPU"
     elif platform.system() == "Linux":
         try:
@@ -101,7 +107,8 @@ def get_cpu_model():
                 for line in f:
                     if "model name" in line:
                         return line.split(":", 1)[1].strip()
-        except:
+        except (IOError, OSError) as e:
+            logger.warning(f"Error reading /proc/cpuinfo: {e}")
             return "Unknown CPU"
     else:
         return platform.processor() or "Unknown CPU"
@@ -363,21 +370,35 @@ def build_discovery_payloads(device_id, base_topic, discovery_prefix, device_inf
 
 
 def publish_discovery(client, device_id, base_topic, discovery_prefix, device_info):
-    payloads = build_discovery_payloads(device_id, base_topic, discovery_prefix, device_info)
-    for sensor, payload in payloads.items():
-        topic = f"{discovery_prefix}/sensor/{device_id}/{sensor}/config"
-        client.publish(topic, json.dumps(payload), retain=True)
-        print(f"[DesktopAgent] Published discovery for {sensor}")
+    try:
+        payloads = build_discovery_payloads(device_id, base_topic, discovery_prefix, device_info)
+        for sensor, payload in payloads.items():
+            topic = f"{discovery_prefix}/sensor/{device_id}/{sensor}/config"
+            client.publish(topic, json.dumps(payload), retain=True)
+            logger.debug(f"Published discovery for {sensor}")
+        logger.info(f"Published discovery for {len(payloads)} sensors")
+    except Exception as e:
+        logger.error(f"Error publishing discovery: {e}", exc_info=True)
 
 
-def start_desktop_agent(client, base_topic, publish_int):
+def start_desktop_agent(client, base_topic, publish_int, stop_event):
     def _publisher():
-        print("[DesktopAgent] Desktop Agent thread started")
-        while True:
-            raw_info = get_system_info()
-            cleaned = {k: clean_value(v) for k, v in raw_info.items()}
-            client.publish(f"{base_topic}/status", json.dumps(cleaned), retain=True)
-            client.publish(f"{base_topic}/availability", "online", retain=True)
-            time.sleep(publish_int)
+        logger.info("Desktop Agent monitor thread started")
+        try:
+            while not stop_event.is_set():
+                try:
+                    raw_info = get_system_info()
+                    cleaned = {k: clean_value(v) for k, v in raw_info.items()}
+                    client.publish(f"{base_topic}/status", json.dumps(cleaned), retain=True)
+                    client.publish(f"{base_topic}/availability", "online", retain=True)
+                except Exception as e:
+                    logger.error(f"Error publishing system info: {e}", exc_info=True)
 
-    threading.Thread(target=_publisher, daemon=True).start()
+                # Sleep but allow interruption
+                stop_event.wait(publish_int)
+        except Exception as e:
+            logger.critical(f"Fatal error in Desktop Agent monitor thread: {e}", exc_info=True)
+        finally:
+            logger.info("Desktop Agent monitor thread stopped")
+
+    threading.Thread(target=_publisher, name="DesktopAgent-Publisher", daemon=True).start()

@@ -3,6 +3,7 @@ import configparser
 import copy
 import glob
 import json
+import logging
 import os
 import re
 import shutil
@@ -13,6 +14,9 @@ from pathlib import Path
 
 # Local imports
 from .config import COMMANDS_MOD
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # ----------------------------
 # System commands
@@ -29,7 +33,7 @@ def load_commands(filename="commands.ini"):
     # Create default if missing
     if not commands_file.exists():
         shutil.copy(src, commands_file)
-        print(f"[Commands] Created default commands config at {commands_file}")
+        logger.info(f"Created default commands config at {commands_file}")
 
     # Parse file
     parser = configparser.ConfigParser()
@@ -82,8 +86,9 @@ def get_linux_gui_env() -> dict:
                     env["DBUS_SESSION_BUS_ADDRESS"] = line.split("=", 1)[1].strip()
                 elif line.startswith("DBUS_SESSION_BUS_PID="):
                     env["DBUS_SESSION_BUS_PID"] = line.split("=", 1)[1].strip()
-        except Exception:
-            pass  # Ignore failures; some systems may not have dbus-launch
+        except (subprocess.CalledProcessError, FileNotFoundError, OSError) as e:
+            logger.debug(f"Could not launch dbus-session: {e}")
+            # Ignore failures; some systems may not have dbus-launch
 
     return env
 
@@ -121,11 +126,11 @@ def run_system_power_command(action: str) -> dict:
 # Run predefined commands
 def run_predefined_command(command_key: str) -> dict:
     if not COMMANDS_MOD:
-        print(f"[Commands] Module not enabled.")
-        return {"success": False, "output": f"Module not enabled"}
+        logger.warning("Commands module not enabled")
+        return {"success": False, "output": "Module not enabled"}
 
     if command_key not in ALLOWED_COMMANDS:
-        print(f"[Commands] Command '{command_key}' not allowed.")
+        logger.warning(f"Command '{command_key}' not allowed")
         return {"success": False, "output": f"Command '{command_key}' not allowed."}
 
     entry = ALLOWED_COMMANDS[command_key]
@@ -139,7 +144,7 @@ def run_predefined_command(command_key: str) -> dict:
         wait = False
         platforms = None
 
-    print(f"[Commands] Received command: {cmd}")
+    logger.info(f"Received command: {cmd}")
     
     platform_name = "linux" if sys.platform.startswith("linux") else "win" if sys.platform.startswith("win") else None
 
@@ -167,6 +172,7 @@ def run_predefined_command(command_key: str) -> dict:
                 proc = subprocess.Popen(cmd_arr, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 time.sleep(1)
                 if proc.poll() is not None:
+                    logger.error(f"Command '{command_key}' failed to start")
                     return {"success": False, "output": f"Command '{command_key}' failed to start."}
                 return {"success": True, "output": f"Command '{command_key}' launched."}
 
@@ -184,7 +190,15 @@ def run_predefined_command(command_key: str) -> dict:
                 return {"success": True, "output": f"Command '{command_key}' launched (Windows)."}
 
         else:
+            logger.error(f"Unsupported platform '{platform_name}'")
             return {"success": False, "output": f"Unsupported platform '{platform_name}'."}
 
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command execution failed: {e}", exc_info=True)
+        return {"success": False, "output": f"Command execution failed: {str(e)}"}
+    except OSError as e:
+        logger.error(f"OS error executing command: {e}", exc_info=True)
+        return {"success": False, "output": f"OS error: {str(e)}"}
     except Exception as e:
+        logger.error(f"Unexpected error executing command: {e}", exc_info=True)
         return {"success": False, "output": str(e)}
