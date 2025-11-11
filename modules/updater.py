@@ -438,7 +438,7 @@ class UpdateManager:
     def _publish_state(self, available: bool, info: Optional[dict], status: str = "idle", error: Optional[str] = None) -> None:
         info = self._safe_info(info)
         installed_version = _read_local_version()
-        latest_version = info.get("version") or installed_version
+        latest_version = info.get("version") if available else installed_version
 
         # Publish state as JSON for update entity
         state_payload = {
