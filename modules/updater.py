@@ -1,3 +1,4 @@
+# Standard library imports
 import hashlib
 import io
 import json
@@ -12,11 +13,15 @@ import zipfile
 from datetime import datetime, timezone
 from typing import Optional
 
+# Third-party imports
 import requests
 
+# Local imports
 from modules.config import REPO_OWNER, REPO_NAME, VERSION_PATH
 
+# ----------------------------
 # Config
+# ----------------------------
 REPO = f"{REPO_OWNER}/{REPO_NAME}"
 GITHUB_API = "https://api.github.com"
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
