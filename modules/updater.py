@@ -280,20 +280,20 @@ class UpdateManager:
         self.poll_thread.start()
 
     def publish_discovery(self) -> None:
-        sensor_payload = {
-            "name": f"{self.device_info.get('name', 'Desktop Agent')} Update Available",
+        # Update entity configuration for Home Assistant
+        update_payload = {
+            "name": f"{self.device_info.get('name', 'Desktop Agent')} Update",
             "state_topic": self.state_topic,
-            "payload_on": "ON",
-            "payload_off": "OFF",
-            "json_attributes_topic": self.attrs_topic,
-            "unique_id": f"{self.device_id}_update_available",
+            "command_topic": self.install_topic,
+            "payload_install": "INSTALL",
+            "unique_id": f"{self.device_id}_update",
             "device": self.device_info,
             "availability_topic": f"{self.base_topic}/availability",
-            "icon": "mdi:update",
             "entity_category": "diagnostic",
+            "device_class": "firmware",
         }
-        sensor_topic = f"{self.discovery_prefix}/binary_sensor/{self.device_id}/update_available/config"
-        self.client.publish(sensor_topic, json.dumps(sensor_payload), retain=True)
+        update_topic = f"{self.discovery_prefix}/update/{self.device_id}/update/config"
+        self.client.publish(update_topic, json.dumps(update_payload), retain=True)
 
         button_payload = {
             "name": f"{self.device_info.get('name', 'Desktop Agent')} Install Update",
@@ -308,14 +308,22 @@ class UpdateManager:
         button_topic = f"{self.discovery_prefix}/button/{self.device_id}/install_update/config"
         self.client.publish(button_topic, json.dumps(button_payload), retain=True)
 
-        self.client.publish(self.state_topic, "OFF", retain=True)
+        # Publish initial state with installed version
+        installed_version = _read_local_version()
+        initial_state = {
+            "installed_version": installed_version,
+            "latest_version": installed_version,
+            "title": "Desktop Agent",
+            "release_summary": "Checking for updates...",
+        }
+        self.client.publish(self.state_topic, json.dumps(initial_state), retain=True)
+
+        # Publish initial attributes
         self.client.publish(
             self.attrs_topic,
             json.dumps(
                 {
                     "channel": self.channel,
-                    "latest_version": None,
-                    "installed_version": _read_local_version(),
                     "status": "initialising",
                     "auto_install": self.auto_install,
                     "install_in_progress": False,
@@ -429,14 +437,53 @@ class UpdateManager:
 
     def _publish_state(self, available: bool, info: Optional[dict], status: str = "idle", error: Optional[str] = None) -> None:
         info = self._safe_info(info)
+        installed_version = _read_local_version()
+        latest_version = info.get("version") or installed_version
 
-        self.client.publish(self.state_topic, "ON" if available else "OFF", qos=1, retain=True)
+        # Publish state as JSON for update entity
+        state_payload = {
+            "installed_version": installed_version,
+            "latest_version": latest_version,
+            "title": f"Desktop Agent {latest_version}",
+        }
 
+        # Add release URL if available
+        if info.get("zip_url"):
+            # Convert API URL to release page URL
+            zip_url = info["zip_url"]
+            if "api.github.com" in zip_url:
+                # For stable releases, link to the release page
+                if self.channel == "stable" and info.get("version"):
+                    state_payload["release_url"] = f"https://github.com/{REPO}/releases/tag/{info['version']}"
+                elif self.channel == "beta" and info.get("version"):
+                    state_payload["release_url"] = f"https://github.com/{REPO}/releases/tag/{info['version']}"
+                else:
+                    state_payload["release_url"] = f"https://github.com/{REPO}"
+            else:
+                state_payload["release_url"] = f"https://github.com/{REPO}"
+
+        # Add release summary with status information
+        if error:
+            state_payload["release_summary"] = f"Error: {error}"
+        elif self.installing:
+            state_payload["release_summary"] = f"Installing update..."
+        elif available:
+            state_payload["release_summary"] = f"Update available: {latest_version}"
+            if info.get("notes"):
+                # Truncate notes to first line for summary
+                first_line = info["notes"].split("\n")[0][:200]
+                state_payload["release_summary"] = f"{first_line}"
+        else:
+            state_payload["release_summary"] = "Up to date"
+
+        self.client.publish(self.state_topic, json.dumps(state_payload), qos=1, retain=True)
+
+        # Publish detailed attributes separately
         attrs = {
             "channel": self.channel,
-            "latest_version": info.get("version"),
+            "latest_version": latest_version,
             "latest_published": info.get("published_at"),
-            "installed_version": _read_local_version(),
+            "installed_version": installed_version,
             "signature": info.get("signature"),
             "status": status,
             "auto_install": self.auto_install,
