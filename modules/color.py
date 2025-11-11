@@ -1,8 +1,11 @@
-from PIL import Image
-from sklearn.cluster import KMeans
+# Standard library imports
+from io import BytesIO
+
+# Third-party imports
 import numpy as np
 import requests
-from io import BytesIO
+from PIL import Image
+from sklearn.cluster import KMeans
 
 def load_image(image_source):
     # Handle bot local and remote images

@@ -1,7 +1,24 @@
-import os, json, time, threading, requests
+# Standard library imports
+import json
+import os
+import threading
+import time
+
+# Third-party imports
 import paho.mqtt.client as mqtt
+import requests
+
+# Local imports
+from .config import (
+    DEVICE_NAME,
+    IGDB_CLIENT,
+    IGDB_TOKEN,
+    base_topic,
+    device_id,
+    device_info,
+    discovery_prefix,
+)
 from .igdb import IGDBClient
-from .config import IGDB_CLIENT, IGDB_TOKEN, DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
 from .playtime import get_lutris_playtime
 
 # ----------------------------

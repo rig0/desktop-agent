@@ -1,14 +1,41 @@
-import json, threading, time, os, sys, warnings
+# Standard library imports
+import json
+import os
+import sys
+import threading
+import time
+import warnings
+
+# Third-party imports
 import paho.mqtt.client as mqtt
+
+# Local imports
 from modules.api import start_api
-from modules.updater import UpdateManager
 from modules.commands import run_predefined_command
+from modules.config import (
+    API_MOD,
+    API_PORT,
+    GAME_AGENT,
+    GAME_FILE,
+    MEDIA_AGENT,
+    MQTT_BROKER,
+    MQTT_PASS,
+    MQTT_PORT,
+    MQTT_USER,
+    PUBLISH_INT,
+    UPDATES_AUTO,
+    UPDATES_CH,
+    UPDATES_INT,
+    UPDATES_MOD,
+    base_topic,
+    device_id,
+    device_info,
+    discovery_prefix,
+)
 from modules.deployment import notify_pipeline
 from modules.desktop_agent import get_system_info, publish_discovery, start_desktop_agent
 from modules.game_agent import start_game_agent
-from modules.config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
-                    API_MOD, API_PORT, MEDIA_AGENT, GAME_AGENT, GAME_FILE, UPDATES_MOD, UPDATES_INT, UPDATES_CH, UPDATES_AUTO, \
-                    device_id, base_topic, discovery_prefix, device_info
+from modules.updater import UpdateManager
 
 
 # ----------------------------

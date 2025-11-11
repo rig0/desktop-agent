@@ -1,4 +1,7 @@
+# Standard library imports
 import os
+
+# Third-party imports
 import requests
 from requests.auth import HTTPBasicAuth
 

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+# Standard library imports
 import os
-import time
-import psutil
 import signal
 import sys
+import time
 from datetime import datetime
+
+# Third-party imports
+import psutil
 
 # CONFIG
 POLL_INTERVAL = 5

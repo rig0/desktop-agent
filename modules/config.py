@@ -1,4 +1,7 @@
-import sys, shutil, configparser
+# Standard library imports
+import configparser
+import shutil
+import sys
 from pathlib import Path
 
 

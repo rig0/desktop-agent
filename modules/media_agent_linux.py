@@ -1,8 +1,24 @@
-import os, sys, time, json, threading, requests
-from pydbus import SessionBus
+# Standard library imports
+import json
+import os
+import sys
+import threading
+import time
 from pathlib import Path
-from modules.config import DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
+
+# Third-party imports
 import paho.mqtt.client as mqtt
+import requests
+from pydbus import SessionBus
+
+# Local imports
+from modules.config import (
+    DEVICE_NAME,
+    base_topic,
+    device_id,
+    device_info,
+    discovery_prefix,
+)
 
 
 # ----------------------------

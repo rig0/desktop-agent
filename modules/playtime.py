@@ -1,4 +1,7 @@
-import sqlite3, os, json
+# Standard library imports
+import json
+import os
+import sqlite3
 
 # -------------------------------------
 # Lutris Playtime Parser

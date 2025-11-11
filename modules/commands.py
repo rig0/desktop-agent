@@ -1,5 +1,17 @@
-import os, sys, subprocess, glob, re, json, copy, time, configparser, shutil
+# Standard library imports
+import configparser
+import copy
+import glob
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
 from pathlib import Path
+
+# Local imports
 from .config import COMMANDS_MOD
 
 # ----------------------------

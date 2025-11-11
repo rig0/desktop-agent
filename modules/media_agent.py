@@ -1,15 +1,47 @@
-import os, sys, time, json, asyncio, threading
+# Standard library imports
+import asyncio
+import json
+import os
+import sys
+import threading
+import time
 from pathlib import Path
-from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
+
+# Third-party imports
 import paho.mqtt.client as mqtt
+from winsdk.windows.media.control import (
+    GlobalSystemMediaTransportControlsSessionManager as MediaManager,
+)
+
+# Local imports
 # Attempt relative import for use as a module within a package structure
 try:
-    from .config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
-                    DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
+    from .config import (
+        DEVICE_NAME,
+        MQTT_BROKER,
+        MQTT_PASS,
+        MQTT_PORT,
+        MQTT_USER,
+        PUBLISH_INT,
+        base_topic,
+        device_id,
+        device_info,
+        discovery_prefix,
+    )
 # Fall back to direct import which assumes the script is being ran standalone
 except ImportError:
-    from config import MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASS, PUBLISH_INT, \
-                    DEVICE_NAME, device_id, base_topic, discovery_prefix, device_info
+    from config import (
+        DEVICE_NAME,
+        MQTT_BROKER,
+        MQTT_PASS,
+        MQTT_PORT,
+        MQTT_USER,
+        PUBLISH_INT,
+        base_topic,
+        device_id,
+        device_info,
+        discovery_prefix,
+    )
 
 
 # ----------------------------

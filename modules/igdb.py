@@ -1,5 +1,12 @@
-import os, sqlite3, time, requests, json
+# Standard library imports
+import json
+import os
+import sqlite3
+import time
 from datetime import datetime, timezone
+
+# Third-party imports
+import requests
 
 class IGDBClient:
     def __init__(self, client_id, access_token, cache_db="igdb_cache.sqlite"):
