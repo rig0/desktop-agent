@@ -27,6 +27,7 @@ import requests
 from modules.core.config import IGDB_CLIENT, IGDB_TOKEN
 from modules.utils.igdb import IGDBClient
 from modules.utils.playtime import get_lutris_playtime
+from modules.utils.color import get_dominant_color
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -267,6 +268,9 @@ class GameCollector:
             cover_bytes = self.get_game_artwork(cover_local, cover_full_url)
             artwork_bytes = self.get_game_artwork(artwork_local, artwork_full_url)
 
+            # Get dominant color
+            dominant_color = get_dominant_color(artwork_local)
+
             # Get playtime
             game_name = game_info.get("name", "Unknown")
             playtime = self.get_playtime(game_name)
@@ -284,6 +288,7 @@ class GameCollector:
                 "total_rating": round(game_info.get("total_rating", 0), 2),
                 "cover_url": cover_full_url or "Cover image not available",
                 "artwork_url": artwork_full_url or "Artwork not available",
+                "color": dominant_color or "Color not available",
                 "url": game_info.get("url", ""),
                 "playtime": playtime_str
             }
