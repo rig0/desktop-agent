@@ -269,7 +269,7 @@ class GameCollector:
             artwork_bytes = self.get_game_artwork(artwork_local, artwork_full_url)
 
             # Get dominant color
-            dominant_color = get_dominant_color(artwork_local)
+            dominant_color = get_dominant_color(cover_local)
 
             # Get playtime
             game_name = game_info.get("name", "Unknown")
