@@ -629,7 +629,7 @@ class UpdateManager:
         """
         # Update entity configuration for Home Assistant
         update_payload = {
-            "name": f"{self.device_info.get('name', 'Desktop Agent')} Update",
+            "name": f"{self.device_info.get('name', 'Desktop Agent')} Agent",
             "state_topic": self.state_topic,
             "command_topic": self.install_topic,
             "payload_install": "INSTALL",
