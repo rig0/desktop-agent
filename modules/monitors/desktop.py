@@ -408,10 +408,11 @@ class DesktopMonitor:
                         key,
                         key.replace("_", " ").title(),
                         unit="°C",
-                        device_class="temperature",
                         icon="mdi:thermometer",
                         entity_category="diagnostic",
                         state_class="measurement"
+                        #Disabled to prevent auto conversion to F
+                        #device_class="temperature"
                     )
                 elif "memory" in key:
                     self.discovery.publish_sensor(
@@ -428,14 +429,16 @@ class DesktopMonitor:
                     key,
                     key.replace("_", " ").title(),
                     unit="°C",
-                    device_class="temperature",
                     icon="mdi:thermometer",
                     entity_category="diagnostic",
                     state_class="measurement"
+                    #Disabled to prevent auto conversion to F
+                    #device_class="temperature",
                 )
             else:
                 # Generic sensor
                 logger.debug("Skipping generic temperature sensors")
+                # These sensors are not very descriptive and produce a lot of empty sensors.
                 # self.discovery.publish_sensor(
                 #     key,
                 #     key.replace("_", " ").title(),
