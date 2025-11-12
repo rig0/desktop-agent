@@ -1,3 +1,44 @@
+"""Automatic update system for Desktop Agent.
+
+This module provides automatic update functionality for the Desktop Agent,
+fetching updates from GitHub releases and applying them automatically.
+It supports multiple release channels (stable, beta, nightly) and integrates
+with Home Assistant via MQTT for update notifications and remote installation.
+
+The update system verifies updates using signature tracking, downloads release
+archives, and applies them safely with rollback capabilities. It runs in a
+background thread and can be configured for automatic or manual updates.
+
+Update Channels:
+    - stable: Official releases from GitHub Releases (latest tag)
+    - beta: Pre-release versions from Git tags
+    - nightly: Latest commit from main branch
+
+Example:
+    Basic usage with MQTT integration:
+
+    >>> from modules.utils.updater import UpdateManager
+    >>> import paho.mqtt.client as mqtt
+    >>>
+    >>> client = mqtt.Client()
+    >>> manager = UpdateManager(
+    ...     client=client,
+    ...     base_topic="desktop/my_pc",
+    ...     discovery_prefix="homeassistant",
+    ...     device_id="my_pc",
+    ...     device_info={"name": "My PC"},
+    ...     channel="beta",
+    ...     auto_install=True
+    ... )
+    >>> manager.start()
+
+    Standalone update check:
+
+    >>> from modules.utils.updater import update_repo
+    >>> if update_repo(channel="stable"):
+    ...     print("Update applied successfully")
+"""
+
 # Standard library imports
 import hashlib
 import io
@@ -39,6 +80,24 @@ os.makedirs(UPDATER_DIR, exist_ok=True)
 # ----------------------------
 
 def _github_get(url: str, timeout: int = 10) -> dict:
+    """Perform a GET request to GitHub API with proper headers.
+
+    Args:
+        url: GitHub API endpoint URL.
+        timeout: Request timeout in seconds (default: 10).
+
+    Returns:
+        JSON response data as dictionary.
+
+    Raises:
+        requests.HTTPError: If the request fails with HTTP error.
+        requests.RequestException: If the request fails for other reasons.
+
+    Example:
+        >>> data = _github_get("https://api.github.com/repos/owner/repo/releases/latest")
+        >>> print(data["tag_name"])
+        'v1.0.0'
+    """
     headers = {"Accept": "application/vnd.github+json"}
     response = requests.get(url, timeout=timeout, headers=headers)
     response.raise_for_status()
@@ -46,6 +105,19 @@ def _github_get(url: str, timeout: int = 10) -> dict:
 
 
 def _get_commit_date(ref: str) -> Optional[str]:
+    """Get commit date for a given Git reference.
+
+    Args:
+        ref: Git reference (branch name, tag, or commit SHA).
+
+    Returns:
+        ISO 8601 formatted commit date string, or None if unavailable.
+
+    Example:
+        >>> date = _get_commit_date("v1.0.0")
+        >>> print(date)
+        '2024-01-15T10:30:00Z'
+    """
     try:
         data = _github_get(f"{GITHUB_API}/repos/{REPO}/commits/{ref}")
         return data.get("commit", {}).get("author", {}).get("date")
@@ -54,12 +126,41 @@ def _get_commit_date(ref: str) -> Optional[str]:
 
 
 def _normalize_version(version: Optional[str]) -> str:
+    """Normalize version string for comparison.
+
+    Removes leading 'v', strips whitespace, and converts to lowercase
+    for consistent version comparison.
+
+    Args:
+        version: Version string to normalize (e.g., "v1.0.0", "V2.3.1").
+
+    Returns:
+        Normalized version string (e.g., "1.0.0", "2.3.1"), or empty string if None.
+
+    Example:
+        >>> _normalize_version("v1.0.0")
+        '1.0.0'
+        >>> _normalize_version("  V2.3.1  ")
+        '2.3.1'
+        >>> _normalize_version(None)
+        ''
+    """
     if not version:
         return ""
     return version.strip().lower().lstrip("v")
 
 
 def _read_local_version() -> str:
+    """Read the currently installed version from VERSION file.
+
+    Returns:
+        Version string from VERSION file, or empty string if not found.
+
+    Example:
+        >>> version = _read_local_version()
+        >>> print(f"Installed version: {version}")
+        'Installed version: 0.10.5'
+    """
     try:
         with open(VERSION_PATH, "r", encoding="utf-8") as f:
             return f.read().strip()
@@ -73,6 +174,22 @@ def _signature_path(channel: str) -> str:
 
 
 def read_installed_signature(channel: str) -> Optional[str]:
+    """Read the installed version signature for a given channel.
+
+    Signatures are used to track which version is currently installed,
+    allowing the update system to detect when new versions are available.
+
+    Args:
+        channel: Update channel ("stable", "beta", or "nightly").
+
+    Returns:
+        Signature string if available, None otherwise.
+
+    Example:
+        >>> signature = read_installed_signature("beta")
+        >>> print(f"Installed signature: {signature}")
+        'abc123def456...'
+    """
     path = _signature_path(channel)
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -82,6 +199,18 @@ def read_installed_signature(channel: str) -> Optional[str]:
 
 
 def write_installed_signature(channel: str, signature: Optional[str]) -> None:
+    """Write the installed version signature for a given channel.
+
+    This is called after successfully installing an update to record
+    which version is now installed.
+
+    Args:
+        channel: Update channel ("stable", "beta", or "nightly").
+        signature: Signature string to write (does nothing if None).
+
+    Example:
+        >>> write_installed_signature("beta", "abc123def456")
+    """
     if not signature:
         return
     path = _signature_path(channel)
@@ -90,6 +219,19 @@ def write_installed_signature(channel: str, signature: Optional[str]) -> None:
 
 
 def seed_signature_from_version(channel: str, release_info: Optional[dict]) -> None:
+    """Initialize signature file if the current version matches remote version.
+
+    This is used on first run to avoid treating the current installation
+    as an "available update" when it's actually already installed.
+
+    Args:
+        channel: Update channel ("stable", "beta", or "nightly").
+        release_info: Release information dictionary from fetch_release_info().
+
+    Example:
+        >>> info = fetch_release_info("beta")
+        >>> seed_signature_from_version("beta", info)
+    """
     if not release_info or read_installed_signature(channel):
         return
 
@@ -108,12 +250,37 @@ def _utcnow_iso() -> str:
 # ----------------------------
 
 def get_sha256(data: bytes) -> str:
+    """Calculate SHA256 hash of data.
+
+    Args:
+        data: Binary data to hash.
+
+    Returns:
+        Hexadecimal SHA256 hash string.
+
+    Example:
+        >>> data = b"hello world"
+        >>> get_sha256(data)
+        'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'
+    """
     h = hashlib.sha256()
     h.update(data)
     return h.hexdigest()
 
-# Overwrite new files without touching other files
+
 def copy_over(src, dst):
+    """Recursively copy files from source to destination, overwriting existing files.
+
+    This function preserves existing files that are not in the source directory,
+    making it suitable for applying updates without removing user data or config.
+
+    Args:
+        src: Source directory path.
+        dst: Destination directory path.
+
+    Example:
+        >>> copy_over("/tmp/update-v1.0.0", "/opt/desktop-agent")
+    """
     os.makedirs(dst, exist_ok=True)
     for item in os.listdir(src):
         s = os.path.join(src, item)
@@ -124,8 +291,16 @@ def copy_over(src, dst):
         else:
             shutil.copy2(s, d)
 
-# Make Linux scripts executable
+
 def make_helpers_executable():
+    """Make all files in the helpers directory executable on Linux.
+
+    This is called after applying updates to ensure helper scripts have
+    the correct permissions. On non-Linux platforms, this is a no-op.
+
+    Example:
+        >>> make_helpers_executable()
+    """
     helpers_dir = os.path.join(AGENT_DIR, "helpers")
     if not os.path.exists(helpers_dir):
         return
@@ -146,6 +321,37 @@ def make_helpers_executable():
 # ----------------------------
 
 def fetch_release_info(channel: str = "beta") -> dict:
+    """Fetch release information for a given update channel from GitHub.
+
+    This function queries GitHub API to get the latest release information
+    for the specified channel. Each channel uses different GitHub endpoints:
+    - stable: Latest GitHub Release
+    - beta: Latest Git tag
+    - nightly: Latest commit on main branch
+
+    Args:
+        channel: Update channel ("stable", "beta", or "nightly"). Defaults to "beta".
+
+    Returns:
+        Dictionary containing release information with keys:
+            - channel: The channel name
+            - version: Version string (e.g., "v1.0.0" or "main-abc123")
+            - signature: Unique identifier for this release (commit SHA or release ID)
+            - zip_url: Download URL for the release archive
+            - published_at: ISO 8601 publication date
+            - notes: Release notes or commit message
+
+    Raises:
+        ValueError: If an unknown channel is specified.
+        requests.RequestException: If GitHub API request fails.
+
+    Example:
+        >>> info = fetch_release_info("beta")
+        >>> print(f"Latest beta: {info['version']}")
+        'Latest beta: v0.10.5'
+        >>> print(f"Published: {info['published_at']}")
+        'Published: 2024-01-15T10:30:00Z'
+    """
     channel = channel or "beta"
 
     if channel == "stable":
@@ -195,6 +401,37 @@ def fetch_release_info(channel: str = "beta") -> dict:
 
 
 def update_repo(channel: str = "stable", release_info: Optional[dict] = None) -> bool:
+    """Download and apply an update from GitHub.
+
+    This function downloads the release archive, verifies it hasn't been
+    applied already (using SHA256 checksum), extracts it to a temporary
+    directory, and copies files to the agent directory. It preserves existing
+    files that aren't in the update.
+
+    Args:
+        channel: Update channel ("stable", "beta", or "nightly"). Defaults to "stable".
+        release_info: Pre-fetched release info (fetches if None).
+
+    Returns:
+        True if update was applied, False if already up-to-date.
+
+    Raises:
+        ValueError: If zip URL is not available.
+        requests.RequestException: If download fails.
+        zipfile.BadZipFile: If downloaded archive is corrupted.
+
+    Example:
+        >>> # Check and apply update
+        >>> if update_repo("beta"):
+        ...     print("Update applied successfully")
+        ... else:
+        ...     print("Already up to date")
+
+        >>> # Use pre-fetched info
+        >>> info = fetch_release_info("stable")
+        >>> if update_repo("stable", release_info=info):
+        ...     print("Updated to", info["version"])
+    """
     release_info = release_info or fetch_release_info(channel)
     zip_url = release_info.get("zip_url")
 
@@ -246,7 +483,71 @@ def update_repo(channel: str = "stable", release_info: Optional[dict] = None) ->
 
 
 class UpdateManager:
-    #Publishes update status via MQTT and handles install requests.
+    """Manages automatic updates and MQTT integration for Home Assistant.
+
+    This class coordinates update checking, publishing update status to MQTT,
+    and handling remote installation requests from Home Assistant. It runs
+    a polling loop in a background thread to periodically check for updates
+    and can automatically install them or wait for manual triggers.
+
+    The UpdateManager publishes Home Assistant discovery configurations for
+    update entities and buttons, allowing users to see update status and
+    trigger installations from the Home Assistant UI.
+
+    Attributes:
+        client: MQTT client for publishing messages.
+        base_topic: Base MQTT topic for all device messages.
+        discovery_prefix: Home Assistant MQTT discovery prefix.
+        device_id: Unique device identifier.
+        device_info: Device information dictionary for Home Assistant.
+        channel: Update channel ("stable", "beta", or "nightly").
+        interval: Update check interval in seconds (minimum 60).
+        auto_install: Whether to automatically install updates.
+        stop_event: Threading event to signal shutdown.
+        state_topic: MQTT topic for update state.
+        attrs_topic: MQTT topic for update attributes.
+        install_topic: MQTT topic for installation commands.
+        install_lock: Thread lock to prevent concurrent installations.
+        installing: Flag indicating installation in progress.
+        poll_thread: Background polling thread.
+        latest_info: Most recently fetched release information.
+        available: Flag indicating if update is available.
+        last_error: Last error message (if any).
+
+    Example:
+        >>> import paho.mqtt.client as mqtt
+        >>> client = mqtt.Client()
+        >>> client.connect("mqtt.example.com", 1883)
+        >>>
+        >>> device_info = {
+        ...     "identifiers": ["my_pc"],
+        ...     "name": "My PC",
+        ...     "manufacturer": "Custom",
+        ...     "model": "Desktop"
+        ... }
+        >>>
+        >>> manager = UpdateManager(
+        ...     client=client,
+        ...     base_topic="desktop/my_pc",
+        ...     discovery_prefix="homeassistant",
+        ...     device_id="my_pc",
+        ...     device_info=device_info,
+        ...     channel="beta",
+        ...     interval=3600,
+        ...     auto_install=True
+        ... )
+        >>>
+        >>> # Subscribe to install requests
+        >>> client.subscribe("desktop/my_pc/update/install")
+        >>> client.message_callback_add(
+        ...     "desktop/my_pc/update/install",
+        ...     lambda client, userdata, msg: manager.handle_install_request(msg.payload)
+        ... )
+        >>>
+        >>> # Start update monitoring
+        >>> manager.start()
+    """
+
     def __init__(
         self,
         client,
@@ -259,6 +560,19 @@ class UpdateManager:
         auto_install: bool = True,
         stop_event: Optional[threading.Event] = None,
     ):
+        """Initialize update manager.
+
+        Args:
+            client: Connected MQTT client instance (paho.mqtt.client.Client).
+            base_topic: Base MQTT topic for device messages.
+            discovery_prefix: Home Assistant discovery prefix (typically "homeassistant").
+            device_id: Unique device identifier (used in entity IDs).
+            device_info: Device information dictionary for Home Assistant discovery.
+            channel: Update channel - "stable", "beta", or "nightly" (default: "stable").
+            interval: Update check interval in seconds, minimum 60 (default: 3600).
+            auto_install: Whether to automatically install updates (default: True).
+            stop_event: Threading event for coordinated shutdown (creates new if None).
+        """
         self.client = client
         self.base_topic = base_topic
         self.discovery_prefix = discovery_prefix
@@ -281,6 +595,16 @@ class UpdateManager:
         self.last_error: Optional[str] = None
 
     def start(self) -> None:
+        """Start the update manager polling thread.
+
+        Publishes Home Assistant discovery configuration, performs an initial
+        update check, and starts the background polling loop. This method is
+        idempotent - calling it multiple times has no effect if already started.
+
+        Example:
+            >>> manager = UpdateManager(client, "desktop/my_pc", "homeassistant", "my_pc", device_info)
+            >>> manager.start()
+        """
         if self.poll_thread:
             return
 
@@ -292,6 +616,17 @@ class UpdateManager:
         logger.info("Update manager poll thread started")
 
     def publish_discovery(self) -> None:
+        """Publish Home Assistant MQTT discovery configurations.
+
+        Publishes discovery messages for:
+        1. Update entity - shows current and available versions
+        2. Button entity - triggers manual installation
+
+        This is called once on startup to register entities with Home Assistant.
+
+        Example:
+            >>> manager.publish_discovery()
+        """
         # Update entity configuration for Home Assistant
         update_payload = {
             "name": f"{self.device_info.get('name', 'Desktop Agent')} Update",
@@ -346,6 +681,31 @@ class UpdateManager:
         )
 
     def handle_install_request(self, payload: Optional[bytes]) -> bool:
+        """Handle installation request from MQTT command topic.
+
+        Parses the MQTT payload and triggers manual installation if the
+        action is recognized. Supports both plain text and JSON payloads.
+
+        Args:
+            payload: MQTT message payload (bytes or str).
+
+        Returns:
+            True if installation was started, False otherwise.
+
+        Example:
+            >>> # In MQTT message callback
+            >>> def on_message(client, userdata, msg):
+            ...     if msg.topic == manager.install_topic:
+            ...         manager.handle_install_request(msg.payload)
+            >>>
+            >>> # Payload can be simple text
+            >>> manager.handle_install_request(b"INSTALL")
+            True
+            >>>
+            >>> # Or JSON
+            >>> manager.handle_install_request(b'{"action": "INSTALL"}')
+            True
+        """
         if isinstance(payload, bytes):
             payload_str = payload.decode("utf-8", errors="ignore").strip()
         else:
@@ -366,6 +726,12 @@ class UpdateManager:
         return False
 
     def _poll_loop(self) -> None:
+        """Background polling loop that periodically checks for updates.
+
+        This runs in a daemon thread and can be stopped by setting the
+        stop_event. It catches and logs any exceptions to prevent thread
+        crashes, publishing error states to MQTT when problems occur.
+        """
         logger.info("Update manager poll loop started")
         try:
             while not self.stop_event.is_set():
@@ -387,6 +753,15 @@ class UpdateManager:
             logger.info("Update manager poll loop stopped")
 
     def _poll_once(self, initial: bool = False) -> None:
+        """Perform a single update check.
+
+        Fetches release information, compares with installed version,
+        and triggers automatic installation if configured and an update
+        is available.
+
+        Args:
+            initial: Whether this is the initial check on startup (unused but kept for API compatibility).
+        """
         if self.installing:
             return
 
@@ -401,6 +776,17 @@ class UpdateManager:
             self._start_install(manual=False, info=info)
 
     def _is_update_available(self, info: Optional[dict]) -> bool:
+        """Check if an update is available by comparing signatures.
+
+        Compares the remote release signature with the locally installed
+        signature to determine if a new version is available.
+
+        Args:
+            info: Release information dictionary from fetch_release_info().
+
+        Returns:
+            True if update is available, False otherwise.
+        """
         if not info:
             return False
 
@@ -416,6 +802,18 @@ class UpdateManager:
         return signature != installed
 
     def _start_install(self, manual: bool, info: Optional[dict] = None) -> bool:
+        """Start the installation process in a background thread.
+
+        Spawns a worker thread to perform the actual installation,
+        preventing concurrent installations with a lock.
+
+        Args:
+            manual: Whether this is a manual (user-triggered) installation.
+            info: Pre-fetched release info (fetches if None).
+
+        Returns:
+            True if installation thread was started, False if already in progress or error occurred.
+        """
         if self.install_lock.locked():
             self._publish_state(self.available, self.latest_info, status="busy", error="Update already in progress")
             return False
@@ -439,6 +837,16 @@ class UpdateManager:
         return True
 
     def _install_worker(self, info: dict, manual: bool) -> None:
+        """Worker thread that performs the actual installation.
+
+        This method runs in a separate thread and holds the install_lock
+        to prevent concurrent installations. It updates MQTT state throughout
+        the process and schedules a delayed refresh after completion.
+
+        Args:
+            info: Release information dictionary.
+            manual: Whether this is a manual (user-triggered) installation.
+        """
         trigger = "manual" if manual else "auto"
         with self.install_lock:
             self.installing = True
@@ -461,6 +869,18 @@ class UpdateManager:
                 threading.Thread(target=self._delayed_refresh, daemon=True).start()
 
     def _publish_state(self, available: bool, info: Optional[dict], status: str = "idle", error: Optional[str] = None) -> None:
+        """Publish update state and attributes to MQTT.
+
+        Publishes both the update entity state (for Home Assistant's update
+        entity) and detailed attributes. Formats release information and
+        includes installation status, errors, and release notes.
+
+        Args:
+            available: Whether an update is available.
+            info: Release information dictionary.
+            status: Installation status ("idle", "installing", "error", etc.).
+            error: Error message if applicable.
+        """
         info = self._safe_info(info)
         installed_version = _read_local_version()
         latest_version = info.get("version") if available else installed_version
@@ -528,6 +948,12 @@ class UpdateManager:
         self.available = available
 
     def _delayed_refresh(self) -> None:
+        """Perform a delayed state refresh after installation.
+
+        Waits 5 seconds after installation completes, then performs
+        another update check to refresh state. This ensures the UI
+        reflects the newly installed version.
+        """
         self.stop_event.wait(5)
         try:
             if not self.installing and not self.stop_event.is_set():
@@ -538,6 +964,15 @@ class UpdateManager:
             self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
 
     def _safe_info(self, info: Optional[dict]) -> dict:
+        """Return safe default info dictionary if None.
+
+        Args:
+            info: Release information dictionary or None.
+
+        Returns:
+            The original dictionary if not None, otherwise a safe default
+            dictionary with empty/None values.
+        """
         if info is None:
             return {
                 "channel": self.channel,
