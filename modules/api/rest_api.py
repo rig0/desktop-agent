@@ -1,3 +1,17 @@
+"""
+REST API server module.
+
+This module provides a Flask-based REST API for Desktop Agent, allowing
+remote querying of system status and execution of predefined commands.
+
+Endpoints:
+    GET /status - Returns current system information
+    POST /run - Executes a predefined command
+
+Authentication:
+    Supports Bearer token and query parameter authentication via API_AUTH_TOKEN.
+"""
+
 # Standard library imports
 import logging
 import secrets
@@ -9,6 +23,8 @@ from functools import wraps
 from flask import Flask, jsonify, request
 
 # Local imports
+from modules.collectors.system import SystemInfoCollector
+from modules.commands import run_predefined_command
 from modules.config import API_AUTH_TOKEN
 
 # Configure logger
@@ -96,10 +112,18 @@ def status():
     Returns current system information.
 
     Authentication required if auth_token is configured.
+
+    Returns:
+        JSON object containing system information including CPU, memory,
+        disk, network, GPU metrics, and system details.
+
+    Example:
+        >>> curl -H "Authorization: Bearer token123" http://localhost:5000/status
+        {"cpu_usage": 25.5, "memory_usage": 45.2, ...}
     """
     try:
-        from modules.desktop_agent import get_system_info
-        return jsonify(get_system_info())
+        collector = SystemInfoCollector()
+        return jsonify(collector.collect_all())
     except Exception as e:
         logger.error(f"Error getting system info: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
@@ -114,25 +138,51 @@ def run_command():
     Authentication required if auth_token is configured.
 
     Request body:
-    {
-        "command": "command_key"
-    }
+        {
+            "command": "command_key"
+        }
+
+    Returns:
+        JSON object with command execution result containing:
+        - success: Boolean indicating if command succeeded
+        - output: Command output or error message
+
+    Example:
+        >>> curl -X POST -H "Authorization: Bearer token123" \\
+        ...      -H "Content-Type: application/json" \\
+        ...      -d '{"command": "restart"}' \\
+        ...      http://localhost:5000/run
+        {"success": true, "output": "Command executed successfully"}
     """
     try:
-        from modules.commands import run_predefined_command
         data = request.json
-        command_key = data.get("command")
+        command_key = data.get("command") if data else None
+
         if not command_key:
             logger.warning("No command key provided in request")
             return jsonify({"success": False, "output": "No command provided."}), 400
+
         result = run_predefined_command(command_key)
         return jsonify(result), 200 if result["success"] else 400
+
     except Exception as e:
         logger.error(f"Error running command: {e}", exc_info=True)
         return jsonify({"success": False, "output": "Internal server error"}), 500
 
+
 def start_api(port, stop_event):
-    """Start Flask API server with graceful shutdown support."""
+    """
+    Start Flask API server with graceful shutdown support.
+
+    Args:
+        port: Port number to listen on
+        stop_event: Threading event for shutdown signaling (currently not used)
+
+    Note:
+        Flask's built-in server doesn't natively support stop_event.
+        For production, consider using a production WSGI server like gunicorn
+        or waitress which support graceful shutdown.
+    """
     logger.info(f"Starting API server on port {port}")
 
     # Suppress Flask's default logging
@@ -140,9 +190,8 @@ def start_api(port, stop_event):
     log.setLevel(logging.ERROR)
 
     try:
-        # Note: Flask's built-in server doesn't natively support stop_event
-        # For production, consider using a production WSGI server like gunicorn
-        # For now, we'll run Flask normally but with proper error handling
+        # Run Flask server
+        # Note: In production, use gunicorn or waitress instead of Flask's dev server
         app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
     except Exception as e:
         logger.error(f"API server error: {e}", exc_info=True)

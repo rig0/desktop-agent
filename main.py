@@ -12,8 +12,9 @@ import warnings
 # Third-party imports
 import paho.mqtt.client as mqtt
 
-# Local imports
-from modules.api import start_api
+# Local imports - NEW MODULAR STRUCTURE
+from modules.api.rest_api import start_api
+from modules.collectors.system import SystemInfoCollector
 from modules.commands import run_predefined_command
 from modules.config import (
     API_MOD,
@@ -39,10 +40,21 @@ from modules.config import (
     device_info,
     discovery_prefix,
 )
-from modules.deployment import notify_pipeline
-from modules.desktop_agent import get_system_info, publish_discovery, start_desktop_agent
-from modules.game_agent import start_game_agent
-from modules.updater import UpdateManager
+from modules.core.discovery import DiscoveryManager
+from modules.core.messaging import MessageBroker
+from modules.monitors.desktop import DesktopMonitor
+from modules.utils.deployment import notify_pipeline
+from modules.utils.updater import UpdateManager
+
+# Conditional imports for optional features
+if GAME_AGENT:
+    from modules.collectors.game import GameCollector
+    from modules.monitors.game import GameMonitor
+
+if MEDIA_AGENT:
+    from modules.collectors.media import MediaCollector
+    from modules.monitors.media import MediaMonitor
+
 
 # ----------------------------
 # Logging Configuration
@@ -210,8 +222,6 @@ def on_connect(client, userdata, flags, rc):
             client.subscribe(topic)
             logger.info(f"Re-subscribed to topic: {topic}")
 
-        # Publish/republish discovery
-        publish_discovery(client, device_id, base_topic, discovery_prefix, device_info)
     else:
         logger.error(message)
         conn_state.on_disconnected()
@@ -235,23 +245,6 @@ def on_mqtt_message(client, userdata, msg):
     except Exception as e:
         logger.error(f"Error handling MQTT command: {e}", exc_info=True)
 
-
-# ----------------------------
-# Media Agent Handler
-# ----------------------------
-
-def media_agent(client, stop_event):
-    try:
-        sysinfo = get_system_info()
-        if sysinfo["os"] == "Linux":
-            from modules.media_agent_linux import start_media_agent
-            start_media_agent(client, stop_event)
-        elif sysinfo["os"] == "Windows":
-            logger.warning("Media agent is enabled but must be run standalone on Windows.")
-            #from modules.media_agent import start_media_agent
-    except Exception as e:
-        logger.error(f"Error in media agent: {e}", exc_info=True)
-    
 
 # ----------------------------
 # Signal Handlers
@@ -317,20 +310,33 @@ def main():
 
     logger.info("MQTT connection established, starting modules...")
 
+    # Create core infrastructure
+    broker = MessageBroker(client, base_topic, discovery_prefix)
+    discovery = DiscoveryManager(broker, device_id, device_info, base_topic)
+
     # Register message callback for commands (subscription happens in on_connect)
     client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
-    # Start desktop agent
+    # Start desktop monitor
+    desktop_collector = SystemInfoCollector()
+    desktop_monitor = DesktopMonitor(
+        desktop_collector,
+        broker,
+        discovery,
+        device_id,
+        base_topic,
+        PUBLISH_INT
+    )
     desktop_stop_event = threading.Event()
     stop_events.append(desktop_stop_event)
     desktop_thread = threading.Thread(
-        target=start_desktop_agent,
-        args=(client, base_topic, PUBLISH_INT, desktop_stop_event),
-        name="DesktopAgent-Monitor",
+        target=desktop_monitor.start,
+        args=(desktop_stop_event,),
+        name="DesktopMonitor",
         daemon=True
     )
     desktop_thread.start()
-    logger.info("Desktop agent thread started")
+    logger.info("Desktop monitor started")
 
     # Start API
     if API_MOD:
@@ -343,33 +349,37 @@ def main():
             daemon=True
         )
         api_thread.start()
-        logger.info("API server thread started")
+        logger.info("API server started")
 
-    # Start media agent
+    # Start media monitor
     if MEDIA_AGENT:
+        media_collector = MediaCollector()
+        media_monitor = MediaMonitor(media_collector, broker, discovery)
         media_stop_event = threading.Event()
         stop_events.append(media_stop_event)
         media_thread = threading.Thread(
-            target=media_agent,
-            args=(client, media_stop_event),
-            name="MediaAgent-Monitor",
+            target=media_monitor.start,
+            args=(media_stop_event,),
+            name="MediaMonitor",
             daemon=True
         )
         media_thread.start()
-        logger.info("Media agent thread started")
+        logger.info("Media monitor started")
 
-    # Start game agent
+    # Start game monitor
     if GAME_AGENT:
+        game_collector = GameCollector(GAME_FILE)
+        game_monitor = GameMonitor(game_collector, broker, discovery, GAME_FILE)
         game_stop_event = threading.Event()
         stop_events.append(game_stop_event)
         game_thread = threading.Thread(
-            target=start_game_agent,
-            args=(client, GAME_FILE, game_stop_event),
-            name="GameAgent-Monitor",
+            target=game_monitor.start,
+            args=(game_stop_event,),
+            name="GameMonitor",
             daemon=True
         )
         game_thread.start()
-        logger.info("Game agent thread started")
+        logger.info("Game monitor started")
 
     # Start updater monitor
     update_manager = None
