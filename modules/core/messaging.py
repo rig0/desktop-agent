@@ -149,7 +149,7 @@ class MessageBroker:
         """
         topic = f"{self.base_topic}/availability"
         self.client.publish(topic, payload=status, qos=qos, retain=retain)
-        logger.info(f"Published availability: {status}")
+        logger.debug(f"Published availability: {status}")
 
     def subscribe(self, topic: str, callback: Optional[Callable] = None) -> None:
         """Subscribe to an MQTT topic.
