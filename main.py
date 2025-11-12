@@ -107,7 +107,7 @@ import warnings
 # Third-party imports
 import paho.mqtt.client as mqtt
 
-# Local imports - NEW MODULAR STRUCTURE
+# Local imports
 from modules.api.rest_api import start_api
 from modules.collectors.system import SystemInfoCollector
 from modules.commands import run_predefined_command
