@@ -138,8 +138,8 @@ from modules.core.config import (
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 from modules.monitors.desktop import DesktopMonitor
+from modules.updater import UpdateManager
 from modules.utils.deployment import notify_pipeline
-from modules.utils.updater import UpdateManager
 
 # Conditional imports for optional features
 if GAME_AGENT:

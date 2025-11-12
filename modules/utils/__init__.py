@@ -9,7 +9,6 @@ Modules:
     color: Image color analysis utilities
     playtime: Lutris/Steam playtime tracking
     igdb: IGDB API client for game metadata
-    updater: Update management for Desktop Agent
     deployment: Jenkins pipeline notification utilities
 """
 
@@ -24,7 +23,6 @@ from .formatting import (
 from .color import get_dominant_color, load_image
 from .playtime import get_lutris_playtime, find_lutris_db
 from .igdb import IGDBClient
-from .updater import UpdateManager
 from .deployment import notify_pipeline
 
 __all__ = [
@@ -39,6 +37,5 @@ __all__ = [
     "get_lutris_playtime",
     "find_lutris_db",
     "IGDBClient",
-    "UpdateManager",
     "notify_pipeline"
 ]

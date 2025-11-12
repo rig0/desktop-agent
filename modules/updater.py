@@ -17,7 +17,7 @@ Update Channels:
 Example:
     Basic usage with MQTT integration:
 
-    >>> from modules.utils.updater import UpdateManager
+    >>> from modules.updater import UpdateManager
     >>> import paho.mqtt.client as mqtt
     >>>
     >>> client = mqtt.Client()
@@ -34,7 +34,7 @@ Example:
 
     Standalone update check:
 
-    >>> from modules.utils.updater import update_repo
+    >>> from modules.updater import update_repo
     >>> if update_repo(channel="stable"):
     ...     print("Update applied successfully")
 """
