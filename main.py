@@ -1,3 +1,98 @@
+"""Desktop Agent - System monitoring and integration for Home Assistant.
+
+Desktop Agent collects system information from desktop computers and 
+exposes it via MQTT and REST API for integration with Home Assistant
+and other automation platforms.
+
+The application provides:
+- Real-time system metrics (CPU, memory, disk, network, GPU)
+- Media playback monitoring
+- Game monitoring with IGDB metadata integration
+- Remote command execution via MQTT & API
+- REST API for external integrations
+- Automatic Home Assistant MQTT discovery
+- Self-updating capabilities
+
+Architecture:
+    The application follows a modular, layered architecture:
+
+    1. **Core Layer** (modules/core/):
+       - config: Configuration management
+       - messaging: MQTT messaging abstraction
+       - discovery: Home Assistant discovery management
+
+    2. **Data Collection Layer** (modules/collectors/):
+       - system: System metrics collection
+       - game: Game information and metadata
+       - media: Media playback information
+
+    3. **Monitoring Layer** (modules/monitors/):
+       - desktop: Desktop system monitoring
+       - game: Game activity monitoring
+       - media: Media playback monitoring
+
+    4. **Feature Layer** (modules/):
+       - commands: Remote command execution
+       - api: REST API server
+
+    5. **Utility Layer** (modules/utils/):
+       - Platform detection, formatting, IGDB integration, etc.
+
+MQTT Topics Structure:
+    desktop/{device_id}/availability         - Online/offline status (LWT)
+    desktop/{device_id}/system/state         - System state (JSON)
+    desktop/{device_id}/system/attrs         - System attributes (JSON)
+    desktop/{device_id}/game/state           - Game state (playing/idle)
+    desktop/{device_id}/game/attrs           - Game metadata (JSON)
+    desktop/{device_id}/game/cover           - Game cover image (binary)
+    desktop/{device_id}/game/artwork         - Game artwork (binary)
+    desktop/{device_id}/media/state          - Media state (playing/paused/idle)
+    desktop/{device_id}/media/attrs          - Media attributes (JSON)
+    desktop/{device_id}/media/thumbnail      - Media thumbnail (binary)
+    desktop/{device_id}/run                  - Command execution (JSON)
+    desktop/{device_id}/run_result           - Command result (JSON)
+    desktop/{device_id}/update/state         - Update status (JSON)
+    desktop/{device_id}/update/install       - Trigger update installation
+
+Connection Management:
+    - Automatic reconnection with exponential backoff
+    - Last Will and Testament (LWT) for availability tracking
+    - Connection state monitoring for thread coordination
+    - Configurable retry limits and timeouts
+
+Thread Safety:
+    - All monitoring modules run in separate daemon threads
+    - Thread-safe connection state management
+    - Graceful shutdown via threading.Event signals
+    - Clean disconnect on SIGINT/SIGTERM
+
+Configuration:
+    Configuration is loaded from data/config.ini with the following sections:
+    - [device]: Device name and publishing interval
+    - [mqtt]: MQTT broker connection settings
+    - [modules]: Feature flags to enable/disable components
+    - [api]: REST API configuration
+    - [igdb]: IGDB API credentials for game metadata
+    - [updates]: Update manager settings
+
+Usage:
+    python main.py              # Normal operation
+    python main.py --deploy     # Deployment mode (notifies CI/CD pipeline) Devs only
+
+Exit Codes:
+    0: Clean shutdown
+    1: Configuration error or connection failure
+
+Example:
+    >>> # main.py starts automatically when run
+    >>> # Configuration loaded from data/config.ini
+    >>> # MQTT connection established
+    >>> # Monitoring threads started
+    >>> # Application runs until SIGINT/SIGTERM
+
+Repo: https://github.com/rig0/desktop-agent/
+"""
+
 # Standard library imports
 import json
 import logging
@@ -16,7 +111,7 @@ import paho.mqtt.client as mqtt
 from modules.api.rest_api import start_api
 from modules.collectors.system import SystemInfoCollector
 from modules.commands import run_predefined_command
-from modules.config import (
+from modules.core.config import (
     API_MOD,
     API_PORT,
     GAME_AGENT,
@@ -59,9 +154,13 @@ if MEDIA_AGENT:
 # ----------------------------
 # Logging Configuration
 # ----------------------------
+
 logging.basicConfig(
+    # Logger verbosity (add option to config?)
     level=logging.INFO,
+    # Logger format ex. [Timestamp] (INFO) main: logger message
     format='[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
+    # Format timestamp
     datefmt='%H:%M:%S'
 )
 logger = logging.getLogger(__name__)
@@ -74,6 +173,7 @@ logger = logging.getLogger(__name__)
 # Ignore deprecated mqtt callback version
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+# Initialize mqtt client
 client = mqtt.Client()
 exit_flag = threading.Event()
 
@@ -83,10 +183,6 @@ stop_events = []
 # Global list to track additional subscriptions for reconnection
 additional_subscriptions = []
 
-
-# ----------------------------
-# Connection State Management
-# ----------------------------
 
 class ConnectionState:
     """Track MQTT connection state for monitoring and thread coordination."""
@@ -118,10 +214,6 @@ class ConnectionState:
         """Check if currently connected."""
         return self.connected.is_set()
 
-
-# ----------------------------
-# MQTT Connection Functions
-# ----------------------------
 
 def connect_with_retry(client, broker, port, max_retries=10, initial_delay=1, max_delay=60):
     """
@@ -227,19 +319,20 @@ def on_connect(client, userdata, flags, rc):
         conn_state.on_disconnected()
 
 
-# ----------------------------
-# MQTT Command Handler
-# ----------------------------
-
 def on_mqtt_message(client, userdata, msg):
+    """Handle MQTT commannds"""
     try:
+        # Load message
         payload = json.loads(msg.payload.decode())
+        # Extract command
         command_key = payload.get("command")
         if not command_key:
             logger.warning("Received MQTT command message with no command key")
             return
+        # Run command and return result
         result = run_predefined_command(command_key)
         client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
+    # Handle errors    
     except json.JSONDecodeError as e:
         logger.error(f"Error decoding MQTT command payload: {e}", exc_info=True)
     except Exception as e:
@@ -268,6 +361,35 @@ def signal_handler(sig, frame):
 # ----------------------------
 
 def main():
+    """
+    Main entry point for Desktop Agent application.
+
+    Initializes and starts all components:
+    1. Registers signal handlers for graceful shutdown
+    2. Creates connection state tracker
+    3. Configures MQTT client with authentication and LWT
+    4. Connects to MQTT broker with retry logic
+    5. Starts MQTT client loop
+    6. Creates core infrastructure (MessageBroker, DiscoveryManager)
+    7. Starts monitoring threads (desktop, game, media as configured)
+    8. Starts optional features (API, updates as configured)
+    9. Enters main event loop until shutdown signal received
+
+    The application runs continuously until:
+    - SIGINT (Ctrl+C) is received
+    - SIGTERM is received
+    - A fatal error occurs
+
+    On shutdown:
+    - Signals all threads to stop via stop_events
+    - Publishes offline status to MQTT
+    - Stops MQTT client loop
+    - Disconnects from MQTT broker
+    - Exits with code 0
+
+    Raises:
+        SystemExit: On fatal configuration or connection errors (exit code 1)
+    """
     # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)

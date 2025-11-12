@@ -18,7 +18,7 @@ from typing import Optional
 import requests
 
 # Local imports
-from modules.config import REPO_OWNER, REPO_NAME, VERSION_PATH
+from modules.core.config import REPO_OWNER, REPO_NAME, VERSION_PATH
 
 # Configure logger
 logger = logging.getLogger(__name__)

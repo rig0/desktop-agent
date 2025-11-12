@@ -24,7 +24,7 @@ from typing import Dict, Any, Optional, Tuple
 import requests
 
 # Local imports
-from modules.config import IGDB_CLIENT, IGDB_TOKEN
+from modules.core.config import IGDB_CLIENT, IGDB_TOKEN
 from modules.utils.igdb import IGDBClient
 from modules.utils.playtime import get_lutris_playtime
 

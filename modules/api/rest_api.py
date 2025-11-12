@@ -25,7 +25,7 @@ from flask import Flask, jsonify, request
 # Local imports
 from modules.collectors.system import SystemInfoCollector
 from modules.commands import run_predefined_command
-from modules.config import API_AUTH_TOKEN
+from modules.core.config import API_AUTH_TOKEN
 
 # Configure logger
 logger = logging.getLogger(__name__)

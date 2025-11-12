@@ -31,7 +31,7 @@ import paho.mqtt.client as mqtt
 
 # Local imports
 from modules.collectors.media import MediaCollector
-from modules.config import DEVICE_NAME, base_topic, device_id, device_info, discovery_prefix
+from modules.core.config import DEVICE_NAME, base_topic, device_id, device_info, discovery_prefix
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 

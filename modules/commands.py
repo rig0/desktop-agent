@@ -1,3 +1,66 @@
+"""Command execution module with security-first design.
+
+This module provides secure command execution functionality for Desktop Agent,
+allowing users to define and execute predefined commands via MQTT or REST API.
+
+Security is the primary concern when executing commands from remote sources.
+This module implements multiple layers of defense:
+
+1. **Command Whitelisting**: Only commands defined in commands.ini can be executed
+2. **Key Validation**: Command keys must be alphanumeric with underscores/dashes only
+3. **Content Validation**: Commands are validated before execution
+4. **Shell Feature Control**: shell=True requires explicit opt-in via 'shell_features' flag
+5. **Safe Parsing**: Uses shlex.split() for proper argument parsing
+6. **Audit Logging**: All command executions are logged with full context
+7. **Platform Separation**: Different implementations for Linux and Windows
+8. **Length Limits**: Maximum lengths enforced for keys and command strings
+
+Configuration Format (commands.ini):
+    [command_key]
+    cmd = /path/to/executable --args
+    wait = false              # Wait for completion and capture output
+    platforms = linux,win     # Comma-separated list of supported platforms
+    shell_features = false    # Enable shell metacharacters (pipes, redirects, etc.)
+
+Security Considerations:
+    - Never execute commands with shell=True unless absolutely necessary
+    - Always validate that 'shell_features' is explicitly enabled before using shell
+    - Use list form [executable, arg1, arg2] whenever possible instead of strings
+    - Log all command executions for audit trail
+    - Fail securely: deny by default, require explicit opt-in for dangerous features
+
+Example Usage:
+    >>> from modules.commands import run_predefined_command
+    >>> result = run_predefined_command("launch_firefox")
+    >>> if result["success"]:
+    ...     print(f"Command executed: {result['output']}")
+    ... else:
+    ...     print(f"Command failed: {result['output']}")
+
+Example Configuration:
+    # Safe command (no shell features)
+    [launch_firefox]
+    cmd = firefox
+    wait = false
+    platforms = linux
+
+    # Command requiring shell features (requires explicit opt-in)
+    [check_processes]
+    cmd = ps aux | grep python
+    wait = true
+    platforms = linux
+    shell_features = true
+
+Built-in System Commands:
+    - reboot: Restart the system
+    - shutdown: Power off the system
+    These commands use hardcoded, safe implementations.
+
+Module Dependencies:
+    - modules.core.config: COMMANDS_MOD flag to enable/disable commands module
+    - Standard library: subprocess, shlex, configparser, logging, etc.
+"""
+
 # Standard library imports
 import configparser
 import copy
@@ -15,7 +78,7 @@ from pathlib import Path
 from typing import Tuple, Optional, Dict, Any, List
 
 # Local imports
-from .config import COMMANDS_MOD
+from modules.core.config import COMMANDS_MOD
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -248,8 +311,29 @@ def load_commands(filename="commands.ini"):
 
 ALLOWED_COMMANDS = load_commands() if COMMANDS_MOD else {}
 
+
 def get_linux_gui_env() -> dict:
-    # Return environment variables for launching GUI applications on Linux,
+    """
+    Prepare environment variables for launching GUI applications on Linux.
+
+    Configures the environment to support both X11 and Wayland display servers,
+    ensuring GUI applications can launch regardless of the display server in use.
+    Also attempts to set up D-Bus session bus address if not already configured.
+
+    Returns:
+        Dictionary of environment variables suitable for subprocess.Popen(env=...)
+
+    Environment Variables Configured:
+        - WAYLAND_DISPLAY: Preserved from current environment
+        - DISPLAY: X11 display (set to :0 if missing but Wayland is present)
+        - USE_WAYLAND: String "True" or "False" indicating Wayland detection
+        - DBUS_SESSION_BUS_ADDRESS: D-Bus session address (auto-detected if missing)
+        - DBUS_SESSION_BUS_PID: D-Bus session PID (auto-detected if missing)
+
+    Example:
+        >>> env = get_linux_gui_env()
+        >>> subprocess.Popen(['firefox'], env=env)
+    """
     env = copy.deepcopy(os.environ)
 
     # Detect Wayland
@@ -283,7 +367,7 @@ def get_linux_gui_env() -> dict:
 
     return env
 
-# Reboot / Shutdown handler
+
 def run_system_power_command(action: str) -> dict:
     """
     Execute system power commands (reboot, shutdown).
@@ -335,7 +419,7 @@ def run_system_power_command(action: str) -> dict:
         logger.error(f"Failed to execute power command '{action}': {e}", exc_info=True)
         return {"success": False, "output": str(e)}
 
-# Run predefined commands
+
 def run_predefined_command(command_key: str) -> dict:
     """
     Execute a predefined command from the configuration.
