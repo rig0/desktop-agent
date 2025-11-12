@@ -205,12 +205,61 @@ def start_media_agent(client: mqtt.Client, stop_event):
 
 def on_connect(client, userdata, flags, rc):
     logger.info(f"Connected to MQTT broker with result code {rc}")
-    
+
 if __name__ == "__main__":
+    import signal
+
+    # Configure logging for standalone execution
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
+        datefmt='%H:%M:%S'
+    )
+
+    logger.info("Starting Media Agent in standalone mode (Windows)...")
+
+    # Create stop event for graceful shutdown
+    stop_event = threading.Event()
+
+    def signal_handler(sig, frame):
+        """Handle shutdown signals gracefully."""
+        logger.info("Shutdown signal received, stopping media agent...")
+        stop_event.set()
+        time.sleep(1)
+        client.disconnect()
+        sys.exit(0)
+
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    # Connect to MQTT
     client = mqtt.Client()
     client.username_pw_set(MQTT_USER, MQTT_PASS)
     client.on_connect = on_connect
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-    start_media_agent(client)
-    while True:
+
+    try:
+        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    except Exception as e:
+        logger.error(f"Could not connect to MQTT broker: {e}", exc_info=True)
+        sys.exit(1)
+
+    # Start MQTT loop in background
+    client.loop_start()
+    logger.info("MQTT client loop started")
+
+    # Start media agent with stop_event
+    start_media_agent(client, stop_event)
+
+    # Keep main thread alive until stop_event is set
+    logger.info("Media Agent running. Press Ctrl+C to exit.")
+    try:
+        while not stop_event.is_set():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received, shutting down...")
+        stop_event.set()
         time.sleep(1)
+        client.loop_stop()
+        client.disconnect()
+        sys.exit(0)
