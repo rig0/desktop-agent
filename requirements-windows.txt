@@ -4,3 +4,6 @@ paho-mqtt
 GPUtil
 requests
 winsdk
+numpy
+kmeans
+scikit-learn
