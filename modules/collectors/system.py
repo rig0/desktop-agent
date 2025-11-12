@@ -689,7 +689,7 @@ class SystemInfoCollector:
             logger.error(f"Error getting uptime: {e}")
             data["uptime_seconds"] = 0
 
-        data["os"] = self.platform.get_platform()
+        data["os"] = self.platform.get_platform().capitalize()
         data["os_version"] = self.platform.get_os_version()
 
         # CPU metrics
