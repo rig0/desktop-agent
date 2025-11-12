@@ -435,12 +435,15 @@ class DesktopMonitor:
                 )
             else:
                 # Generic sensor
-                self.discovery.publish_sensor(
-                    key,
-                    key.replace("_", " ").title(),
-                    icon="mdi:thermometer",
-                    entity_category="diagnostic"
-                )
+                logger.debug("Skipping generic temperature sensors")
+                # self.discovery.publish_sensor(
+                #     key,
+                #     key.replace("_", " ").title(),
+                #     unit="°C",
+                #     device_class="temperature",
+                #     icon="mdi:thermometer",
+                #     entity_category="diagnostic"
+                # )
 
             logger.debug(f"Published dynamic sensor discovery: {key}")
 
