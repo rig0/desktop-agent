@@ -743,6 +743,7 @@ class SystemInfoCollector:
                     data[f"{prefix}memory_total_gb"] = mem_total
 
         # Additional temperature sensors (if available)
+        # These sensors are not very descriptive and produce a lot of empty sensors.
         # try:
         #     if hasattr(psutil, "sensors_temperatures"):
         #         temps = psutil.sensors_temperatures()
