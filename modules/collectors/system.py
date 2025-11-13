@@ -743,18 +743,18 @@ class SystemInfoCollector:
                     data[f"{prefix}memory_total_gb"] = mem_total
 
         # Additional temperature sensors (if available)
-        try:
-            if hasattr(psutil, "sensors_temperatures"):
-                temps = psutil.sensors_temperatures()
-                for label, entries in temps.items():
-                    for entry in entries:
-                        # Create sensor key
-                        key = f"{label}_{entry.label}" if entry.label else label
-                        # Clean the value (handle NaN/Inf)
-                        if entry.current is not None:
-                            if not (math.isnan(entry.current) or math.isinf(entry.current)):
-                                data[key] = round(entry.current, 1)
-        except Exception as e:
-            logger.debug(f"Error collecting temperature sensors: {e}")
+        # try:
+        #     if hasattr(psutil, "sensors_temperatures"):
+        #         temps = psutil.sensors_temperatures()
+        #         for label, entries in temps.items():
+        #             for entry in entries:
+        #                 # Create sensor key
+        #                 key = f"{label}_{entry.label}" if entry.label else label
+        #                 # Clean the value (handle NaN/Inf)
+        #                 if entry.current is not None:
+        #                     if not (math.isnan(entry.current) or math.isinf(entry.current)):
+        #                         data[key] = round(entry.current, 1)
+        # except Exception as e:
+        #     logger.debug(f"Error collecting temperature sensors: {e}")
 
         return data
