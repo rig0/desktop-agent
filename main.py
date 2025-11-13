@@ -96,6 +96,7 @@ Repo: https://github.com/rig0/desktop-agent/
 # Standard library imports
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import signal
 import socket
@@ -155,19 +156,29 @@ if MEDIA_AGENT:
 # Logging Configuration
 # ----------------------------
 
-logging.basicConfig(
-    # Logger verbosity (add option to config?)
-    level=logging.INFO,
-    # Logger format ex. [Timestamp] (INFO) main: logger message
-    format='[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
-    # Format timestamp
-    datefmt='%H:%M:%S',
-    # Log file
-    filename='data/main.log',
-    # Rewrite log on every boot (a) to append
-    filemode='w'
-)
+# Create logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create formatter
+formatter = logging.Formatter(
+    '[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
+    datefmt='%m/%d/%Y %I:%M %p'
+)
+
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+# Rotating file handler
+file_handler = RotatingFileHandler(
+    'data/main.log',
+    maxBytes=5*1024*1024,  # 5MB per file
+    backupCount=3          # Keep 3 backups (main.log.1, main.log.2, main.log.3)
+)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 
 # ----------------------------
