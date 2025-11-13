@@ -161,7 +161,11 @@ logging.basicConfig(
     # Logger format ex. [Timestamp] (INFO) main: logger message
     format='[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
     # Format timestamp
-    datefmt='%H:%M:%S'
+    datefmt='%H:%M:%S',
+    # Log file
+    filename='data/main.log',
+    # Rewrite log on every boot (a) to append
+    filemode='w'
 )
 logger = logging.getLogger(__name__)
 
