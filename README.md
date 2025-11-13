@@ -1,19 +1,20 @@
 # Desktop Agent
 
-## About
-A lightweight desktop agent that integrates your PC with [Home Assistant](https://www.home-assistant.io/) using **MQTT**.  
-It publishes live system metrics, exposes a simple API, and lets you run custom commands remotely.
-
 > ***Actively being developed. Expect breaking changes until release.***
 
+## About
+Desktop Agent is a lightweight desktop monitoring tool. It collects system information from desktop computers and exposes it via MQTT and REST API for integration with [Home Assistant](https://www.home-assistant.io/) and other automation platforms.
+
+
 ## Features
-- **System monitoring**: CPU, memory, storage, and other stats sent to Home Assistant via MQTT.
-- **Built-in API**: Fetch system info or run commands via HTTP.
-- **Remote commands**: Define and trigger your own scripts/commands remotely.
-- **Media agent**: Now playing info. Title, artist, album and thumbnail via MQTT.
-- **Game agent**: Current game info. Cover, artwork, playtime and game details via MQTT.
-- **Auto updater**: Optional auto updates
-- **Home Assistant auto-discovery**: Device and sensors show up automatically if MQTT discovery is enabled.
+- **Real-time system metrics**: CPU, memory, disk, network, GPU usage and temperatures
+- **Media playback monitoring**: Track what's playing with metadata and thumbnails
+- **Game monitoring**: Detect running games with IGDB metadata integration including cover art, artwork, playtime, and game details
+- **Remote command execution**: Securely execute predefined commands via MQTT or REST API
+- **REST API**: HTTP endpoints for external integrations and system queries
+- **Automatic Home Assistant discovery**: Devices and sensors automatically appear in Home Assistant
+- **Self-updating capabilities**: Optional automatic updates with multiple release channels
+- **Modular architecture**: Enable only the features you need
 
 
 ## Preview 
