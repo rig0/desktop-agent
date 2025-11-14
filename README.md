@@ -77,3 +77,13 @@ Desktop Agent is a lightweight, modular system monitoring tool designed for seam
 **New Users**: Start with [Getting Started](https://github.com/rig0/desktop-agent/wiki/Getting-Started) → [Installation](https://github.com/rig0/desktop-agent/wiki/Installation) → [Configuration](https://github.com/rig0/desktop-agent/wiki/Configuration)
 
 **Developers**: See [Architecture](https://github.com/rig0/desktop-agent/wiki/Architecture) for technical details and design decisions
+
+## Need Help?
+
+**Having issues?** Check out these support resources:
+
+- [**FAQ**](FAQ) - Common questions about installation, configuration, features, and Home Assistant integration
+- [**Troubleshooting**](https://github.com/rig0/desktop-agent/Troubleshooting) - Step-by-step solutions for connection issues, module problems, and platform-specific challenges
+- [**Table of Contents**](https://github.com/rig0/desktop-agent/Table-of-Contents) - Complete documentation index
+
+**Quick troubleshooting tip**: Most issues are related to MQTT connectivity. If Desktop Agent is not appearing in Home Assistant, verify your broker settings in `config.ini` and check the logs in the `data/` directory.
