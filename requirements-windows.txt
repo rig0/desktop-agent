@@ -5,5 +5,5 @@ GPUtil
 requests
 winsdk
 numpy
-kmeans
 scikit-learn
+pillow

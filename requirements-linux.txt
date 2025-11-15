@@ -6,5 +6,5 @@ requests
 PyGObject
 pydbus
 numpy
-kmeans
 scikit-learn
+pillow
