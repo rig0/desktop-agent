@@ -77,7 +77,7 @@ class IGDBClient:
         """
         self.client_id = client_id
         self.access_token = access_token
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'game_agent'))
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'game_agent'))
         os.makedirs(base_dir, exist_ok=True)
         self.cache_db = os.path.join(base_dir, cache_db)
         self._init_cache()
