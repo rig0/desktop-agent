@@ -110,7 +110,7 @@ from logging.handlers import RotatingFileHandler
 import paho.mqtt.client as mqtt
 
 # Local imports
-from modules.api.rest_api import start_api
+from modules.api import start_api
 from modules.collectors.system import SystemInfoCollector
 from modules.commands import run_predefined_command
 from modules.core.config import (
