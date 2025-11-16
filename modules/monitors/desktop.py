@@ -10,8 +10,6 @@ import json
 import logging
 import math
 import threading
-
-# from typing import Any, Dict, Optional
 from typing import Any, Optional
 
 from modules.collectors.system import SystemInfoCollector

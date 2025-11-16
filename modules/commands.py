@@ -64,9 +64,6 @@ Module Dependencies:
 # Standard library imports
 import configparser
 import copy
-
-# import glob
-# import json
 import logging
 import os
 import re
@@ -76,8 +73,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-
-# from typing import Any, Dict, List, Optional, Tuple
 from typing import List, Tuple
 
 # Local imports

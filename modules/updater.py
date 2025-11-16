@@ -50,8 +50,6 @@ import stat
 import sys
 import tempfile
 import threading
-
-# import time
 import zipfile
 from datetime import datetime, timezone
 from typing import Optional

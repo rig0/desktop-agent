@@ -20,8 +20,6 @@ Example:
 # Standard library imports
 import json
 import logging
-
-# import os
 import threading
 
 # import time
@@ -39,10 +37,6 @@ from modules.core.config import (
 )
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
-
-# Third-party imports
-# import paho.mqtt.client as mqtt
-
 
 # Configure logger
 logger = logging.getLogger(__name__)
