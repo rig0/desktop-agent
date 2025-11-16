@@ -40,8 +40,8 @@ Architecture:
 
 MQTT Topics Structure:
     desktop/{device_id}/availability         - Online/offline status (LWT)
-    desktop/{device_id}/system/state         - System state (JSON)
-    desktop/{device_id}/system/attrs         - System attributes (JSON)
+    desktop/{device_id}/state                - System state. All senors (JSON)
+    desktop/{device_id}/{sensor}             - Individual sensor info
     desktop/{device_id}/game/state           - Game state (playing/idle)
     desktop/{device_id}/game/attrs           - Game metadata (JSON)
     desktop/{device_id}/game/cover           - Game cover image (binary)
