@@ -32,8 +32,9 @@ Architecture:
        - media: Media playback monitoring
 
     4. **Feature Layer** (modules/):
-       - commands: Remote command execution
        - api: REST API server
+       - commands: Remote command execution
+       - updater: Update manager
 
     5. **Utility Layer** (modules/utils/):
        - Platform detection, formatting, IGDB integration, etc.
