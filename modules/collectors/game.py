@@ -17,7 +17,8 @@ Example:
 # Standard library imports
 import logging
 import os
-from pathlib import Path
+
+# from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 # Third-party imports

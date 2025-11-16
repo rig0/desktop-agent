@@ -21,11 +21,6 @@ Example:
 import json
 import logging
 import threading
-import time
-from typing import Optional
-
-# Third-party imports
-import paho.mqtt.client as mqtt
 
 # Local imports
 from modules.collectors.game import GameCollector
@@ -38,6 +33,13 @@ from modules.core.config import (
 )
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
+
+# import time
+# from typing import Optional
+
+# Third-party imports
+# import paho.mqtt.client as mqtt
+
 
 # Configure logger
 logger = logging.getLogger(__name__)

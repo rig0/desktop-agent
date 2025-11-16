@@ -2,7 +2,8 @@
 import asyncio
 import json
 import logging
-import os
+
+# import os
 import sys
 import threading
 import time
@@ -20,13 +21,12 @@ logger = logging.getLogger(__name__)
 # Local imports
 # Attempt relative import for use as a module within a package structure
 try:
-    from .config import (
+    from .config import (  # PUBLISH_INT,
         DEVICE_NAME,
         MQTT_BROKER,
         MQTT_PASS,
         MQTT_PORT,
         MQTT_USER,
-        PUBLISH_INT,
         base_topic,
         device_id,
         device_info,
@@ -34,13 +34,12 @@ try:
     )
 # Fall back to direct import which assumes the script is being ran standalone
 except ImportError:
-    from config import (
+    from config import (  # PUBLISH_INT,
         DEVICE_NAME,
         MQTT_BROKER,
         MQTT_PASS,
         MQTT_PORT,
         MQTT_USER,
-        PUBLISH_INT,
         base_topic,
         device_id,
         device_info,

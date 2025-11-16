@@ -99,10 +99,10 @@ class MediaCollector:
         """
         try:
             # Import Windows-specific modules
-            from winsdk.windows.media.control import (
+            from winsdk.windows.media.control import (  # noqa: F401
                 GlobalSystemMediaTransportControlsSessionManager as MediaManager,
             )
-            from winsdk.windows.storage.streams import DataReader
+            from winsdk.windows.storage.streams import DataReader  # noqa: F401
 
             # Run async function to get media info
             return asyncio.run(self._get_media_info_windows_async())

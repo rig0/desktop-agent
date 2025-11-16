@@ -15,8 +15,9 @@ Authentication:
 # Standard library imports
 import logging
 import secrets
-import signal
-import sys
+
+# import signal
+# import sys
 from functools import wraps
 
 # Third-party imports

@@ -97,7 +97,8 @@ Repo: https://github.com/rig0/desktop-agent/
 # Standard library imports
 import json
 import logging
-import os
+
+# import os
 import signal
 import socket
 import sys

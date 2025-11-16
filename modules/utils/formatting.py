@@ -5,7 +5,7 @@ raw system data into human-readable strings suitable for display
 in Home Assistant or API responses.
 """
 
-from typing import Optional
+# from typing import Optional
 
 
 def format_bytes(bytes_value: float, decimal_places: int = 1) -> str:
