@@ -42,7 +42,9 @@ def find_lutris_db():
     """
     possible_paths = [
         os.path.expanduser("~/.local/share/lutris/pga.db"),
-        os.path.expanduser("~/.var/app/net.lutris.Lutris/data/lutris/pga.db"),  # Flatpak path
+        os.path.expanduser(
+            "~/.var/app/net.lutris.Lutris/data/lutris/pga.db"
+        ),  # Flatpak path
     ]
 
     for path in possible_paths:
@@ -102,7 +104,7 @@ def get_lutris_playtime(game_name):
         # Try the 'games' table
         cursor.execute(
             "SELECT playtime, service FROM games WHERE LOWER(name) = LOWER(?)",
-            (game_name,)
+            (game_name,),
         )
         row = cursor.fetchone()
 
@@ -113,10 +115,10 @@ def get_lutris_playtime(game_name):
             playtime, service = None, None
 
         # If playtime is 0 and game is a steam game use the service_games table
-        if (playtime is None or playtime == 0) and service and service.lower() == 'steam':
+        if (playtime is None or playtime == 0) and service and service.lower() == "steam":
             cursor.execute(
                 "SELECT details FROM service_games WHERE LOWER(name) = LOWER(?) AND LOWER(service) = LOWER(?)",
-                (game_name, service)
+                (game_name, service),
             )
             row = cursor.fetchone()
             if row:
@@ -133,6 +135,7 @@ def get_lutris_playtime(game_name):
         print(f"[Playtime] SQLite error: {e}")
         return None
 
+
 # Standalone testing
 if __name__ == "__main__":
     game = "My Summer Car"
@@ -142,5 +145,3 @@ if __name__ == "__main__":
         print(f"Playtime for '{game}': {playtime} hours")
     else:
         print(f"Game '{game}' not found in the database.")
-
-

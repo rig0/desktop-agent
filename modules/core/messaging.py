@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, Optional
 
 import paho.mqtt.client as mqtt
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +35,7 @@ class MessageBroker:
         self,
         client: mqtt.Client,
         base_topic: str,
-        discovery_prefix: str = "homeassistant"
+        discovery_prefix: str = "homeassistant",
     ):
         """Initialize the message broker.
 
@@ -51,11 +50,7 @@ class MessageBroker:
         logger.debug(f"MessageBroker initialized with base_topic='{base_topic}'")
 
     def publish_state(
-        self,
-        entity: str,
-        state: str,
-        qos: int = 1,
-        retain: bool = True
+        self, entity: str, state: str, qos: int = 1, retain: bool = True
     ) -> None:
         """Publish entity state to MQTT.
 
@@ -74,11 +69,7 @@ class MessageBroker:
         logger.debug(f"Published state to {topic}: {state}")
 
     def publish_attributes(
-        self,
-        entity: str,
-        attrs: Dict[str, Any],
-        qos: int = 1,
-        retain: bool = True
+        self, entity: str, attrs: Dict[str, Any], qos: int = 1, retain: bool = True
     ) -> None:
         """Publish entity attributes as JSON to MQTT.
 
@@ -106,7 +97,7 @@ class MessageBroker:
         entity_id: str,
         config: Dict[str, Any],
         qos: int = 0,
-        retain: bool = True
+        retain: bool = True,
     ) -> None:
         """Publish Home Assistant MQTT discovery configuration.
 
@@ -131,10 +122,7 @@ class MessageBroker:
         logger.debug(f"Published discovery config to {topic}")
 
     def publish_availability(
-        self,
-        status: str = "online",
-        qos: int = 1,
-        retain: bool = True
+        self, status: str = "online", qos: int = 1, retain: bool = True
     ) -> None:
         """Publish device availability status.
 

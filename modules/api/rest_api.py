@@ -37,6 +37,7 @@ app = Flask(__name__)
 # Authentication decorator
 # ----------------------------
 
+
 def require_auth(f):
     """
     Authentication decorator for API endpoints.
@@ -53,35 +54,47 @@ def require_auth(f):
     - Logs failed authentication attempts with IP address
     - Returns standard 401 Unauthorized response
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # If no auth token configured, allow access (backward compatibility)
         if not API_AUTH_TOKEN:
-            logger.warning(f"API endpoint '{request.path}' accessed without authentication - auth_token not configured")
+            logger.warning(
+                f"API endpoint '{request.path}' accessed without authentication - auth_token not configured"
+            )
             return f(*args, **kwargs)
 
         provided_token = None
 
         # Check Authorization header (preferred method)
-        auth_header = request.headers.get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
             provided_token = auth_header[7:]  # Remove 'Bearer ' prefix
 
         # Check query parameter (alternative method)
         if not provided_token:
-            provided_token = request.args.get('auth_token')
+            provided_token = request.args.get("auth_token")
 
         # Validate token using constant-time comparison
         if provided_token and secrets.compare_digest(provided_token, API_AUTH_TOKEN):
-            logger.debug(f"Successful authentication for '{request.path}' from {request.remote_addr}")
+            logger.debug(
+                f"Successful authentication for '{request.path}' from {request.remote_addr}"
+            )
             return f(*args, **kwargs)
 
         # Authentication failed
-        logger.warning(f"Unauthorized API access attempt to '{request.path}' from {request.remote_addr}")
-        return jsonify({
-            "error": "Unauthorized",
-            "message": "Valid authentication token required. Use 'Authorization: Bearer <token>' header or '?auth_token=<token>' query parameter."
-        }), 401
+        logger.warning(
+            f"Unauthorized API access attempt to '{request.path}' from {request.remote_addr}"
+        )
+        return (
+            jsonify(
+                {
+                    "error": "Unauthorized",
+                    "message": "Valid authentication token required. Use 'Authorization: Bearer <token>' header or '?auth_token=<token>' query parameter.",
+                }
+            ),
+            401,
+        )
 
     return decorated_function
 
@@ -90,12 +103,13 @@ def require_auth(f):
 # Security headers middleware
 # ----------------------------
 
+
 @app.after_request
 def add_security_headers(response):
     """Add security headers to all responses."""
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
     # Note: Consider adding rate limiting in the future for additional security
     return response
 
@@ -103,6 +117,7 @@ def add_security_headers(response):
 # ----------------------------
 # API endpoints
 # ----------------------------
+
 
 @app.route("/status")
 @require_auth
@@ -127,6 +142,7 @@ def status():
     except Exception as e:
         logger.error(f"Error getting system info: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
 
 @app.route("/run", methods=["POST"])
 @require_auth
@@ -186,7 +202,7 @@ def start_api(port, stop_event):
     logger.info(f"Starting API server on port {port}")
 
     # Suppress Flask's default logging
-    log = logging.getLogger('werkzeug')
+    log = logging.getLogger("werkzeug")
     log.setLevel(logging.ERROR)
 
     try:

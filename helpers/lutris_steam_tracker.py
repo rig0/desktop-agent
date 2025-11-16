@@ -34,21 +34,26 @@ def log(msg):
     # Also print to stdout if we're in foreground mode
     print(f"{ts} {msg}", flush=True)
 
+
 def write_game_name(name):
     with open(TRACK_FILE, "w") as f:
         f.write(name + "\n")
     log(f"[tracker] Tracking game: {name}")
 
+
 def clear_game_name():
     open(TRACK_FILE, "w").close()
     log("[tracker] Cleared game tracking file.")
 
+
 def find_target_pids():
     # Return a set of PIDs for all matching target processes.
     matches = set()
-    for proc in psutil.process_iter(['name']):
+    for proc in psutil.process_iter(["name"]):
         try:
-            if proc.info['name'] and proc.info['name'].lower() in [t.lower() for t in TARGET_PROCESSES]:
+            if proc.info["name"] and proc.info["name"].lower() in [
+                t.lower() for t in TARGET_PROCESSES
+            ]:
                 matches.add(proc.pid)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
@@ -131,6 +136,7 @@ def daemonize():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     signal.signal(signal.SIGINT, lambda *_: sys.exit(0))
 
+
 def main():
     game_name = os.getenv("GAME_NAME", "Unknown")
     log(f"[tracker] Starting tracker for '{game_name}' (pid={os.getpid()})")
@@ -145,6 +151,7 @@ def main():
     except Exception as e:
         log(f"[tracker] Exception: {e}")
         clear_game_name()
+
 
 if __name__ == "__main__":
     main()

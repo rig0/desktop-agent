@@ -67,7 +67,7 @@ import logging
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Configure logger for config module
 logger = logging.getLogger(__name__)
@@ -108,6 +108,7 @@ REPO_WIKI_URL = f"{REPO_URL}/wiki/"
 # Create configuration (first run)
 # ----------------------------
 
+
 def create_config(config_path: Path) -> None:
     """
     Create default configuration file from template.
@@ -138,13 +139,13 @@ def create_config(config_path: Path) -> None:
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not config_path.exists():
-        print(f"\n[Config] Config file not found! Creating now...")
+        print("\n[Config] Config file not found! Creating now...")
 
         src = BASE_DIR / "resources" / "config_example.ini"
         shutil.copy(src, config_path)
 
         print(f"\n[Config] Created default config at {config_path}")
-        print(f"\n[Config] Edit config.ini with required info! Exiting...\n")
+        print("\n[Config] Edit config.ini with required info! Exiting...\n")
         sys.exit(1)
 
 
@@ -194,7 +195,9 @@ if API_MOD and not API_AUTH_TOKEN:
     logger.warning("Your API endpoints are accessible without authentication.")
     logger.warning("This is a SECURITY RISK if your system is exposed to network.")
     logger.warning("Please add an auth_token to [api] section in config.ini")
-    logger.warning("Generate token: python -c \"import secrets; print(secrets.token_urlsafe(32))\"")
+    logger.warning(
+        'Generate token: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+    )
     logger.warning("=" * 70)
 
 
@@ -218,7 +221,9 @@ IGDB_TOKEN = config.get("igdb", "token", fallback="")
 # Validate IGDB credentials if game agent is enabled
 if GAME_AGENT and (not IGDB_CLIENT or not IGDB_TOKEN):
     logger.warning("=" * 70)
-    logger.warning("WARNING: Game agent is enabled but IGDB credentials are not configured!")
+    logger.warning(
+        "WARNING: Game agent is enabled but IGDB credentials are not configured!"
+    )
     logger.warning("Please add your IGDB client_id and token to config.ini")
     logger.warning("The game agent will be disabled for this run.")
     logger.warning("=" * 70)

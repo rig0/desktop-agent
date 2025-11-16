@@ -12,7 +12,6 @@ import subprocess
 import sys
 from typing import Optional
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -126,7 +125,9 @@ class PlatformUtils:
                             else:
                                 distro_name = data.get("NAME", "Linux")
                                 distro_version = data.get("VERSION_ID", "")
-                                self._os_version = f"{distro_name} {distro_version}".strip()
+                                self._os_version = (
+                                    f"{distro_name} {distro_version}".strip()
+                                )
 
                             return self._os_version
                     except (IOError, OSError, ValueError) as e:
@@ -174,9 +175,7 @@ class PlatformUtils:
                 if shutil.which("wmic"):
                     try:
                         output = subprocess.check_output(
-                            "wmic cpu get Name",
-                            shell=True,
-                            timeout=5
+                            "wmic cpu get Name", shell=True, timeout=5
                         )
                         lines = [
                             line.strip()
@@ -186,16 +185,21 @@ class PlatformUtils:
                         if len(lines) >= 2:
                             self._cpu_model = lines[1]
                             return self._cpu_model
-                    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
-                            OSError, UnicodeDecodeError) as e:
+                    except (
+                        subprocess.CalledProcessError,
+                        subprocess.TimeoutExpired,
+                        OSError,
+                        UnicodeDecodeError,
+                    ) as e:
                         logger.debug(f"Error getting CPU model via wmic: {e}")
 
                 # Fallback to Windows Registry
                 try:
                     import winreg
+
                     key = winreg.OpenKey(
                         winreg.HKEY_LOCAL_MACHINE,
-                        r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+                        r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
                     )
                     cpu_name, _ = winreg.QueryValueEx(key, "ProcessorNameString")
                     winreg.CloseKey(key)

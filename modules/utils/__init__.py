@@ -12,18 +12,18 @@ Modules:
     deployment: Jenkins pipeline notification utilities
 """
 
-from .platform import PlatformUtils
+from .color import get_dominant_color, load_image
+from .deployment import notify_pipeline
 from .formatting import (
     format_bytes,
+    format_frequency,
     format_percentage,
     format_temperature,
-    format_frequency,
-    sanitize_topic
+    sanitize_topic,
 )
-from .color import get_dominant_color, load_image
-from .playtime import get_lutris_playtime, find_lutris_db
 from .igdb import IGDBClient
-from .deployment import notify_pipeline
+from .platform import PlatformUtils
+from .playtime import find_lutris_db, get_lutris_playtime
 
 __all__ = [
     "PlatformUtils",
@@ -37,5 +37,5 @@ __all__ = [
     "get_lutris_playtime",
     "find_lutris_db",
     "IGDBClient",
-    "notify_pipeline"
+    "notify_pipeline",
 ]

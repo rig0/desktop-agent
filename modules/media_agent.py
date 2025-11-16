@@ -52,6 +52,7 @@ except ImportError:
 # Windows Media Agent (SMTC)
 # ----------------------------
 
+
 async def _get_media_info_async():
     sessions = await MediaManager.request_async()
     current = sessions.get_current_session()
@@ -71,6 +72,7 @@ async def _get_media_info_async():
             size = int(stream.size or 0)
             if size > 0:
                 from winsdk.windows.storage.streams import DataReader
+
                 input_stream = stream.get_input_stream_at(0)
                 reader = DataReader(input_stream)
                 await reader.load_async(size)
@@ -91,7 +93,7 @@ async def _get_media_info_async():
         "album": album,
         "is_playing": is_playing,
         "playback_status": status,
-        "thumbnail_bytes": thumbnail_bytes
+        "thumbnail_bytes": thumbnail_bytes,
     }
 
 
@@ -118,18 +120,28 @@ def start_media_agent(client: mqtt.Client, stop_event):
                 try:
                     info = get_media_info()
                     if info:
-                        state = "playing" if info["is_playing"] else "paused" if info["playback_status"] == 5 else "idle"
+                        state = (
+                            "playing"
+                            if info["is_playing"]
+                            else "paused"
+                            if info["playback_status"] == 5
+                            else "idle"
+                        )
                         attrs = {
                             "title": info["title"],
                             "artist": info["artist"],
                             "album": info["album"],
-                            "status": state
+                            "status": state,
                         }
 
                         client.publish(f"{base_topic}/media/state", state, retain=True)
 
                         if attrs != last_attrs:
-                            client.publish(f"{base_topic}/media/attrs", json.dumps(attrs), retain=True)
+                            client.publish(
+                                f"{base_topic}/media/attrs",
+                                json.dumps(attrs),
+                                retain=True,
+                            )
                             last_attrs = attrs
 
                         # Thumbnail or placeholder
@@ -149,11 +161,17 @@ def start_media_agent(client: mqtt.Client, stop_event):
                                     with open(placeholder_path, "rb") as f:
                                         thumbnail_bytes = f.read()
                                 except (IOError, OSError) as e:
-                                    logger.error(f"Failed to load default placeholder thumbnail: {e}")
+                                    logger.error(
+                                        f"Failed to load default placeholder thumbnail: {e}"
+                                    )
                                     thumbnail_bytes = None
 
                         if thumbnail_bytes and thumbnail_bytes != last_image:
-                            client.publish(f"{base_topic}/media/thumbnail", thumbnail_bytes, retain=True)
+                            client.publish(
+                                f"{base_topic}/media/thumbnail",
+                                thumbnail_bytes,
+                                retain=True,
+                            )
                             last_image = thumbnail_bytes
 
                 except Exception as e:
@@ -162,7 +180,9 @@ def start_media_agent(client: mqtt.Client, stop_event):
                 # Sleep but allow interruption
                 stop_event.wait(5)
         except Exception as e:
-            logger.critical(f"Fatal error in Media Agent poller thread: {e}", exc_info=True)
+            logger.critical(
+                f"Fatal error in Media Agent poller thread: {e}", exc_info=True
+            )
         finally:
             logger.info("Media Agent poller thread stopped")
 
@@ -191,7 +211,7 @@ def start_media_agent(client: mqtt.Client, stop_event):
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/media/thumbnail",
-                "icon": "mdi:music"
+                "icon": "mdi:music",
             }
             topic = f"{discovery_prefix}/camera/{device_id}_media/config"
             client.publish(topic, json.dumps(camera_payload), retain=True)
@@ -203,8 +223,10 @@ def start_media_agent(client: mqtt.Client, stop_event):
     publish_discovery()
     threading.Thread(target=media_poller, name="MediaAgent-Poller", daemon=True).start()
 
+
 def on_connect(client, userdata, flags, rc):
     logger.info(f"Connected to MQTT broker with result code {rc}")
+
 
 if __name__ == "__main__":
     import signal
@@ -212,8 +234,8 @@ if __name__ == "__main__":
     # Configure logging for standalone execution
     logging.basicConfig(
         level=logging.INFO,
-        format='[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
-        datefmt='%H:%M:%S'
+        format="[%(asctime)s] (%(levelname)s) %(module)s: %(message)s",
+        datefmt="%H:%M:%S",
     )
 
     logger.info("Starting Media Agent in standalone mode (Windows)...")

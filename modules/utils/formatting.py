@@ -29,7 +29,7 @@ def format_bytes(bytes_value: float, decimal_places: int = 1) -> str:
         >>> format_bytes(1024)
         '1.0 KB'
     """
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
         if bytes_value < 1024.0:
             return f"{bytes_value:.{decimal_places}f} {unit}"
         bytes_value /= 1024.0
@@ -77,7 +77,7 @@ def format_temperature(celsius: float, unit: str = "C") -> str:
         '212.0°F'
     """
     if unit.upper() == "F":
-        fahrenheit = (celsius * 9/5) + 32
+        fahrenheit = (celsius * 9 / 5) + 32
         return f"{fahrenheit:.1f}°F"
     return f"{celsius:.1f}°C"
 

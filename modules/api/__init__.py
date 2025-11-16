@@ -7,6 +7,6 @@ Modules:
     rest_api: Flask application and API endpoints
 """
 
-from .rest_api import start_api, app
+from .rest_api import app, start_api
 
 __all__ = ["start_api", "app"]

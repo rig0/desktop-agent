@@ -72,7 +72,7 @@ def load_image(image_source):
         'RGB'
     """
     # Handle both local and remote images
-    if image_source.startswith('http://') or image_source.startswith('https://'):
+    if image_source.startswith("http://") or image_source.startswith("https://"):
         response = requests.get(image_source)
         img = Image.open(BytesIO(response.content))
     else:

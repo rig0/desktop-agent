@@ -406,7 +406,7 @@ Write-Host "-------------------------------------------------" -ForegroundColor 
 Write-Host "-------------------------------------------------`n" -ForegroundColor DarkGray
 
 Write-Host "Installation complete!" -ForegroundColor Green
-Write-Host "`nTo run the desktop agent:" 
+Write-Host "`nTo run the desktop agent:"
 Write-Host "    cd $ProjectRoot"
 Write-Host "    python3 main.py"
 Write-Host "`nTo run the media agent:"

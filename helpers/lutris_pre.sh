@@ -14,4 +14,3 @@ echo "$GAME_NAME" > "$GAME_NAME_FILE"
 
 # Log the launch event with additional information (optional).
 #echo "Launching $GAME_NAME ($LUTRIS_GAME_UUID) [$STORE]" >> "$SCRIPT_DIR/../data/game_agent/lutris_launch.log"
-

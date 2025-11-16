@@ -9,7 +9,6 @@ from typing import Any, Dict, Optional
 
 from .messaging import MessageBroker
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +35,7 @@ class DiscoveryManager:
         broker: MessageBroker,
         device_id: str,
         device_info: Dict[str, Any],
-        base_topic: str
+        base_topic: str,
     ):
         """Initialize the discovery manager.
 
@@ -62,7 +61,7 @@ class DiscoveryManager:
         entity_category: Optional[str] = None,
         state_class: Optional[str] = None,
         json_attributes_topic: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Publish sensor discovery configuration.
 
@@ -126,7 +125,7 @@ class DiscoveryManager:
         payload_on: str = "ON",
         payload_off: str = "OFF",
         json_attributes_topic: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Publish binary sensor discovery configuration.
 
@@ -175,7 +174,7 @@ class DiscoveryManager:
         payload_press: str = "PRESS",
         icon: Optional[str] = None,
         entity_category: Optional[str] = "config",
-        **kwargs
+        **kwargs,
     ) -> None:
         """Publish button discovery configuration.
 
@@ -215,7 +214,7 @@ class DiscoveryManager:
         name: str,
         topic: str,
         icon: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Publish camera discovery configuration.
 
@@ -255,7 +254,7 @@ class DiscoveryManager:
         device_class: str = "firmware",
         entity_category: Optional[str] = "diagnostic",
         json_attributes_topic: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Publish update entity discovery configuration.
 

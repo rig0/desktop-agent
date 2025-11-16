@@ -16,7 +16,6 @@ from modules.collectors.system import SystemInfoCollector
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -61,7 +60,7 @@ class DesktopMonitor:
         discovery: DiscoveryManager,
         device_id: str,
         base_topic: str,
-        interval: int = 10
+        interval: int = 10,
     ):
         """Initialize desktop monitor.
 
@@ -114,7 +113,9 @@ class DesktopMonitor:
                 try:
                     self._collect_and_publish()
                 except Exception as e:
-                    logger.error(f"Error collecting/publishing metrics: {e}", exc_info=True)
+                    logger.error(
+                        f"Error collecting/publishing metrics: {e}", exc_info=True
+                    )
 
                 # Wait for interval or stop signal
                 stop_event.wait(self.interval)
@@ -152,7 +153,7 @@ class DesktopMonitor:
                 "hostname",
                 "Hostname",
                 icon="mdi:information",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             self.discovery.publish_sensor(
@@ -161,21 +162,21 @@ class DesktopMonitor:
                 unit="s",
                 icon="mdi:clock-outline",
                 entity_category="diagnostic",
-                state_class="total_increasing"
+                state_class="total_increasing",
             )
 
             self.discovery.publish_sensor(
                 "os",
                 "Operating System",
                 icon="mdi:desktop-classic",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             self.discovery.publish_sensor(
                 "os_version",
                 "OS Version",
                 icon="mdi:information",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             # CPU sensors
@@ -183,7 +184,7 @@ class DesktopMonitor:
                 "cpu_model",
                 "CPU Model",
                 icon="mdi:cpu-64-bit",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             self.discovery.publish_sensor(
@@ -192,14 +193,11 @@ class DesktopMonitor:
                 unit="%",
                 icon="mdi:chip",
                 entity_category="diagnostic",
-                state_class="measurement"
+                state_class="measurement",
             )
 
             self.discovery.publish_sensor(
-                "cpu_cores",
-                "CPU Cores",
-                icon="mdi:chip",
-                entity_category="diagnostic"
+                "cpu_cores", "CPU Cores", icon="mdi:chip", entity_category="diagnostic"
             )
 
             self.discovery.publish_sensor(
@@ -208,7 +206,7 @@ class DesktopMonitor:
                 unit="MHz",
                 icon="mdi:chip",
                 entity_category="diagnostic",
-                state_class="measurement"
+                state_class="measurement",
             )
 
             # Memory sensors
@@ -218,7 +216,7 @@ class DesktopMonitor:
                 unit="%",
                 icon="mdi:memory",
                 entity_category="diagnostic",
-                state_class="measurement"
+                state_class="measurement",
             )
 
             self.discovery.publish_sensor(
@@ -226,7 +224,7 @@ class DesktopMonitor:
                 "Memory Total",
                 unit="GB",
                 icon="mdi:memory",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             self.discovery.publish_sensor(
@@ -235,7 +233,7 @@ class DesktopMonitor:
                 unit="GB",
                 icon="mdi:memory",
                 entity_category="diagnostic",
-                state_class="measurement"
+                state_class="measurement",
             )
 
             # Disk sensors
@@ -245,7 +243,7 @@ class DesktopMonitor:
                 unit="%",
                 icon="mdi:harddisk",
                 entity_category="diagnostic",
-                state_class="measurement"
+                state_class="measurement",
             )
 
             self.discovery.publish_sensor(
@@ -253,7 +251,7 @@ class DesktopMonitor:
                 "Disk Total",
                 unit="GB",
                 icon="mdi:harddisk",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             self.discovery.publish_sensor(
@@ -262,7 +260,7 @@ class DesktopMonitor:
                 unit="GB",
                 icon="mdi:harddisk",
                 entity_category="diagnostic",
-                state_class="measurement"
+                state_class="measurement",
             )
 
             # Network sensors
@@ -270,14 +268,14 @@ class DesktopMonitor:
                 "network_sent_bytes",
                 "Network Sent",
                 icon="mdi:upload-network",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             self.discovery.publish_sensor(
                 "network_recv_bytes",
                 "Network Received",
                 icon="mdi:download-network",
-                entity_category="diagnostic"
+                entity_category="diagnostic",
             )
 
             # GPU sensors (dynamically discovered during collection)
@@ -333,17 +331,13 @@ class DesktopMonitor:
 
             # Clean all values (remove NaN, Inf)
             cleaned_data = {
-                key: self._clean_value(value)
-                for key, value in raw_data.items()
+                key: self._clean_value(value) for key, value in raw_data.items()
             }
 
             # Publish combined status message (for compatibility with existing setup)
             status_payload = json.dumps(cleaned_data)
             self.broker.client.publish(
-                f"{self.base_topic}/status",
-                payload=status_payload,
-                qos=1,
-                retain=True
+                f"{self.base_topic}/status", payload=status_payload, qos=1, retain=True
             )
 
             # Also publish individual state topics for each metric
@@ -352,11 +346,25 @@ class DesktopMonitor:
                     # Check if this is a new dynamic sensor (GPU or temperature)
                     # that needs discovery configuration
                     if key.startswith("gpu") or (
-                        key not in ["hostname", "uptime_seconds", "os", "os_version",
-                                   "cpu_model", "cpu_usage", "cpu_cores", "cpu_frequency_mhz",
-                                   "memory_usage", "memory_total_gb", "memory_used_gb",
-                                   "disk_usage", "disk_total_gb", "disk_used_gb",
-                                   "network_sent_bytes", "network_recv_bytes"]
+                        key
+                        not in [
+                            "hostname",
+                            "uptime_seconds",
+                            "os",
+                            "os_version",
+                            "cpu_model",
+                            "cpu_usage",
+                            "cpu_cores",
+                            "cpu_frequency_mhz",
+                            "memory_usage",
+                            "memory_total_gb",
+                            "memory_used_gb",
+                            "disk_usage",
+                            "disk_total_gb",
+                            "disk_used_gb",
+                            "network_sent_bytes",
+                            "network_recv_bytes",
+                        ]
                     ):
                         # This is a dynamic sensor, publish discovery if not already done
                         self._publish_dynamic_sensor_discovery(key, value)
@@ -392,7 +400,7 @@ class DesktopMonitor:
                         key,
                         key.replace("_", " ").title(),
                         icon="mdi:expansion-card",
-                        entity_category="diagnostic"
+                        entity_category="diagnostic",
                     )
                 elif "load_percent" in key or "usage" in key:
                     self.discovery.publish_sensor(
@@ -401,7 +409,7 @@ class DesktopMonitor:
                         unit="%",
                         icon="mdi:expansion-card",
                         entity_category="diagnostic",
-                        state_class="measurement"
+                        state_class="measurement",
                     )
                 elif "temperature" in key:
                     self.discovery.publish_sensor(
@@ -411,8 +419,8 @@ class DesktopMonitor:
                         icon="mdi:thermometer",
                         entity_category="diagnostic",
                         state_class="measurement"
-                        #Disabled to prevent auto conversion to F
-                        #device_class="temperature"
+                        # Disabled to prevent auto conversion to F
+                        # device_class="temperature"
                     )
                 elif "memory" in key:
                     self.discovery.publish_sensor(
@@ -421,7 +429,7 @@ class DesktopMonitor:
                         unit="GB",
                         icon="mdi:expansion-card",
                         entity_category="diagnostic",
-                        state_class="measurement"
+                        state_class="measurement",
                     )
             elif "temperature" in key or key.endswith("_c"):
                 # Temperature sensor
@@ -432,8 +440,8 @@ class DesktopMonitor:
                     icon="mdi:thermometer",
                     entity_category="diagnostic",
                     state_class="measurement"
-                    #Disabled to prevent auto conversion to F
-                    #device_class="temperature",
+                    # Disabled to prevent auto conversion to F
+                    # device_class="temperature",
                 )
             else:
                 # Generic sensor

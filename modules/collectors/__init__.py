@@ -14,16 +14,16 @@ Modules:
     media: Media playback collection (Windows SMTC, Linux MPRIS)
 """
 
-from .system import (
-    CPUCollector,
-    MemoryCollector,
-    DiskCollector,
-    NetworkCollector,
-    GPUCollector,
-    SystemInfoCollector
-)
 from .game import GameCollector
 from .media import MediaCollector
+from .system import (
+    CPUCollector,
+    DiskCollector,
+    GPUCollector,
+    MemoryCollector,
+    NetworkCollector,
+    SystemInfoCollector,
+)
 
 __all__ = [
     "CPUCollector",
@@ -33,5 +33,5 @@ __all__ = [
     "GPUCollector",
     "SystemInfoCollector",
     "GameCollector",
-    "MediaCollector"
+    "MediaCollector",
 ]

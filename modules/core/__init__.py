@@ -9,8 +9,7 @@ Modules:
     discovery: Home Assistant MQTT discovery management
 """
 
-from .config import (
-    # Export key config values commonly used across modules
+from .config import (  # Export key config values commonly used across modules
     MQTT_BROKER,
     MQTT_PORT,
     base_topic,

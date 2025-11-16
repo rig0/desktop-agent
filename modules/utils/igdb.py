@@ -77,7 +77,9 @@ class IGDBClient:
         """
         self.client_id = client_id
         self.access_token = access_token
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'game_agent'))
+        base_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "data", "game_agent")
+        )
         os.makedirs(base_dir, exist_ok=True)
         self.cache_db = os.path.join(base_dir, cache_db)
         self._init_cache()
@@ -90,14 +92,16 @@ class IGDBClient:
         """
         conn = sqlite3.connect(self.cache_db)
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS games (
                 id INTEGER PRIMARY KEY,
                 game_name TEXT UNIQUE,
                 data TEXT,
                 last_updated INTEGER
             )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
@@ -113,7 +117,9 @@ class IGDBClient:
         """
         conn = sqlite3.connect(self.cache_db)
         cur = conn.cursor()
-        cur.execute("SELECT data, last_updated FROM games WHERE game_name=?", (game_name,))
+        cur.execute(
+            "SELECT data, last_updated FROM games WHERE game_name=?", (game_name,)
+        )
         row = cur.fetchone()
         conn.close()
         if row:
@@ -131,13 +137,16 @@ class IGDBClient:
         """
         conn = sqlite3.connect(self.cache_db)
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             INSERT OR REPLACE INTO games (id, game_name, data, last_updated)
             VALUES (
                 COALESCE((SELECT id FROM games WHERE game_name=?), NULL),
                 ?, ?, ?
             )
-        """, (game_name, game_name, json.dumps(data), int(time.time())))
+        """,
+            (game_name, game_name, json.dumps(data), int(time.time())),
+        )
         conn.commit()
         conn.close()
 
@@ -164,7 +173,9 @@ class IGDBClient:
         if not url:
             return None
 
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'game_agent'))
+        base_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "data", "game_agent")
+        )
 
         full_folder_path = os.path.join(base_dir, folder)
 
@@ -237,16 +248,16 @@ class IGDBClient:
 
         headers = {
             "Client-ID": self.client_id,
-            "Authorization": f"Bearer {self.access_token}"
+            "Authorization": f"Bearer {self.access_token}",
         }
 
-        query = f'''
+        query = f"""
         search "{game_name}";
         fields name, summary, total_rating, first_release_date,
                cover.url, artworks.url, screenshots.url,
                genres.name, platforms.name, involved_companies.company.name, url;
         limit 1;
-        '''
+        """
 
         resp = requests.post("https://api.igdb.com/v4/games", headers=headers, data=query)
         resp.raise_for_status()
@@ -257,20 +268,32 @@ class IGDBClient:
         game = data[0]
 
         # Cover and artwork
-        cover_url = "https:" + game["cover"]["url"].replace("t_thumb", "t_cover_big") if "cover" in game else None
+        cover_url = (
+            "https:" + game["cover"]["url"].replace("t_thumb", "t_cover_big")
+            if "cover" in game
+            else None
+        )
         artwork_url = None
         if "artworks" in game and game["artworks"]:
-            artwork_url = "https:" + game["artworks"][-1]["url"].replace("t_thumb", "t_720p")
+            artwork_url = "https:" + game["artworks"][-1]["url"].replace(
+                "t_thumb", "t_720p"
+            )
         elif "screenshots" in game and game["screenshots"]:
-            artwork_url = "https:" + game["screenshots"][0]["url"].replace("t_thumb", "t_720p")
+            artwork_url = "https:" + game["screenshots"][0]["url"].replace(
+                "t_thumb", "t_720p"
+            )
 
         # Save images locally
         cover_path = self._download_image(cover_url, "covers", f"{game['name']}.png")
-        artwork_path = self._download_image(artwork_url, "artworks", f"{game['name']}.png")
+        artwork_path = self._download_image(
+            artwork_url, "artworks", f"{game['name']}.png"
+        )
 
         # Humanize release date
         release_date = (
-            datetime.fromtimestamp(game["first_release_date"], tz=timezone.utc).strftime("%Y-%m-%d")
+            datetime.fromtimestamp(game["first_release_date"], tz=timezone.utc).strftime(
+                "%Y-%m-%d"
+            )
             if "first_release_date" in game
             else None
         )
@@ -284,11 +307,14 @@ class IGDBClient:
             "artwork": artwork_path,
             "genres": [g["name"] for g in game.get("genres", [])],
             "platforms": [p["name"] for p in game.get("platforms", [])],
-            "developers": [ic["company"]["name"] for ic in game.get("involved_companies", []) if "company" in ic],
+            "developers": [
+                ic["company"]["name"]
+                for ic in game.get("involved_companies", [])
+                if "company" in ic
+            ],
             "url": game.get("url"),
-            "_raw": game  # full untouched IGDB response
+            "_raw": game,  # full untouched IGDB response
         }
 
         self._save_cache(game_name, result)
         return result
-

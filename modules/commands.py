@@ -75,7 +75,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Tuple, Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional, Tuple
 
 # Local imports
 from modules.core.config import COMMANDS_MOD
@@ -92,10 +92,10 @@ MAX_COMMAND_KEY_LENGTH = 100
 MAX_COMMAND_LENGTH = 1000
 
 # Shell metacharacters that indicate shell features are needed
-SHELL_METACHARACTERS = frozenset(['|', '>', '<', '&', ';', '$', '`', '\n', '(', ')'])
+SHELL_METACHARACTERS = frozenset(["|", ">", "<", "&", ";", "$", "`", "\n", "(", ")"])
 
 # Pattern for validating command keys (alphanumeric, underscore, dash only)
-COMMAND_KEY_PATTERN = re.compile(r'^[a-zA-Z0-9_-]+$')
+COMMAND_KEY_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
 def has_shell_features(cmd: str) -> bool:
@@ -149,7 +149,10 @@ def validate_command_key(key: str) -> Tuple[bool, str]:
         return False, f"Command key too long (max {MAX_COMMAND_KEY_LENGTH} characters)"
 
     if not COMMAND_KEY_PATTERN.match(key):
-        return False, "Command key must contain only letters, numbers, underscores, and dashes"
+        return (
+            False,
+            "Command key must contain only letters, numbers, underscores, and dashes",
+        )
 
     return True, "OK"
 
@@ -234,6 +237,7 @@ def safe_split_command(cmd: str) -> List[str]:
 # System commands
 # ----------------------------
 
+
 def load_commands(filename="commands.ini"):
     """
     Load and validate command configurations from INI file.
@@ -309,6 +313,7 @@ def load_commands(filename="commands.ini"):
 
     return commands
 
+
 ALLOWED_COMMANDS = load_commands() if COMMANDS_MOD else {}
 
 
@@ -342,7 +347,7 @@ def get_linux_gui_env() -> dict:
 
     # Detect X11
     x11_display = env.get("DISPLAY")
-    use_x11 = bool(x11_display)
+    # use_x11 = bool(x11_display)
 
     env["USE_WAYLAND"] = str(use_wayland)
 
@@ -355,6 +360,7 @@ def get_linux_gui_env() -> dict:
         # Fallback to launching dbus-session if missing
         try:
             from subprocess import check_output
+
             dbus_address = check_output(["dbus-launch"], text=True).splitlines()
             for line in dbus_address:
                 if line.startswith("DBUS_SESSION_BUS_ADDRESS="):
@@ -387,7 +393,13 @@ def run_system_power_command(action: str) -> dict:
         - Provides platform-specific implementations
     """
     try:
-        platform_name = "linux" if sys.platform.startswith("linux") else "win" if sys.platform.startswith("win") else None
+        platform_name = (
+            "linux"
+            if sys.platform.startswith("linux")
+            else "win"
+            if sys.platform.startswith("win")
+            else None
+        )
         if not platform_name:
             return {"success": False, "output": f"Unsupported platform: {sys.platform}"}
 
@@ -480,14 +492,25 @@ def run_predefined_command(command_key: str) -> dict:
         logger.error(f"Command '{command_key}' failed validation: {error_msg}")
         return {"success": False, "output": f"Command validation failed: {error_msg}"}
 
-    logger.info(f"Executing command '{command_key}': {cmd[:100]}{'...' if len(cmd) > 100 else ''}")
+    logger.info(
+        f"Executing command '{command_key}': {cmd[:100]}{'...' if len(cmd) > 100 else ''}"
+    )
 
-    platform_name = "linux" if sys.platform.startswith("linux") else "win" if sys.platform.startswith("win") else None
+    platform_name = (
+        "linux"
+        if sys.platform.startswith("linux")
+        else "win"
+        if sys.platform.startswith("win")
+        else None
+    )
 
     # Check platform compatibility
     if platforms and platform_name not in platforms:
         logger.warning(f"Command '{command_key}' not available on {platform_name}")
-        return {"success": False, "output": f"Command '{command_key}' not available on {platform_name}."}
+        return {
+            "success": False,
+            "output": f"Command '{command_key}' not available on {platform_name}.",
+        }
 
     # Special hardcoded commands
     if cmd in ["reboot", "shutdown"]:
@@ -502,7 +525,10 @@ def run_predefined_command(command_key: str) -> dict:
 
         else:
             logger.error(f"Unsupported platform '{platform_name}'")
-            return {"success": False, "output": f"Unsupported platform '{platform_name}'."}
+            return {
+                "success": False,
+                "output": f"Unsupported platform '{platform_name}'.",
+            }
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Command '{command_key}' execution failed: {e}", exc_info=True)
@@ -514,11 +540,15 @@ def run_predefined_command(command_key: str) -> dict:
         logger.error(f"Command '{command_key}' has invalid syntax: {e}", exc_info=True)
         return {"success": False, "output": f"Invalid command syntax: {str(e)}"}
     except Exception as e:
-        logger.error(f"Unexpected error executing command '{command_key}': {e}", exc_info=True)
+        logger.error(
+            f"Unexpected error executing command '{command_key}': {e}", exc_info=True
+        )
         return {"success": False, "output": str(e)}
 
 
-def _execute_linux_command(command_key: str, cmd: str, wait: bool, shell_features: bool) -> dict:
+def _execute_linux_command(
+    command_key: str, cmd: str, wait: bool, shell_features: bool
+) -> dict:
     """
     Execute a command on Linux platform.
 
@@ -550,7 +580,7 @@ def _execute_linux_command(command_key: str, cmd: str, wait: bool, shell_feature
                 shell=True,
                 capture_output=True,
                 text=True,
-                timeout=30  # Add timeout for safety
+                timeout=30,  # Add timeout for safety
             )
         else:
             # Safe execution without shell
@@ -562,12 +592,12 @@ def _execute_linux_command(command_key: str, cmd: str, wait: bool, shell_feature
                 shell=False,
                 capture_output=True,
                 text=True,
-                timeout=30  # Add timeout for safety
+                timeout=30,  # Add timeout for safety
             )
 
         return {
             "success": result.returncode == 0,
-            "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+            "output": result.stdout.strip() if result.stdout else result.stderr.strip(),
         }
 
     else:
@@ -577,22 +607,26 @@ def _execute_linux_command(command_key: str, cmd: str, wait: bool, shell_feature
         logger.info(f"Launching GUI app '{command_key}': {cmd_list}")
 
         proc = subprocess.Popen(
-            cmd_list,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            cmd_list, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
 
         # Verify the process started
         time.sleep(1)
         if proc.poll() is not None:
-            logger.error(f"Command '{command_key}' failed to start (exit code: {proc.returncode})")
-            return {"success": False, "output": f"Command '{command_key}' failed to start."}
+            logger.error(
+                f"Command '{command_key}' failed to start (exit code: {proc.returncode})"
+            )
+            return {
+                "success": False,
+                "output": f"Command '{command_key}' failed to start.",
+            }
 
         return {"success": True, "output": f"Command '{command_key}' launched."}
 
 
-def _execute_windows_command(command_key: str, cmd: str, wait: bool, shell_features: bool) -> dict:
+def _execute_windows_command(
+    command_key: str, cmd: str, wait: bool, shell_features: bool
+) -> dict:
     """
     Execute a command on Windows platform.
 
@@ -626,34 +660,32 @@ def _execute_windows_command(command_key: str, cmd: str, wait: bool, shell_featu
                 shell=True,
                 capture_output=True,
                 text=True,
-                timeout=30  # Add timeout for safety
+                timeout=30,  # Add timeout for safety
             )
         else:
             # Try to execute without shell
             try:
                 cmd_list = safe_split_command(cmd)
-                logger.info(f"Executing '{command_key}' without shell (Windows): {cmd_list}")
+                logger.info(
+                    f"Executing '{command_key}' without shell (Windows): {cmd_list}"
+                )
                 result = subprocess.run(
                     cmd_list,
                     shell=False,
                     capture_output=True,
                     text=True,
-                    timeout=30  # Add timeout for safety
+                    timeout=30,  # Add timeout for safety
                 )
             except (OSError, FileNotFoundError) as e:
                 # Fall back to shell if direct execution fails (for .bat, PATH issues, etc.)
                 logger.info(f"Direct execution failed, retrying with shell: {e}")
                 result = subprocess.run(
-                    cmd,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=30
+                    cmd, shell=True, capture_output=True, text=True, timeout=30
                 )
 
         return {
             "success": result.returncode == 0,
-            "output": result.stdout.strip() if result.stdout else result.stderr.strip()
+            "output": result.stdout.strip() if result.stdout else result.stderr.strip(),
         }
 
     else:
@@ -666,16 +698,16 @@ def _execute_windows_command(command_key: str, cmd: str, wait: bool, shell_featu
                 cmd_list,
                 shell=False,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
             )
         except (OSError, FileNotFoundError) as e:
             # Fall back to shell for .bat files, PATH resolution, etc.
             logger.info(f"Direct launch failed, using shell (Windows): {e}")
             subprocess.Popen(
-                cmd,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
-        return {"success": True, "output": f"Command '{command_key}' launched (Windows)."}
+        return {
+            "success": True,
+            "output": f"Command '{command_key}' launched (Windows).",
+        }

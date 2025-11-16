@@ -1,6 +1,6 @@
 """Desktop Agent - System monitoring and integration for Home Assistant.
 
-Desktop Agent collects system information from desktop computers and 
+Desktop Agent collects system information from desktop computers and
 exposes it via MQTT and REST API for integration with Home Assistant
 and other automation platforms.
 
@@ -96,7 +96,6 @@ Repo: https://github.com/rig0/desktop-agent/
 # Standard library imports
 import json
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 import signal
 import socket
@@ -104,6 +103,7 @@ import sys
 import threading
 import time
 import warnings
+from logging.handlers import RotatingFileHandler
 
 # Third-party imports
 import paho.mqtt.client as mqtt
@@ -162,8 +162,8 @@ logger.setLevel(logging.INFO)
 
 # Create formatter
 formatter = logging.Formatter(
-    '[%(asctime)s] (%(levelname)s) %(module)s: %(message)s',
-    datefmt='%m/%d/%Y %I:%M %p'
+    "[%(asctime)s] (%(levelname)s) %(module)s: %(message)s",
+    datefmt="%m/%d/%Y %I:%M %p",
 )
 
 # Console handler
@@ -173,9 +173,9 @@ logger.addHandler(console_handler)
 
 # Rotating file handler
 file_handler = RotatingFileHandler(
-    'data/main.log',
-    maxBytes=5*1024*1024,  # 5MB per file
-    backupCount=3          # Keep 3 backups (main.log.1, main.log.2, main.log.3)
+    "data/main.log",
+    maxBytes=5 * 1024 * 1024,  # 5MB per file
+    backupCount=3,  # Keep 3 backups (main.log.1, main.log.2, main.log.3)
 )
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
@@ -201,6 +201,7 @@ additional_subscriptions = []
 
 class ConnectionState:
     """Track MQTT connection state for monitoring and thread coordination."""
+
     def __init__(self):
         self.connected = threading.Event()
         self.connection_count = 0
@@ -212,7 +213,9 @@ class ConnectionState:
         with self.lock:
             self.connected.set()
             self.connection_count += 1
-            logger.info(f"Connection established (total connections: {self.connection_count})")
+            logger.info(
+                f"Connection established (total connections: {self.connection_count})"
+            )
 
     def on_disconnected(self):
         """Mark as disconnected."""
@@ -230,7 +233,9 @@ class ConnectionState:
         return self.connected.is_set()
 
 
-def connect_with_retry(client, broker, port, max_retries=10, initial_delay=1, max_delay=60):
+def connect_with_retry(
+    client, broker, port, max_retries=10, initial_delay=1, max_delay=60
+):
     """
     Connect to MQTT broker with exponential backoff retry logic.
 
@@ -347,7 +352,7 @@ def on_mqtt_message(client, userdata, msg):
         # Run command and return result
         result = run_predefined_command(command_key)
         client.publish(f"{base_topic}/run_result", json.dumps(result), qos=1)
-    # Handle errors    
+    # Handle errors
     except json.JSONDecodeError as e:
         logger.error(f"Error decoding MQTT command payload: {e}", exc_info=True)
     except Exception as e:
@@ -357,6 +362,7 @@ def on_mqtt_message(client, userdata, msg):
 # ----------------------------
 # Signal Handlers
 # ----------------------------
+
 
 def signal_handler(sig, frame):
     """Handle shutdown signals gracefully."""
@@ -374,6 +380,7 @@ def signal_handler(sig, frame):
 # ----------------------------
 # Main
 # ----------------------------
+
 
 def main():
     """
@@ -426,11 +433,15 @@ def main():
     logger.info("Last Will and Testament configured")
 
     # Configure automatic reconnection
-    client.reconnect_delay_set(min_delay=MQTT_MIN_RECONNECT_DELAY, max_delay=MQTT_MAX_RECONNECT_DELAY)
+    client.reconnect_delay_set(
+        min_delay=MQTT_MIN_RECONNECT_DELAY, max_delay=MQTT_MAX_RECONNECT_DELAY
+    )
 
     # Connect with retry logic
     logger.info("Initiating connection to MQTT broker...")
-    if not connect_with_retry(client, MQTT_BROKER, MQTT_PORT, max_retries=MQTT_MAX_RETRIES):
+    if not connect_with_retry(
+        client, MQTT_BROKER, MQTT_PORT, max_retries=MQTT_MAX_RETRIES
+    ):
         logger.error("Failed to connect to MQTT broker after maximum retry attempts")
         sys.exit(1)
 
@@ -457,12 +468,7 @@ def main():
     # Start desktop monitor
     desktop_collector = SystemInfoCollector()
     desktop_monitor = DesktopMonitor(
-        desktop_collector,
-        broker,
-        discovery,
-        device_id,
-        base_topic,
-        PUBLISH_INT
+        desktop_collector, broker, discovery, device_id, base_topic, PUBLISH_INT
     )
     desktop_stop_event = threading.Event()
     stop_events.append(desktop_stop_event)
@@ -470,7 +476,7 @@ def main():
         target=desktop_monitor.start,
         args=(desktop_stop_event,),
         name="DesktopMonitor",
-        daemon=True
+        daemon=True,
     )
     desktop_thread.start()
     logger.info("Desktop monitor started")
@@ -483,7 +489,7 @@ def main():
             target=start_api,
             args=(API_PORT, api_stop_event),
             name="API-Server",
-            daemon=True
+            daemon=True,
         )
         api_thread.start()
         logger.info("API server started")
@@ -498,7 +504,7 @@ def main():
             target=media_monitor.start,
             args=(media_stop_event,),
             name="MediaMonitor",
-            daemon=True
+            daemon=True,
         )
         media_thread.start()
         logger.info("Media monitor started")
@@ -513,7 +519,7 @@ def main():
             target=game_monitor.start,
             args=(game_stop_event,),
             name="GameMonitor",
-            daemon=True
+            daemon=True,
         )
         game_thread.start()
         logger.info("Game monitor started")
@@ -554,7 +560,7 @@ def main():
         logger.info("Update manager started")
 
     # Trigger Jenkins pipeline if deploying
-    if '--deploy' in sys.argv:
+    if "--deploy" in sys.argv:
         logger.info("Deploy mode detected, waiting 60s before notifying pipeline")
         time.sleep(60)
         notify_pipeline("Build Successful")
@@ -581,6 +587,7 @@ def main():
 
         time.sleep(1)
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

@@ -17,7 +17,7 @@ Example:
 import asyncio
 import logging
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Third-party imports
 import requests
@@ -79,7 +79,9 @@ class MediaCollector:
             elif self.platform == "linux":
                 return self._get_media_info_linux()
             else:
-                logger.warning(f"Unsupported platform for media collection: {self.platform}")
+                logger.warning(
+                    f"Unsupported platform for media collection: {self.platform}"
+                )
                 return None
         except Exception as e:
             logger.error(f"Error getting media info: {e}", exc_info=True)
@@ -162,7 +164,7 @@ class MediaCollector:
                 "album": album,
                 "is_playing": is_playing,
                 "playback_status": status,
-                "thumbnail_bytes": thumbnail_bytes
+                "thumbnail_bytes": thumbnail_bytes,
             }
 
         except Exception as e:
@@ -186,7 +188,8 @@ class MediaCollector:
             bus = SessionBus()
             dbus = bus.get("org.freedesktop.DBus", "/org/freedesktop/DBus")
             players = [
-                name for name in dbus.ListNames()
+                name
+                for name in dbus.ListNames()
                 if name.startswith("org.mpris.MediaPlayer2.")
             ]
 
@@ -244,7 +247,7 @@ class MediaCollector:
                 "album": album,
                 "is_playing": is_playing,
                 "playback_status": status,
-                "thumbnail_bytes": thumbnail_bytes
+                "thumbnail_bytes": thumbnail_bytes,
             }
 
         except ImportError as e:

@@ -20,7 +20,6 @@ import psutil
 # Import PlatformUtils from our utils package
 from modules.utils.platform import PlatformUtils
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -203,7 +202,7 @@ class MemoryCollector:
         """
         try:
             virtual_mem = psutil.virtual_memory()
-            return round(virtual_mem.total / (1024 ** 3), 1)
+            return round(virtual_mem.total / (1024**3), 1)
         except Exception as e:
             logger.error(f"Error getting total memory: {e}")
             return 0.0
@@ -221,7 +220,7 @@ class MemoryCollector:
         """
         try:
             virtual_mem = psutil.virtual_memory()
-            return round(virtual_mem.used / (1024 ** 3), 1)
+            return round(virtual_mem.used / (1024**3), 1)
         except Exception as e:
             logger.error(f"Error getting used memory: {e}")
             return 0.0
@@ -239,7 +238,7 @@ class MemoryCollector:
         """
         try:
             virtual_mem = psutil.virtual_memory()
-            return round(virtual_mem.available / (1024 ** 3), 1)
+            return round(virtual_mem.available / (1024**3), 1)
         except Exception as e:
             logger.error(f"Error getting available memory: {e}")
             return 0.0
@@ -280,7 +279,7 @@ class DiskCollector:
         if sys.platform.startswith("win"):
             # Windows: Monitor C: drive
             try:
-                usage = psutil.disk_usage('C:\\')
+                usage = psutil.disk_usage("C:\\")
                 return usage.total, usage.used, usage.free, usage.percent
             except (PermissionError, OSError) as e:
                 logger.error(f"Error accessing C: drive: {e}")
@@ -288,7 +287,7 @@ class DiskCollector:
         else:
             # Linux: Find most relevant partition
             total = used = free = 0.0
-            target_partitions = ['/var/home', '/home', '/run/host/var/home', '/']
+            target_partitions = ["/var/home", "/home", "/run/host/var/home", "/"]
 
             for partition in psutil.disk_partitions(all=False):
                 if partition.mountpoint in target_partitions:
@@ -338,7 +337,7 @@ class DiskCollector:
         """
         try:
             total, _, _, _ = self.get_smart_disk()
-            return round(total / (1024 ** 3), 1)
+            return round(total / (1024**3), 1)
         except Exception as e:
             logger.error(f"Error getting total disk space: {e}")
             return 0.0
@@ -356,7 +355,7 @@ class DiskCollector:
         """
         try:
             _, used, _, _ = self.get_smart_disk()
-            return round(used / (1024 ** 3), 1)
+            return round(used / (1024**3), 1)
         except Exception as e:
             logger.error(f"Error getting used disk space: {e}")
             return 0.0
@@ -444,6 +443,7 @@ class GPUCollector:
         """Check if GPUtil is available and detect GPUs."""
         try:
             import GPUtil
+
             self._gputil_available = True
             self._gpus = GPUtil.getGPUs()
             if self._gpus:
@@ -504,10 +504,13 @@ class GPUCollector:
 
         try:
             import GPUtil
+
             gpus = GPUtil.getGPUs()
             if gpu_index < len(gpus):
                 gpu = gpus[gpu_index]
-                load = self._safe_number(gpu.load * 100 if gpu.load is not None else None, 0)
+                load = self._safe_number(
+                    gpu.load * 100 if gpu.load is not None else None, 0
+                )
                 return round(load)
         except Exception as e:
             logger.debug(f"Error getting GPU usage: {e}")
@@ -534,6 +537,7 @@ class GPUCollector:
 
         try:
             import GPUtil
+
             gpus = GPUtil.getGPUs()
             if gpu_index < len(gpus):
                 gpu = gpus[gpu_index]
@@ -564,6 +568,7 @@ class GPUCollector:
 
         try:
             import GPUtil
+
             gpus = GPUtil.getGPUs()
             if gpu_index < len(gpus):
                 gpu = gpus[gpu_index]
@@ -594,6 +599,7 @@ class GPUCollector:
 
         try:
             import GPUtil
+
             gpus = GPUtil.getGPUs()
             if gpu_index < len(gpus):
                 gpu = gpus[gpu_index]
@@ -624,6 +630,7 @@ class GPUCollector:
 
         try:
             import GPUtil
+
             gpus = GPUtil.getGPUs()
             if gpu_index < len(gpus):
                 return gpus[gpu_index].name or "Unknown GPU"
@@ -714,6 +721,7 @@ class SystemInfoCollector:
 
         # Network metrics
         from modules.utils.formatting import format_bytes
+
         data["network_sent_bytes"] = format_bytes(self.network.get_bytes_sent())
         data["network_recv_bytes"] = format_bytes(self.network.get_bytes_received())
 
@@ -721,6 +729,7 @@ class SystemInfoCollector:
         if self.gpu.is_available():
             # Support multiple GPUs
             import GPUtil
+
             gpus = GPUtil.getGPUs()
             for i, gpu in enumerate(gpus):
                 prefix = f"gpu{i}_"

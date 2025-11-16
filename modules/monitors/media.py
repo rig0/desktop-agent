@@ -31,7 +31,13 @@ import paho.mqtt.client as mqtt
 
 # Local imports
 from modules.collectors.media import MediaCollector
-from modules.core.config import DEVICE_NAME, base_topic, device_id, device_info, discovery_prefix
+from modules.core.config import (
+    DEVICE_NAME,
+    base_topic,
+    device_id,
+    device_info,
+    discovery_prefix,
+)
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 
@@ -58,7 +64,7 @@ class MediaMonitor:
         collector: MediaCollector,
         broker: MessageBroker,
         discovery: DiscoveryManager,
-        poll_interval: int = 5
+        poll_interval: int = 5,
     ):
         """
         Initialize the MediaMonitor.
@@ -81,7 +87,9 @@ class MediaMonitor:
         # Placeholder image paths
         base_dir = Path(__file__).parent.parent.parent
         self.placeholder_path = base_dir / "resources" / "media_thumb.png"
-        self.placeholder_path_custom = base_dir / "data" / "media_agent" / "media_thumb.png"
+        self.placeholder_path_custom = (
+            base_dir / "data" / "media_agent" / "media_thumb.png"
+        )
 
     def start(self, stop_event: threading.Event) -> None:
         """
@@ -134,9 +142,14 @@ class MediaMonitor:
             # Determine state based on playback status
             if info["is_playing"]:
                 state = "playing"
-            elif isinstance(info["playback_status"], str) and info["playback_status"].lower() == "paused":
+            elif (
+                isinstance(info["playback_status"], str)
+                and info["playback_status"].lower() == "paused"
+            ):
                 state = "paused"
-            elif isinstance(info["playback_status"], int) and info["playback_status"] == 5:
+            elif (
+                isinstance(info["playback_status"], int) and info["playback_status"] == 5
+            ):
                 state = "paused"  # Windows status code 5 = Paused
             else:
                 state = "idle"
@@ -146,7 +159,7 @@ class MediaMonitor:
                 "title": info["title"],
                 "artist": info["artist"],
                 "album": info["album"],
-                "status": state
+                "status": state,
             }
 
             # Publish state
@@ -232,7 +245,7 @@ class MediaMonitor:
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/media/thumbnail",
-                "icon": "mdi:music"
+                "icon": "mdi:music",
             }
 
             topic = f"{discovery_prefix}/camera/{device_id}_media/config"

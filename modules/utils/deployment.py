@@ -84,7 +84,16 @@ def notify_pipeline(message: str = "ready") -> None:
     build_number = os.environ.get("JENKINS_BUILD_NUMBER")
     callback_token = os.environ.get("PIPELINE_CALLBACK_TOKEN")
 
-    if not all([jenkins_url, jenkins_user, jenkins_token, job_name, build_number, callback_token]):
+    if not all(
+        [
+            jenkins_url,
+            jenkins_user,
+            jenkins_token,
+            job_name,
+            build_number,
+            callback_token,
+        ]
+    ):
         raise ValueError(
             "Missing required environment variables: "
             "JENKINS_URL, JENKINS_USER, JENKINS_TOKEN, JENKINS_JOB, "
@@ -100,10 +109,7 @@ def notify_pipeline(message: str = "ready") -> None:
     description = f"✓ CALLBACK:{callback_token}:{message}"
 
     # Prepare form data (Jenkins expects 'description' field)
-    data = {
-        "description": description,
-        "Submit": "Submit"  # Jenkins form requirement
-    }
+    data = {"description": description, "Submit": "Submit"}  # Jenkins form requirement
 
     try:
         print(f"Sending callback to Jenkins build {job_name} #{build_number}")
@@ -114,7 +120,7 @@ def notify_pipeline(message: str = "ready") -> None:
             auth=HTTPBasicAuth(jenkins_user, jenkins_token),
             timeout=30,
             # For homelab with self-signed certs
-            verify=os.environ.get("VERIFY_SSL", "true").lower() != "false"
+            verify=os.environ.get("VERIFY_SSL", "true").lower() != "false",
         )
 
         response.raise_for_status()

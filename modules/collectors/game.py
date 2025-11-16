@@ -18,16 +18,16 @@ Example:
 import logging
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 # Third-party imports
 import requests
 
 # Local imports
 from modules.core.config import IGDB_CLIENT, IGDB_TOKEN
+from modules.utils.color import get_dominant_color
 from modules.utils.igdb import IGDBClient
 from modules.utils.playtime import get_lutris_playtime
-from modules.utils.color import get_dominant_color
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -74,13 +74,13 @@ class GameCollector:
             # Check if the file exists, and if not, create an empty file
             if not os.path.exists(self.game_file_path):
                 os.makedirs(os.path.dirname(self.game_file_path), exist_ok=True)
-                with open(self.game_file_path, 'w') as f:
+                with open(self.game_file_path, "w") as f:
                     pass  # Create an empty file
                 logger.info(f"Created game file at {self.game_file_path}")
                 return None
 
             # Read game name from file
-            with open(self.game_file_path, 'r') as f:
+            with open(self.game_file_path, "r") as f:
                 game_name = f.readline().strip()
 
             if not game_name or game_name.lower() == "unknown":
@@ -128,9 +128,7 @@ class GameCollector:
             return None
 
     def get_game_artwork(
-        self,
-        img_dir: Optional[str],
-        img_url: Optional[str]
+        self, img_dir: Optional[str], img_url: Optional[str]
     ) -> Optional[bytes]:
         """
         Retrieve game artwork as bytes.
@@ -169,7 +167,9 @@ class GameCollector:
                     img_bytes = resp.content
                     logger.debug(f"Downloaded image from URL: {img_url}")
                 else:
-                    logger.warning(f"Failed to download image, status: {resp.status_code}")
+                    logger.warning(
+                        f"Failed to download image, status: {resp.status_code}"
+                    )
 
         except (IOError, OSError) as e:
             logger.error(f"Failed to read cover image from file: {e}")
@@ -204,8 +204,7 @@ class GameCollector:
             return None
 
     def get_game_attributes(
-        self,
-        game_info: Dict[str, Any]
+        self, game_info: Dict[str, Any]
     ) -> Tuple[Dict[str, Any], Dict[str, Optional[bytes]]]:
         """
         Process game metadata into attributes and images.
@@ -261,8 +260,8 @@ class GameCollector:
                 artwork_full_url = None
 
             # Get cached image paths
-            cover_local = game_info.get('cover')
-            artwork_local = game_info.get('artwork')
+            cover_local = game_info.get("cover")
+            artwork_local = game_info.get("artwork")
 
             # Download or load images
             cover_bytes = self.get_game_artwork(cover_local, cover_full_url)
@@ -282,22 +281,19 @@ class GameCollector:
                 "title": game_info.get("name", "Unknown"),
                 "summary": game_info.get("summary", "No summary available."),
                 "release_date": game_info.get("release_date", "Not available"),
-                "genres": ', '.join(game_info.get("genres", [])),
-                "developers": ', '.join(game_info.get("developers", [])),
-                "platforms": ', '.join(game_info.get("platforms", [])),
+                "genres": ", ".join(game_info.get("genres", [])),
+                "developers": ", ".join(game_info.get("developers", [])),
+                "platforms": ", ".join(game_info.get("platforms", [])),
                 "total_rating": round(game_info.get("total_rating", 0), 2),
                 "cover_url": cover_full_url or "Cover image not available",
                 "artwork_url": artwork_full_url or "Artwork not available",
                 "color": dominant_color or "Color not available",
                 "url": game_info.get("url", ""),
-                "playtime": playtime_str
+                "playtime": playtime_str,
             }
 
             # Build images dictionary
-            images = {
-                "cover": cover_bytes,
-                "artwork": artwork_bytes
-            }
+            images = {"cover": cover_bytes, "artwork": artwork_bytes}
 
             return attrs, images
 

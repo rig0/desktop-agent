@@ -29,7 +29,13 @@ import paho.mqtt.client as mqtt
 
 # Local imports
 from modules.collectors.game import GameCollector
-from modules.core.config import DEVICE_NAME, base_topic, device_id, device_info, discovery_prefix
+from modules.core.config import (
+    DEVICE_NAME,
+    base_topic,
+    device_id,
+    device_info,
+    discovery_prefix,
+)
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 
@@ -59,7 +65,7 @@ class GameMonitor:
         broker: MessageBroker,
         discovery: DiscoveryManager,
         game_file_path: str,
-        poll_interval: int = 3
+        poll_interval: int = 3,
     ):
         """
         Initialize the GameMonitor.
@@ -207,7 +213,7 @@ class GameMonitor:
                 "icon": "mdi:gamepad-variant",
                 "unique_id": f"{device_id}_game_status",
                 "device": device_info,
-                "availability_topic": f"{base_topic}/availability"
+                "availability_topic": f"{base_topic}/availability",
             }
 
             topic = f"{discovery_prefix}/sensor/{device_id}/game_status/config"
@@ -222,7 +228,7 @@ class GameMonitor:
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/game/cover",
-                "icon": "mdi:gamepad-variant"
+                "icon": "mdi:gamepad-variant",
             }
 
             topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
@@ -237,7 +243,7 @@ class GameMonitor:
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/game/artwork",
-                "icon": "mdi:gamepad-variant"
+                "icon": "mdi:gamepad-variant",
             }
 
             topic = f"{discovery_prefix}/camera/{device_id}_game_artwork/config"

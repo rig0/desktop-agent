@@ -65,7 +65,7 @@ if [ -f /etc/os-release ]; then
         DISTRO=$DISTRO_ID
     fi
 else
-    echo 
+    echo
     echo "Could not detect Linux distribution!"
     exit 1
 fi

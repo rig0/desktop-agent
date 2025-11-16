@@ -59,7 +59,7 @@ from typing import Optional
 import requests
 
 # Local imports
-from modules.core.config import REPO_OWNER, REPO_NAME, VERSION_PATH
+from modules.core.config import REPO_NAME, REPO_OWNER, VERSION_PATH
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -78,6 +78,7 @@ os.makedirs(UPDATER_DIR, exist_ok=True)
 # ----------------------------
 # GitHub helpers
 # ----------------------------
+
 
 def _github_get(url: str, timeout: int = 10) -> dict:
     """Perform a GET request to GitHub API with proper headers.
@@ -237,7 +238,9 @@ def seed_signature_from_version(channel: str, release_info: Optional[dict]) -> N
 
     remote_version = release_info.get("version")
     local_version = _read_local_version()
-    if remote_version and _normalize_version(remote_version) == _normalize_version(local_version):
+    if remote_version and _normalize_version(remote_version) == _normalize_version(
+        local_version
+    ):
         write_installed_signature(channel, release_info.get("signature"))
 
 
@@ -248,6 +251,7 @@ def _utcnow_iso() -> str:
 # ----------------------------
 # File helpers
 # ----------------------------
+
 
 def get_sha256(data: bytes) -> str:
     """Calculate SHA256 hash of data.
@@ -311,7 +315,9 @@ def make_helpers_executable():
                 path = os.path.join(root, name)
                 try:
                     st = os.stat(path)
-                    os.chmod(path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                    os.chmod(
+                        path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+                    )
                 except PermissionError as e:
                     logger.warning(f"Cannot chmod {path}, permission denied: {e}")
 
@@ -319,6 +325,7 @@ def make_helpers_executable():
 # ----------------------------
 # Release information
 # ----------------------------
+
 
 def fetch_release_info(channel: str = "beta") -> dict:
     """Fetch release information for a given update channel from GitHub.
@@ -379,7 +386,8 @@ def fetch_release_info(channel: str = "beta") -> dict:
             "channel": channel,
             "version": version,
             "signature": signature,
-            "zip_url": tag.get("zipball_url") or f"https://api.github.com/repos/{REPO}/zipball/{version}",
+            "zip_url": tag.get("zipball_url")
+            or f"https://api.github.com/repos/{REPO}/zipball/{version}",
             "published_at": _get_commit_date(version) if version else None,
             "notes": "",
         }
@@ -611,7 +619,9 @@ class UpdateManager:
         self.publish_discovery()
         self._poll_once(initial=True)
 
-        self.poll_thread = threading.Thread(target=self._poll_loop, name="UpdateManager-Poll", daemon=True)
+        self.poll_thread = threading.Thread(
+            target=self._poll_loop, name="UpdateManager-Poll", daemon=True
+        )
         self.poll_thread.start()
         logger.info("Update manager poll thread started")
 
@@ -652,7 +662,9 @@ class UpdateManager:
             "entity_category": "config",
             "icon": "mdi:update",
         }
-        button_topic = f"{self.discovery_prefix}/button/{self.device_id}/install_update/config"
+        button_topic = (
+            f"{self.discovery_prefix}/button/{self.device_id}/install_update/config"
+        )
         self.client.publish(button_topic, json.dumps(button_payload), retain=True)
 
         # Publish initial state with installed version
@@ -715,14 +727,21 @@ class UpdateManager:
         if payload_str:
             try:
                 data = json.loads(payload_str)
-                action = str(data.get("action") or data.get("command") or "INSTALL").upper()
+                action = str(
+                    data.get("action") or data.get("command") or "INSTALL"
+                ).upper()
             except (ValueError, json.JSONDecodeError):
                 action = payload_str.upper()
 
         if action in {"INSTALL", "INSTALL_UPDATE", "UPDATE"}:
             return self._start_install(manual=True)
 
-        self._publish_state(self.available, self.latest_info, status="idle", error=f"Unsupported action '{action}'")
+        self._publish_state(
+            self.available,
+            self.latest_info,
+            status="idle",
+            error=f"Unsupported action '{action}'",
+        )
         return False
 
     def _poll_loop(self) -> None:
@@ -746,7 +765,9 @@ class UpdateManager:
                 except Exception as exc:
                     self.last_error = str(exc)
                     logger.error(f"Error in update poll: {exc}", exc_info=True)
-                    self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
+                    self._publish_state(
+                        self.available, self.latest_info, status="error", error=str(exc)
+                    )
         except Exception as e:
             logger.critical(f"Fatal error in update poll loop: {e}", exc_info=True)
         finally:
@@ -815,7 +836,12 @@ class UpdateManager:
             True if installation thread was started, False if already in progress or error occurred.
         """
         if self.install_lock.locked():
-            self._publish_state(self.available, self.latest_info, status="busy", error="Update already in progress")
+            self._publish_state(
+                self.available,
+                self.latest_info,
+                status="busy",
+                error="Update already in progress",
+            )
             return False
 
         if info is None:
@@ -823,7 +849,9 @@ class UpdateManager:
                 info = fetch_release_info(self.channel)
             except Exception as exc:
                 self.last_error = str(exc)
-                self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
+                self._publish_state(
+                    self.available, self.latest_info, status="error", error=str(exc)
+                )
                 return False
 
         thread = threading.Thread(
@@ -868,7 +896,13 @@ class UpdateManager:
                 self.installing = False
                 threading.Thread(target=self._delayed_refresh, daemon=True).start()
 
-    def _publish_state(self, available: bool, info: Optional[dict], status: str = "idle", error: Optional[str] = None) -> None:
+    def _publish_state(
+        self,
+        available: bool,
+        info: Optional[dict],
+        status: str = "idle",
+        error: Optional[str] = None,
+    ) -> None:
         """Publish update state and attributes to MQTT.
 
         Publishes both the update entity state (for Home Assistant's update
@@ -899,9 +933,13 @@ class UpdateManager:
             if "api.github.com" in zip_url:
                 # For stable releases, link to the release page
                 if self.channel == "stable" and info.get("version"):
-                    state_payload["release_url"] = f"https://github.com/{REPO}/releases/tag/{info['version']}"
+                    state_payload[
+                        "release_url"
+                    ] = f"https://github.com/{REPO}/releases/tag/{info['version']}"
                 elif self.channel == "beta" and info.get("version"):
-                    state_payload["release_url"] = f"https://github.com/{REPO}/releases/tag/{info['version']}"
+                    state_payload[
+                        "release_url"
+                    ] = f"https://github.com/{REPO}/releases/tag/{info['version']}"
                 else:
                     state_payload["release_url"] = f"https://github.com/{REPO}"
             else:
@@ -911,7 +949,7 @@ class UpdateManager:
         if error:
             state_payload["release_summary"] = f"Error: {error}"
         elif self.installing:
-            state_payload["release_summary"] = f"Installing update..."
+            state_payload["release_summary"] = "Installing update..."
         elif available:
             state_payload["release_summary"] = f"Update available: {latest_version}"
             if info.get("notes"):
@@ -921,7 +959,9 @@ class UpdateManager:
         else:
             state_payload["release_summary"] = "Up to date"
 
-        self.client.publish(self.state_topic, json.dumps(state_payload), qos=1, retain=True)
+        self.client.publish(
+            self.state_topic, json.dumps(state_payload), qos=1, retain=True
+        )
 
         # Publish detailed attributes separately
         attrs = {
@@ -961,7 +1001,9 @@ class UpdateManager:
         except Exception as exc:
             self.last_error = str(exc)
             logger.error(f"Error in delayed refresh: {exc}", exc_info=True)
-            self._publish_state(self.available, self.latest_info, status="error", error=str(exc))
+            self._publish_state(
+                self.available, self.latest_info, status="error", error=str(exc)
+            )
 
     def _safe_info(self, info: Optional[dict]) -> dict:
         """Return safe default info dictionary if None.
@@ -988,7 +1030,7 @@ class UpdateManager:
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     channel = "beta"
