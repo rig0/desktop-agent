@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Desktop Agent - System monitoring and integration for Home Assistant.
 
 Desktop Agent collects system information from desktop computers and
