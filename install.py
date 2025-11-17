@@ -15,7 +15,8 @@ Requirements:
 Note:
     This installer only installs Python packages. System packages must be
     installed separately. Configuration happens on first run of main.py.
-    See SYSTEM_REQUIREMENTS.md for platform-specific prerequisites.
+    See https://github.com/rig0/desktop-agent/wiki/System-Requirements
+    for platform-specific prerequisites.
 """
 
 import platform
@@ -141,11 +142,10 @@ class Installer:
         except subprocess.CalledProcessError as e:
             print("\n[ERROR] Failed to install requirements")
             print("\nPossible causes:")
-            print("  1. Missing system dependencies (see SYSTEM_REQUIREMENTS.md)")
+            print("  1. Missing system dependencies")
             print("  2. Network connection issues")
             print("  3. Insufficient permissions")
             print("\nFor help:")
-            print("  - Check SYSTEM_REQUIREMENTS.md in the project root")
             print("  - Visit: https://github.com/rig0/desktop-agent/wiki")
             print("  - Report issues: https://github.com/rig0/desktop-agent/issues")
             raise RuntimeError(f"Failed to install requirements: {e}")
