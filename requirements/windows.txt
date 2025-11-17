@@ -5,4 +5,4 @@
 -r base.txt
 
 # Windows Media Monitoring (Windows SDK)
-winsdk>=1.0.0
+winsdk
