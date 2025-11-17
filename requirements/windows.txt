@@ -5,4 +5,5 @@
 -r base.txt
 
 # Windows Media Monitoring (Windows SDK)
-winsdk
+# Pinned to 1.0.0b10 which has pre-built wheels for Python 3.12
+winsdk==1.0.0b10
