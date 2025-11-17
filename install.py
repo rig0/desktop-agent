@@ -84,12 +84,44 @@ class Installer:
             raise FileNotFoundError(f"Requirements file not found: {req_file}")
         return req_file
 
+    def _upgrade_pip_tools(self):
+        """Upgrade pip, setuptools, and wheel to latest versions."""
+        print("[Installer] Upgrading pip, setuptools, and wheel...")
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "pip",
+            "setuptools",
+            "wheel",
+        ]
+
+        try:
+            subprocess.run(cmd, check=True, capture_output=True)
+            print("[Installer] Build tools upgraded successfully")
+        except subprocess.CalledProcessError as e:
+            # Non-fatal: continue even if upgrade fails (system might be externally managed)
+            print(
+                f"[Installer] Warning: Could not upgrade pip tools (may be externally managed) {e}"
+            )
+
     def _install_requirements(self, req_file: Path):
         """Install Python packages from requirements file."""
         print(f"[Installer] Installing requirements from {req_file.name}...")
         print("[Installer] This may take a few minutes...")
 
-        cmd = [sys.executable, "-m", "pip", "install", "-r", str(req_file)]
+        # Use --no-cache-dir to avoid cached build failures (especially for Pillow)
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--no-cache-dir",
+            "-r",
+            str(req_file),
+        ]
 
         try:
             subprocess.run(cmd, check=True)
@@ -126,6 +158,7 @@ class Installer:
 
             self._check_python_version()
             self._check_pip()
+            self._upgrade_pip_tools()
 
             req_file = self._get_requirements_file()
             self._install_requirements(req_file)
