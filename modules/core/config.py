@@ -64,7 +64,6 @@ Example:
 # Standard library imports
 import configparser
 import logging
-import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict
@@ -105,57 +104,353 @@ REPO_WIKI_URL = f"{REPO_URL}/wiki/"
 
 
 # ----------------------------
-# Create configuration (first run)
+# Helper Functions
 # ----------------------------
 
 
-def create_config(config_path: Path) -> None:
+def is_interactive_environment() -> bool:
     """
-    Create default configuration file from template.
+    Determine if running in interactive environment.
 
-    On first run, copies the example configuration file from resources/
-    to the data/ directory. This provides users with a template containing
-    all available configuration options with explanatory comments.
+    Returns True if:
+    - stdin is a TTY (terminal)
+    - DA_NON_INTERACTIVE env var is NOT set
+
+    Returns False if:
+    - stdin is not a TTY (pipe, file, CI/CD)
+    - DA_NON_INTERACTIVE is explicitly set
+    """
+    import os
+
+    # Explicit override takes precedence
+    if os.getenv("DA_NON_INTERACTIVE"):
+        return False
+
+    # Check if stdin is connected to a terminal
+    return sys.stdin.isatty()
+
+
+def prompt_yes_no(prompt: str, default: bool = False) -> bool:
+    """
+    Prompt user for yes/no question with validation.
+
+    Accepts: y, yes, n, no (case insensitive)
+    Returns: boolean
+    """
+    default_str = "Y/n" if default else "y/N"
+
+    while True:
+        response = input(f"{prompt} [{default_str}]: ").strip().lower()
+
+        if not response:  # User pressed Enter (use default)
+            return default
+
+        if response in ("y", "yes"):
+            return True
+        elif response in ("n", "no"):
+            return False
+        else:
+            print("  Invalid input. Please enter 'y' for yes or 'n' for no.")
+
+
+# ----------------------------
+# Validation Functions
+# ----------------------------
+
+
+def validate_required_mqtt(
+    broker: str, port: str, user: str, password: str
+) -> tuple[bool, str]:
+    """
+    Validate required MQTT settings.
+
+    Returns (is_valid, error_message).
+    """
+    if not broker or not broker.strip():
+        return False, "MQTT broker cannot be empty"
+
+    if not user or not user.strip():
+        return False, "MQTT username cannot be empty"
+
+    if not password:
+        logger.warning("MQTT password is empty - ensure your broker allows this")
+
+    try:
+        port_int = int(port)
+        if not (1 <= port_int <= 65535):
+            return False, f"MQTT port must be between 1-65535, got {port}"
+    except ValueError:
+        return False, f"MQTT port must be a number, got '{port}'"
+
+    return True, ""
+
+
+# ----------------------------
+# Interactive Configuration Creation
+# ----------------------------
+
+
+def create_config_interactive(config_path: Path) -> None:
+    """
+    Create configuration file interactively on first run.
+
+    This function guides the user through setting up Desktop Agent,
+    collecting required MQTT settings, optional module configurations,
+    and automatically generating secure API keys when REST API is enabled.
+
+    Falls back to non-interactive mode if not running in a terminal.
 
     Args:
         config_path: Path where config.ini should be created
 
     Behavior:
-        - Creates parent directories if they don't exist
-        - Copies config_example.ini to config.ini
-        - Prints instructions for user to edit the file
-        - Exits the application to force user configuration
+        - Creates parent directories if needed
+        - Prompts for required settings (MQTT)
+        - Prompts for optional modules
+        - Generates secure API key using secrets.token_urlsafe(32) if REST enabled
+        - Writes complete config.ini
+        - Does NOT exit (unlike old behavior)
 
-    Exit Codes:
-        1: Configuration file created, user must edit before running
-
-    Example:
-        This function is called automatically when config.ini is missing:
-
-        [Config] Config file not found! Creating now...
-        [Config] Created default config at /path/to/data/config.ini
-        [Config] Edit config.ini with required info! Exiting...
+    Environment Variables (for automation/CI/CD only):
+        DA_MQTT_BROKER: MQTT broker hostname
+        DA_MQTT_PORT: MQTT broker port (default: 1883)
+        DA_MQTT_USER: MQTT username
+        DA_MQTT_PASS: MQTT password
+        DA_DEVICE_NAME: Device name (default: hostname)
+        DA_NON_INTERACTIVE: Set to skip prompts (uses env vars or defaults)
     """
+    import os
+    import secrets
+    import socket
+
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if not config_path.exists():
-        print("\n[Config] Config file not found! Creating now...")
+    # Check if running in interactive environment
+    is_interactive = is_interactive_environment()
 
-        src = BASE_DIR / "resources" / "config_example.ini"
-        shutil.copy(src, config_path)
+    try:
+        if is_interactive:
+            print("\n" + "=" * 70)
+            print("Desktop Agent - First Run Configuration")
+            print("=" * 70)
+            print("\nWelcome! Let's configure Desktop Agent for your system.")
+            print("You can press Enter to accept default values shown in [brackets].\n")
 
-        print(f"\n[Config] Created default config at {config_path}")
-        print("\n[Config] Edit config.ini with required info! Exiting...\n")
+        # Get configuration values
+        if is_interactive:
+            device_name = (
+                input(f"Device name [{socket.gethostname()}]: ").strip()
+                or socket.gethostname()
+            )
+
+            print("\nMQTT Broker Settings (required):")
+            mqtt_broker = ""
+            while not mqtt_broker:
+                mqtt_broker = input("  MQTT broker hostname/IP: ").strip()
+                if not mqtt_broker:
+                    print("  Error: MQTT broker is required!")
+
+            mqtt_port = input("  MQTT port [1883]: ").strip() or "1883"
+
+            mqtt_user = ""
+            while not mqtt_user:
+                mqtt_user = input("  MQTT username: ").strip()
+                if not mqtt_user:
+                    print("  Error: MQTT username is required!")
+
+            mqtt_pass = ""
+            while not mqtt_pass:
+                mqtt_pass = input("  MQTT password: ").strip()
+                if not mqtt_pass:
+                    print("  Error: MQTT password is required!")
+
+            # Validate MQTT settings
+            valid, error = validate_required_mqtt(
+                mqtt_broker, mqtt_port, mqtt_user, mqtt_pass
+            )
+            if not valid:
+                print(f"  Error: {error}")
+                print("  Please run Desktop Agent again to reconfigure.")
+                sys.exit(1)
+
+            print("\nOptional Modules:")
+            api_enabled = prompt_yes_no("  Enable REST API?")
+            commands_enabled = prompt_yes_no("  Enable remote commands?")
+            media_enabled = prompt_yes_no("  Enable media monitoring?")
+            game_enabled = prompt_yes_no("  Enable game monitoring?")
+            updates_enabled = prompt_yes_no("  Enable automatic updates?")
+
+            api_port = "5555"
+            api_token = ""
+            if api_enabled:
+                api_port = input("  API port [5555]: ").strip() or "5555"
+                # Generate secure API key automatically
+                api_token = secrets.token_urlsafe(32)
+                print("\n  " + "=" * 66)
+                print("  SECURITY: Auto-generated API authentication token")
+                print("  " + "=" * 66)
+                print(f"  Token: {api_token}")
+                print("  " + "=" * 66)
+                print("  IMPORTANT: Save this token securely!")
+                print("  You'll need it to authenticate REST API requests.")
+                print("  This token will be saved to your config file.")
+                print("  " + "=" * 66)
+                input("\n  Press Enter to continue...")
+
+            igdb_client_id = ""
+            igdb_token = ""
+            if game_enabled:
+                print("\n  Game monitoring requires IGDB API credentials.")
+                print("  Get them at: https://api-docs.igdb.com/#authentication")
+                igdb_client_id = input("  IGDB Client ID (optional): ").strip()
+                igdb_token = input("  IGDB Access Token (optional): ").strip()
+
+        else:
+            # Non-interactive mode: use environment variables or defaults
+            device_name = os.getenv("DA_DEVICE_NAME", socket.gethostname())
+            mqtt_broker = os.getenv("DA_MQTT_BROKER", "localhost")
+            mqtt_port = os.getenv("DA_MQTT_PORT", "1883")
+            mqtt_user = os.getenv("DA_MQTT_USER", "username")
+            mqtt_pass = os.getenv("DA_MQTT_PASS", "password")
+            api_enabled = False
+            commands_enabled = False
+            media_enabled = False
+            game_enabled = False
+            updates_enabled = False
+            api_port = "5555"
+            api_token = ""  # No API key in non-interactive mode (API disabled)
+            igdb_client_id = ""
+            igdb_token = ""
+
+            logger.warning(
+                "Non-interactive mode: Using environment variables or defaults"
+            )
+            logger.warning("Edit config.ini with real MQTT credentials before running!")
+
+        # Write config file
+        config_content = f"""; ================== DESKTOP AGENT CONFIG ==================
+; Documentation: {REPO_URL}/wiki
+; Generated on first run
+; ==========================================================
+
+[device]
+name = {device_name}
+interval = 10
+
+[mqtt]
+broker = {mqtt_broker}
+port = {mqtt_port}
+username = {mqtt_user}
+password = {mqtt_pass}
+max_connection_retries = 10
+min_reconnect_delay = 1
+max_reconnect_delay = 60
+connection_timeout = 30
+
+[modules]
+api = {str(api_enabled).lower()}
+commands = {str(commands_enabled).lower()}
+media_agent = {str(media_enabled).lower()}
+game_agent = {str(game_enabled).lower()}
+updates = {str(updates_enabled).lower()}
+
+[api]
+port = {api_port}
+auth_token = {api_token}
+
+[updates]
+interval = 3600
+auto_install = false
+channel = beta
+
+[igdb]
+client_id = {igdb_client_id}
+token = {igdb_token}
+"""
+
+        config_path.write_text(config_content, encoding="utf-8")
+
+        if is_interactive:
+            print("\n" + "=" * 70)
+            print(f"Configuration saved to: {config_path}")
+            print("=" * 70)
+            print("\nStarting Desktop Agent...\n")
+        else:
+            logger.info(f"Configuration created at {config_path}")
+
+    except KeyboardInterrupt:
+        print("\n\nSetup interrupted by user.")
+        print("Config file not created. Please run again to complete setup.")
         sys.exit(1)
+    except PermissionError:
+        logger.error(f"Permission denied writing to: {config_path}")
+        logger.error("Please check file permissions or run with appropriate privileges")
+        sys.exit(1)
+    except OSError as e:
+        logger.error(f"Failed to write config file: {e}")
+        sys.exit(1)
+
+
+def load_config_with_first_run(config_path: Path) -> configparser.ConfigParser:
+    """
+    Load configuration file, creating it interactively if missing.
+
+    This replaces the old behavior of exiting on missing config.
+    Now we guide the user through setup and continue running.
+
+    Args:
+        config_path: Path to config.ini
+
+    Returns:
+        Loaded ConfigParser object
+    """
+    if not config_path.exists():
+        create_config_interactive(config_path)
+
+    config = configparser.ConfigParser()
+
+    try:
+        files_read = config.read(config_path)
+        if not files_read:
+            raise ValueError("Config file exists but couldn't be read")
+
+        # Validate critical sections exist
+        if not config.has_section("mqtt"):
+            raise ValueError("Config file missing [mqtt] section")
+
+        return config
+
+    except (configparser.Error, ValueError) as e:
+        logger.error(f"Configuration file is corrupt: {e}")
+        logger.error(f"Location: {config_path}")
+
+        # Prompt user for action if interactive
+        if is_interactive_environment():
+            print("\nYour configuration file is corrupt or incomplete.")
+            print("Options:")
+            print("  1. Backup current config and create new one")
+            print("  2. Exit and manually fix the config")
+            choice = input("\nChoose option [1/2]: ").strip()
+
+            if choice == "1":
+                backup_path = config_path.with_suffix(".ini.backup")
+                config_path.rename(backup_path)
+                logger.info(f"Backed up corrupt config to: {backup_path}")
+                create_config_interactive(config_path)
+                return load_config_with_first_run(config_path)
+            else:
+                sys.exit(1)
+        else:
+            # Non-interactive: can't prompt, must exit
+            logger.error("Cannot repair config in non-interactive mode")
+            sys.exit(1)
 
 
 # ----------------------------
 # Load configuration
 # ----------------------------
 
-config = configparser.ConfigParser()
-if not config.read(CONFIG_PATH):
-    create_config(CONFIG_PATH)
+config = load_config_with_first_run(CONFIG_PATH)
 
 
 # ----------------------------
@@ -188,17 +483,18 @@ API_MOD = config.getboolean("modules", "api", fallback=False)
 API_PORT = config.getint("api", "port", fallback=5555)
 API_AUTH_TOKEN = config.get("api", "auth_token", fallback="").strip()
 
-# Validate API authentication configuration
+# Enforce API authentication requirement
 if API_MOD and not API_AUTH_TOKEN:
-    logger.warning("=" * 70)
-    logger.warning("WARNING: API is enabled but auth_token is NOT configured!")
-    logger.warning("Your API endpoints are accessible without authentication.")
-    logger.warning("This is a SECURITY RISK if your system is exposed to network.")
-    logger.warning("Please add an auth_token to [api] section in config.ini")
-    logger.warning(
+    logger.error("=" * 70)
+    logger.error("ERROR: API is enabled but auth_token is NOT configured!")
+    logger.error("Desktop Agent requires API authentication for security.")
+    logger.error("Please add an auth_token to [api] section in config.ini")
+    logger.error(
         'Generate token: python -c "import secrets; print(secrets.token_urlsafe(32))"'
     )
-    logger.warning("=" * 70)
+    logger.error("Or disable the API module: api = false")
+    logger.error("=" * 70)
+    sys.exit(1)  # Fail-fast on security issue
 
 
 # ----------------------------

@@ -28,6 +28,14 @@ from modules.core.config import API_AUTH_TOKEN
 # Configure logger
 logger = logging.getLogger(__name__)
 
+# Validate auth token is configured (defense in depth)
+if not API_AUTH_TOKEN:
+    raise RuntimeError(
+        "API module cannot start without authentication token. "
+        "This should have been caught at config validation. "
+        "Please add auth_token to [api] section in config.ini"
+    )
+
 app = Flask(__name__)
 
 
@@ -44,10 +52,10 @@ def require_auth(f):
     1. Bearer token in Authorization header: Authorization: Bearer <token>
     2. Query parameter: ?auth_token=<token>
 
-    If API_AUTH_TOKEN is not configured, allows access but logs a warning.
-    This provides backward compatibility for existing installations.
+    API always requires authentication. No exceptions.
 
     Security features:
+    - Mandatory authentication (enforced at config load time)
     - Constant-time token comparison to prevent timing attacks
     - Logs failed authentication attempts with IP address
     - Returns standard 401 Unauthorized response
@@ -55,12 +63,8 @@ def require_auth(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # If no auth token configured, allow access (backward compatibility)
-        if not API_AUTH_TOKEN:
-            logger.warning(
-                f"API endpoint '{request.path}' accessed without authentication - auth_token not configured"
-            )
-            return f(*args, **kwargs)
+        # NOTE: Backward compatibility code removed in Phase 2 refactor
+        # API now REQUIRES authentication - enforced at config load time
 
         provided_token = None
 
