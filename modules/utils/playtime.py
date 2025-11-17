@@ -20,8 +20,11 @@ Example:
 
 # Standard library imports
 import json
+import logging
 import os
 import sqlite3
+
+logger = logging.getLogger(__name__)
 
 
 def find_lutris_db():
@@ -90,11 +93,11 @@ def get_lutris_playtime(game_name):
     """
     db_path = find_lutris_db()
     if db_path is None:
-        print("[Playtime] Lutris database not found")
+        logger.debug("Lutris database not found")
         return None
 
     if not os.path.isfile(db_path):
-        print(f"[Playtime] Database file does not exist: {db_path}")
+        logger.debug(f"Database file does not exist: {db_path}")
         return None
 
     try:
@@ -132,7 +135,7 @@ def get_lutris_playtime(game_name):
         return playtime
 
     except sqlite3.Error as e:
-        print(f"[Playtime] SQLite error: {e}")
+        logger.error(f"SQLite error: {e}")
         return None
 
 
