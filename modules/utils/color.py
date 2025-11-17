@@ -37,9 +37,10 @@ Example:
 from io import BytesIO
 
 # Third-party imports
+import imageio.v3 as iio
 import numpy as np
 import requests
-from PIL import Image
+from scipy.ndimage import zoom
 from sklearn.cluster import KMeans
 
 
@@ -49,38 +50,51 @@ def load_image(image_source):
     Loads an image from either a local file path or remote URL, converts
     it to RGB format, and resizes to 100x100 pixels for efficient processing.
 
+    Uses imageio for image decoding - a lighter alternative to Pillow that
+    supports all common formats (JPEG, PNG, GIF, etc.) without system dependencies.
+
     Args:
         image_source: Path to local image file or HTTP/HTTPS URL.
 
     Returns:
-        PIL Image object (RGB mode, 100x100 pixels).
+        numpy array of shape (100, 100, 3) with RGB values (0-255).
 
     Raises:
         requests.RequestException: If URL fetch fails.
-        PIL.UnidentifiedImageError: If image format is unsupported.
+        ValueError: If image format is unsupported.
         FileNotFoundError: If local file doesn't exist.
 
     Example:
         >>> # Load from local file
         >>> img = load_image("/path/to/cover.jpg")
-        >>> print(img.size)
-        (100, 100)
+        >>> print(img.shape)
+        (100, 100, 3)
 
         >>> # Load from URL
         >>> img = load_image("https://example.com/cover.png")
-        >>> print(img.mode)
-        'RGB'
+        >>> print(img.dtype)
+        uint8
     """
-    # Handle both local and remote images
+    # Load image from URL or file
     if image_source.startswith("http://") or image_source.startswith("https://"):
-        response = requests.get(image_source)
-        img = Image.open(BytesIO(response.content))
+        response = requests.get(image_source, timeout=10)
+        response.raise_for_status()
+        img_array = iio.imread(BytesIO(response.content))
     else:
-        img = Image.open(image_source)
+        img_array = iio.imread(image_source)
 
-    # Convert image to a manageable size (for performance)
-    img = img.convert("RGB").resize((100, 100))
-    return img
+    # Ensure RGB format
+    if img_array.ndim == 2:  # Grayscale
+        img_array = np.stack([img_array] * 3, axis=-1)
+    elif img_array.shape[2] == 4:  # RGBA
+        img_array = img_array[..., :3]
+
+    # Resize to 100x100 using bilinear interpolation
+    h, w = img_array.shape[:2]
+    zoom_h, zoom_w = 100 / h, 100 / w
+    img_resized = zoom(img_array, (zoom_h, zoom_w, 1), order=1)
+
+    return img_resized.astype(np.uint8)
 
 
 def get_dominant_color(image_source, k=3):
@@ -123,12 +137,11 @@ def get_dominant_color(image_source, k=3):
         >>> print(hex_color)
         '#2d7bc8'
     """
-    image = load_image(image_source)
-    image_np = np.array(image)
+    image_np = load_image(image_source)
     image_np = image_np.reshape((-1, 3))
 
     # Find the most common color
-    kmeans = KMeans(n_clusters=k)
+    kmeans = KMeans(n_clusters=k, n_init=10, random_state=42)
     kmeans.fit(image_np)
 
     # Get the color with the largest cluster

@@ -87,32 +87,44 @@ class Installer:
     def _upgrade_pip_tools(self):
         """Upgrade pip, setuptools, and wheel to latest versions."""
         print("[Installer] Upgrading pip, setuptools, and wheel...")
-        cmd = [
+
+        # Upgrade pip first
+        pip_cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "pip"]
+        try:
+            subprocess.run(pip_cmd, check=True, capture_output=True)
+            print("[Installer] pip upgraded successfully")
+        except subprocess.CalledProcessError:
+            print("[Installer] Warning: Could not upgrade pip (continuing anyway)")
+
+        # Then setuptools
+        setuptools_cmd = [
             sys.executable,
             "-m",
             "pip",
             "install",
             "--upgrade",
-            "pip",
             "setuptools",
-            "wheel",
         ]
-
         try:
-            subprocess.run(cmd, check=True, capture_output=True)
-            print("[Installer] Build tools upgraded successfully")
-        except subprocess.CalledProcessError as e:
-            # Non-fatal: continue even if upgrade fails (system might be externally managed)
-            print(
-                f"[Installer] Warning: Could not upgrade pip tools (may be externally managed) {e}"
-            )
+            subprocess.run(setuptools_cmd, check=True, capture_output=True)
+            print("[Installer] setuptools upgraded successfully")
+        except subprocess.CalledProcessError:
+            print("[Installer] Warning: Could not upgrade setuptools (continuing anyway)")
+
+        # Finally wheel
+        wheel_cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "wheel"]
+        try:
+            subprocess.run(wheel_cmd, check=True, capture_output=True)
+            print("[Installer] wheel upgraded successfully")
+        except subprocess.CalledProcessError:
+            print("[Installer] Warning: Could not upgrade wheel (continuing anyway)")
 
     def _install_requirements(self, req_file: Path):
         """Install Python packages from requirements file."""
         print(f"[Installer] Installing requirements from {req_file.name}...")
         print("[Installer] This may take a few minutes...")
 
-        # Use --no-cache-dir to avoid cached build failures (especially for Pillow)
+        # Use --no-cache-dir to avoid cached build failures
         cmd = [
             sys.executable,
             "-m",

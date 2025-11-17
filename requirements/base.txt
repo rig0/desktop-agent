@@ -17,7 +17,8 @@ GPUtil>=1.4.0
 # HTTP Client (used by updater, IGDB integration)
 requests>=2.31.0,<3.0.0
 
-# Image Processing and ML (for media agent)
+# Image Processing and ML (used to extract dominant color from image)
 numpy>=1.24.0,<2.0.0
 scikit-learn>=1.3.0,<2.0.0
-Pillow>=10.0.0,<11.0.0
+imageio>=2.31.0,<3.0.0
+scipy>=1.11.0,<2.0.0
