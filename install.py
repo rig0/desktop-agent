@@ -125,13 +125,12 @@ class Installer:
         print(f"[Installer] Installing requirements from {req_file.name}...")
         print("[Installer] This may take a few minutes...")
 
-        # Use --no-cache-dir to avoid cached build failures
+        # Let pip use its cache for faster installs and wheel reuse
         cmd = [
             sys.executable,
             "-m",
             "pip",
             "install",
-            "--no-cache-dir",
             "-r",
             str(req_file),
         ]
