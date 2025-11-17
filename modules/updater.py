@@ -296,19 +296,20 @@ def copy_over(src, dst):
 
 
 def make_helpers_executable():
-    """Make all files in the helpers directory executable on Linux.
+    """Make all files in the helpers directory and main.py executable on Linux.
 
-    This is called after applying updates to ensure helper scripts have
-    the correct permissions. On non-Linux platforms, this is a no-op.
+    This is called after applying updates to ensure helper scripts and the main
+    entry point have the correct permissions. On non-Linux platforms, this is a no-op.
 
     Example:
         >>> make_helpers_executable()
     """
-    helpers_dir = os.path.join(AGENT_DIR, "helpers")
-    if not os.path.exists(helpers_dir):
+    if not sys.platform.startswith("linux"):
         return
 
-    if sys.platform.startswith("linux"):
+    # Make helpers directory executable
+    helpers_dir = os.path.join(AGENT_DIR, "helpers")
+    if os.path.exists(helpers_dir):
         for root, dirs, files in os.walk(helpers_dir):
             for name in files + dirs:
                 path = os.path.join(root, name)
@@ -319,6 +320,15 @@ def make_helpers_executable():
                     )
                 except PermissionError as e:
                     logger.warning(f"Cannot chmod {path}, permission denied: {e}")
+
+    # Make main.py executable
+    main_py = os.path.join(AGENT_DIR, "main.py")
+    if os.path.exists(main_py):
+        try:
+            st = os.stat(main_py)
+            os.chmod(main_py, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        except PermissionError as e:
+            logger.warning(f"Cannot chmod {main_py}, permission denied: {e}")
 
 
 # ----------------------------
