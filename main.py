@@ -158,7 +158,7 @@ if MEDIA_AGENT:
 # ----------------------------
 
 # Create logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Create formatter
