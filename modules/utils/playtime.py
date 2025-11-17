@@ -93,11 +93,11 @@ def get_lutris_playtime(game_name):
     """
     db_path = find_lutris_db()
     if db_path is None:
-        logger.debug("Lutris database not found")
+        logger.info("Lutris database not found")
         return None
 
     if not os.path.isfile(db_path):
-        logger.debug(f"Database file does not exist: {db_path}")
+        logger.info(f"Database file does not exist: {db_path}")
         return None
 
     try:
