@@ -1,0 +1,9 @@
+# Linux-specific dependencies
+# Desktop Agent Linux Requirements
+# Includes base requirements + Linux media monitoring packages
+
+-r base.txt
+
+# Linux Media Monitoring (DBus, GObject)
+PyGObject>=3.42.0
+pydbus>=0.6.0

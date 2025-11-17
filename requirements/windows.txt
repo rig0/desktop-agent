@@ -1,0 +1,8 @@
+# Windows-specific dependencies
+# Desktop Agent Windows Requirements
+# Includes base requirements + Windows media monitoring packages
+
+-r base.txt
+
+# Windows Media Monitoring (Windows SDK)
+winsdk>=1.0.0
