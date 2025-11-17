@@ -163,7 +163,7 @@ logger.setLevel(logging.INFO)
 
 # Create formatter
 formatter = logging.Formatter(
-    "[%(asctime)s] (%(levelname)s) %(module)s: %(message)s",
+    "%(asctime)s [%(levelname)s] %(module)s: %(message)s",
     datefmt="%m/%d/%Y %I:%M %p",
 )
 
