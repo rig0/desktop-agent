@@ -302,8 +302,8 @@ def create_config_interactive(config_path: Path) -> None:
             if game_enabled:
                 print("\n  Game monitoring requires IGDB API credentials.")
                 print("  Get them at: https://api-docs.igdb.com/#authentication")
-                igdb_client_id = input("  IGDB Client ID (optional): ").strip()
-                igdb_token = input("  IGDB Access Token (optional): ").strip()
+                igdb_client_id = input("  IGDB Client ID: ").strip()
+                igdb_token = input("  IGDB Access Token: ").strip()
 
         else:
             # Non-interactive mode: use environment variables or defaults
