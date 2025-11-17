@@ -47,6 +47,7 @@ import logging
 import os
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import threading
@@ -485,6 +486,30 @@ def update_repo(channel: str = "stable", release_info: Optional[dict] = None) ->
 
         copy_over(repo_root, AGENT_DIR)
         make_helpers_executable()
+
+        # Run install.py to install any new requirements
+        logger.info("Running install.py to update dependencies...")
+        install_py = os.path.join(AGENT_DIR, "install.py")
+        if os.path.exists(install_py):
+            try:
+                result = subprocess.run(
+                    [sys.executable, install_py],
+                    capture_output=True,
+                    text=True,
+                    timeout=600,  # 10 minute timeout
+                )
+                if result.returncode == 0:
+                    logger.info("Dependencies updated successfully")
+                else:
+                    logger.warning(f"install.py returned exit code {result.returncode}")
+                    if result.stderr:
+                        logger.warning(f"install.py stderr: {result.stderr}")
+            except subprocess.TimeoutExpired:
+                logger.error("install.py timed out after 10 minutes")
+            except Exception as e:
+                logger.error(f"Failed to run install.py: {e}")
+        else:
+            logger.warning("install.py not found, skipping dependency installation")
 
         with open(checksum_file, "w", encoding="utf-8") as f:
             f.write(new_checksum)
