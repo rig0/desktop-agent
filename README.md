@@ -75,7 +75,7 @@ Desktop Agent is a lightweight, modular system monitoring tool designed for seam
 
 ## Quick Links
 
-**New Users**: Start with [Getting Started](https://github.com/rig0/desktop-agent/wiki/Getting-Started) → [System Requirements](https://github.com/rig0/desktop-agent/wiki/System-Requirements) → [Installation](https://github.com/rig0/desktop-agent/wiki/Installation) → [Configuration](https://github.com/rig0/desktop-agent/wiki/Configuration)
+**New Users**: Start with [Getting Started](https://github.com/rig0/desktop-agent/wiki/Getting-Started) → [Installation](https://github.com/rig0/desktop-agent/wiki/Installation) → [Configuration](https://github.com/rig0/desktop-agent/wiki/Configuration)
 
 **Developers**: See [Architecture](https://github.com/rig0/desktop-agent/wiki/Architecture) for technical details and design decisions
 
