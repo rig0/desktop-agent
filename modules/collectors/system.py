@@ -8,6 +8,7 @@ All collectors are pure data collection classes - they don't handle
 MQTT publishing, formatting, or any other concerns beyond gathering data.
 """
 
+# Standard library imports
 import logging
 import math
 import socket
@@ -15,9 +16,10 @@ import sys
 import time
 from typing import Any, Dict, Optional, Tuple
 
+# Third-party imports
 import psutil
 
-# Import PlatformUtils from our utils package
+# Local imports
 from modules.utils.platform import PlatformUtils
 
 logger = logging.getLogger(__name__)

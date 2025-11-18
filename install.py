@@ -19,6 +19,7 @@ Note:
     for platform-specific prerequisites.
 """
 
+# Standard library imports
 import platform
 import subprocess
 import sys

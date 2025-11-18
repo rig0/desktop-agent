@@ -6,12 +6,14 @@ It runs in a monitoring loop, periodically collecting metrics and publishing
 them along with Home Assistant discovery configurations.
 """
 
+# Standard library imports
 import json
 import logging
 import math
 import threading
 from typing import Any, Optional
 
+# Local imports
 from modules.collectors.system import SystemInfoCollector
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker

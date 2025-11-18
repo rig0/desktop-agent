@@ -4,9 +4,11 @@ This module handles the creation and publishing of Home Assistant MQTT
 discovery configurations for all device entities.
 """
 
+# Standard library imports
 import logging
 from typing import Any, Dict, Optional
 
+# Local imports
 from .messaging import MessageBroker
 
 logger = logging.getLogger(__name__)
