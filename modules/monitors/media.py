@@ -85,7 +85,7 @@ class MediaMonitor:
         base_dir = Path(__file__).parent.parent.parent
         self.placeholder_path = base_dir / "resources" / "media_thumb.png"
         self.placeholder_path_custom = (
-            base_dir / "data" / "media_agent" / "media_thumb.png"
+            base_dir / "data" / "media_monitor" / "media_thumb.png"
         )
 
     def start(self, stop_event: threading.Event) -> None:
@@ -249,7 +249,7 @@ class MediaMonitor:
             self.broker.client.publish(topic, json.dumps(camera_config), retain=True)
             logger.debug("Published discovery for media camera")
 
-            logger.info("Published discovery for media agent entities")
+            logger.info("Published discovery for media monitor entities")
 
         except Exception as e:
-            logger.error(f"Error publishing media agent discovery: {e}", exc_info=True)
+            logger.error(f"Error publishing media monitor discovery: {e}", exc_info=True)

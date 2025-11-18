@@ -29,8 +29,8 @@ Configuration Structure:
     [modules]
         api: Enable REST API server (default: False)
         commands: Enable MQTT command execution (default: False)
-        media_agent: Enable media monitoring (default: False)
-        game_agent: Enable game monitoring (default: False)
+        media_monitor: Enable media monitoring (default: False)
+        game_monitor: Enable game monitoring (default: False)
         updates: Enable automatic update checks (default: False)
 
     [api]
@@ -350,8 +350,8 @@ connection_timeout = 30
 [modules]
 api = {str(api_enabled).lower()}
 commands = {str(commands_enabled).lower()}
-media_agent = {str(media_enabled).lower()}
-game_agent = {str(game_enabled).lower()}
+media_monitor = {str(media_enabled).lower()}
+game_monitor = {str(game_enabled).lower()}
 updates = {str(updates_enabled).lower()}
 
 [api]
@@ -502,28 +502,28 @@ if API_MOD and not API_AUTH_TOKEN:
 # ----------------------------
 
 COMMANDS_MOD = config.getboolean("modules", "commands", fallback=False)
-MEDIA_AGENT = config.getboolean("modules", "media_agent", fallback=False)
-GAME_AGENT = config.getboolean("modules", "game_agent", fallback=False)
+MEDIA_MONITOR = config.getboolean("modules", "media_monitor", fallback=False)
+GAME_MONITOR = config.getboolean("modules", "game_monitor", fallback=False)
 
 
 # ----------------------------
-# Game Agent Configuration
+# Game Monitor Configuration
 # ----------------------------
 
-GAME_FILE = BASE_DIR / "data" / "game_agent" / "current_game"
+GAME_FILE = BASE_DIR / "data" / "game_monitor" / "current_game"
 IGDB_CLIENT = config.get("igdb", "client_id", fallback="")
 IGDB_TOKEN = config.get("igdb", "token", fallback="")
 
-# Validate IGDB credentials if game agent is enabled
-if GAME_AGENT and (not IGDB_CLIENT or not IGDB_TOKEN):
+# Validate IGDB credentials if game monitor is enabled
+if GAME_MONITOR and (not IGDB_CLIENT or not IGDB_TOKEN):
     logger.warning("=" * 70)
     logger.warning(
-        "WARNING: Game agent is enabled but IGDB credentials are not configured!"
+        "WARNING: Game monitor is enabled but IGDB credentials are not configured!"
     )
     logger.warning("Please add your IGDB client_id and token to config.ini")
-    logger.warning("The game agent will be disabled for this run.")
+    logger.warning("The game monitor will be disabled for this run.")
     logger.warning("=" * 70)
-    GAME_AGENT = False
+    GAME_MONITOR = False
 
 
 # ----------------------------

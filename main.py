@@ -28,8 +28,8 @@ Architecture:
        - media: Media playback information
 
     3. **Monitoring Layer** (modules/monitors/):
-       - desktop: Desktop system monitoring
-       - game: Game activity monitoring
+       - system: System monitoring
+       - game: Game monitoring
        - media: Media playback monitoring
 
     4. **Feature Layer** (modules/):
@@ -116,9 +116,9 @@ from modules.commands import run_predefined_command
 from modules.core.config import (
     API_MOD,
     API_PORT,
-    GAME_AGENT,
     GAME_FILE,
-    MEDIA_AGENT,
+    GAME_MONITOR,
+    MEDIA_MONITOR,
     MQTT_BROKER,
     MQTT_CONNECTION_TIMEOUT,
     MQTT_MAX_RECONNECT_DELAY,
@@ -139,16 +139,16 @@ from modules.core.config import (
 )
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
-from modules.monitors.desktop import DesktopMonitor
+from modules.monitors.system import SystemMonitor
 from modules.updater import UpdateManager
 from modules.utils.deployment import notify_pipeline
 
 # Conditional imports for optional features
-if GAME_AGENT:
+if GAME_MONITOR:
     from modules.collectors.game import GameCollector
     from modules.monitors.game import GameMonitor
 
-if MEDIA_AGENT:
+if MEDIA_MONITOR:
     from modules.collectors.media import MediaCollector
     from modules.monitors.media import MediaMonitor
 
@@ -466,21 +466,21 @@ def main():
     # Register message callback for commands (subscription happens in on_connect)
     client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
-    # Start desktop monitor
+    # Start system monitor
     desktop_collector = SystemInfoCollector()
-    desktop_monitor = DesktopMonitor(
+    system_monitor = SystemMonitor(
         desktop_collector, broker, discovery, device_id, base_topic, PUBLISH_INT
     )
     desktop_stop_event = threading.Event()
     stop_events.append(desktop_stop_event)
-    desktop_thread = threading.Thread(
-        target=desktop_monitor.start,
+    system_thread = threading.Thread(
+        target=system_monitor.start,
         args=(desktop_stop_event,),
-        name="DesktopMonitor",
+        name="SystemMonitor",
         daemon=True,
     )
-    desktop_thread.start()
-    logger.info("Desktop monitor started")
+    system_thread.start()
+    logger.info("System monitor started")
 
     # Start API
     if API_MOD:
@@ -496,7 +496,7 @@ def main():
         logger.info("API server started")
 
     # Start media monitor
-    if MEDIA_AGENT:
+    if MEDIA_MONITOR:
         media_collector = MediaCollector()
         media_monitor = MediaMonitor(media_collector, broker, discovery)
         media_stop_event = threading.Event()
@@ -511,7 +511,7 @@ def main():
         logger.info("Media monitor started")
 
     # Start game monitor
-    if GAME_AGENT:
+    if GAME_MONITOR:
         game_collector = GameCollector(GAME_FILE)
         game_monitor = GameMonitor(game_collector, broker, discovery, GAME_FILE)
         game_stop_event = threading.Event()

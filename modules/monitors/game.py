@@ -245,7 +245,7 @@ class GameMonitor:
             self.broker.client.publish(topic, json.dumps(artwork_config), retain=True)
             logger.debug("Published discovery for game artwork camera")
 
-            logger.info("Published discovery for game agent entities")
+            logger.info("Published discovery for game monitor entities")
 
         except Exception as e:
-            logger.error(f"Error publishing game agent discovery: {e}", exc_info=True)
+            logger.error(f"Error publishing game monitor discovery: {e}", exc_info=True)

@@ -65,10 +65,10 @@ Desktop Agent is a lightweight, modular system monitoring tool designed for seam
 ### Reference
 - [Architecture](https://github.com/rig0/desktop-agent/wiki/Architecture) - Technical architecture and design documentation
 - [Modules](https://github.com/rig0/desktop-agent/wiki/Modules) - Overview of available modules
-  - [Desktop Monitor](https://github.com/rig0/desktop-agent/wiki/Modules-Desktop-Agent) - System metrics monitoring
+  - [System Monitor](https://github.com/rig0/desktop-agent/wiki/Modules-System-Monitor) - System metrics monitoring
   - [MQTT](https://github.com/rig0/desktop-agent/wiki/Modules-MQTT) - MQTT communication and topics
-  - [Media Agent](https://github.com/rig0/desktop-agent/wiki/Modules-Media-Agent) - Media playback tracking
-  - [Game Agent](https://github.com/rig0/desktop-agent/wiki/Modules-Game-Agent) - Game monitoring with IGDB
+  - [Media Monitor](https://github.com/rig0/desktop-agent/wiki/Modules-Media-Monitor) - Media playback tracking
+  - [Game Monitor](https://github.com/rig0/desktop-agent/wiki/Modules-Game-Monitor) - Game monitoring with IGDB
   - [Commands](https://github.com/rig0/desktop-agent/wiki/Modules-Commands) - Remote command execution
   - [API](https://github.com/rig0/desktop-agent/wiki/Modules-API) - REST API endpoints
   - [Updates](https://github.com/rig0/desktop-agent/wiki/Modules-Updates) - Automatic update system

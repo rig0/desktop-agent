@@ -1,6 +1,6 @@
-"""Desktop system monitoring implementation.
+"""System monitoring implementation.
 
-This module provides the DesktopMonitor class which coordinates system
+This module provides the SystemMonitor class which coordinates system
 data collection and publishing to MQTT for Home Assistant integration.
 It runs in a monitoring loop, periodically collecting metrics and publishing
 them along with Home Assistant discovery configurations.
@@ -19,8 +19,8 @@ from modules.core.messaging import MessageBroker
 logger = logging.getLogger(__name__)
 
 
-class DesktopMonitor:
-    """Monitors desktop system metrics and publishes to MQTT.
+class SystemMonitor:
+    """Monitors system metrics and publishes to MQTT.
 
     This class coordinates the collection of system metrics (CPU, memory,
     disk, network, GPU, temperatures) and their publication to MQTT topics
@@ -48,7 +48,7 @@ class DesktopMonitor:
         ...     "model": "Desktop"
         ... }
         >>> discovery = DiscoveryManager(broker, "my_pc", device_info, "desktop/my_pc")
-        >>> monitor = DesktopMonitor(collector, broker, discovery, "my_pc", "desktop/my_pc", interval=10)
+        >>> monitor = SystemMonitor(collector, broker, discovery, "my_pc", "desktop/my_pc", interval=10)
         >>> stop_event = threading.Event()
         >>> monitor.start(stop_event)
     """
@@ -62,7 +62,7 @@ class DesktopMonitor:
         base_topic: str,
         interval: int = 10,
     ):
-        """Initialize desktop monitor.
+        """Initialize system monitor.
 
         Args:
             collector: System information collector instance.
@@ -78,7 +78,7 @@ class DesktopMonitor:
         self.device_id = device_id
         self.base_topic = base_topic
         self.interval = interval
-        logger.debug(f"DesktopMonitor initialized with interval={interval}s")
+        logger.debug(f"SystemMonitor initialized with interval={interval}s")
 
     def start(self, stop_event: threading.Event) -> None:
         """Start the monitoring loop.
@@ -92,14 +92,14 @@ class DesktopMonitor:
             stop_event: Event to signal monitoring should stop.
 
         Example:
-            >>> monitor = DesktopMonitor(collector, broker, discovery, "my_pc", "desktop/my_pc")
+            >>> monitor = SystemMonitor(collector, broker, discovery, "my_pc", "desktop/my_pc")
             >>> stop_event = threading.Event()
             >>> # Start monitoring in background
             >>> threading.Thread(target=monitor.start, args=(stop_event,), daemon=True).start()
             >>> # Later, stop monitoring
             >>> stop_event.set()
         """
-        logger.info("Desktop monitor started")
+        logger.info("System monitor started")
 
         try:
             # Publish discovery configuration once at startup
@@ -121,7 +121,7 @@ class DesktopMonitor:
                 stop_event.wait(self.interval)
 
         except Exception as e:
-            logger.critical(f"Fatal error in desktop monitor: {e}", exc_info=True)
+            logger.critical(f"Fatal error in system monitor: {e}", exc_info=True)
         finally:
             # Publish offline status on shutdown
             try:
@@ -129,7 +129,7 @@ class DesktopMonitor:
             except Exception as e:
                 logger.error(f"Error publishing offline status: {e}")
 
-            logger.info("Desktop monitor stopped")
+            logger.info("System monitor stopped")
 
     def _publish_discovery(self) -> None:
         """Publish Home Assistant discovery configurations for all sensors.
@@ -282,7 +282,7 @@ class DesktopMonitor:
             # Temperature sensors (dynamically discovered during collection)
             # These will be published during first collection if available
 
-            logger.info("Published discovery configurations for desktop sensors")
+            logger.info("Published discovery configurations for system sensors")
 
         except Exception as e:
             logger.error(f"Error publishing discovery: {e}", exc_info=True)

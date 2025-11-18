@@ -46,7 +46,7 @@ except ImportError:
 
 
 # ----------------------------
-# Windows Media Agent (SMTC)
+# Windows Media Monitor (SMTC)
 # ----------------------------
 
 
@@ -102,15 +102,15 @@ def get_media_info():
         return None
 
 
-def start_media_agent(client: mqtt.Client, stop_event):
+def start_media_monitor(client: mqtt.Client, stop_event):
     # Starts the media polling thread and publishes discovery.
     def media_poller():
-        logger.info("Media Agent poller thread started")
+        logger.info("Media Monitor poller thread started")
         last_attrs = None
         last_image = None
         BASE_DIR = Path(__file__).parent.parent
         placeholder_path = BASE_DIR / "resources" / "media_thumb.png"
-        placeholder_path_custom = BASE_DIR / "data" / "media_agent" / "media_thumb.png"
+        placeholder_path_custom = BASE_DIR / "data" / "media_monitor" / "media_thumb.png"
 
         try:
             while not stop_event.is_set():
@@ -178,10 +178,10 @@ def start_media_agent(client: mqtt.Client, stop_event):
                 stop_event.wait(5)
         except Exception as e:
             logger.critical(
-                f"Fatal error in Media Agent poller thread: {e}", exc_info=True
+                f"Fatal error in Media Monitor poller thread: {e}", exc_info=True
             )
         finally:
-            logger.info("Media Agent poller thread stopped")
+            logger.info("Media Monitor poller thread stopped")
 
     def publish_discovery():
         try:
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         datefmt="%H:%M:%S",
     )
 
-    logger.info("Starting Media Agent in standalone mode (Windows)...")
+    logger.info("Starting Media Monitor in standalone mode (Windows)...")
 
     # Create stop event for graceful shutdown
     stop_event = threading.Event()
@@ -267,11 +267,11 @@ if __name__ == "__main__":
     client.loop_start()
     logger.info("MQTT client loop started")
 
-    # Start media agent with stop_event
-    start_media_agent(client, stop_event)
+    # Start media monitor with stop_event
+    start_media_monitor(client, stop_event)
 
     # Keep main thread alive until stop_event is set
-    logger.info("Media Agent running. Press Ctrl+C to exit.")
+    logger.info("Media Monitor running. Press Ctrl+C to exit.")
     try:
         while not stop_event.is_set():
             time.sleep(1)

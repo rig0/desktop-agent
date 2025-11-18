@@ -9,13 +9,13 @@ the monitoring loop but delegate actual data collection and publishing
 to specialized classes.
 
 Modules:
-    desktop: Desktop system monitoring implementation
-    game: Game activity monitoring implementation
-    media: Media playback monitoring implementation
+    system: System monitoring implementation
+    game: Game monitoring implementation
+    media: Media monitoring implementation
 """
 
-from .desktop import DesktopMonitor
 from .game import GameMonitor
 from .media import MediaMonitor
+from .system import SystemMonitor
 
-__all__ = ["DesktopMonitor", "GameMonitor", "MediaMonitor"]
+__all__ = ["SystemMonitor", "GameMonitor", "MediaMonitor"]

@@ -15,8 +15,8 @@ API Requirements:
 
 Cache Strategy:
     - Results cached for 30 days
-    - Images stored in modules/data/game_agent/covers/ and .../artworks/
-    - Database: modules/data/game_agent/igdb_cache.sqlite
+    - Images stored in modules/data/game_monitor/covers/ and .../artworks/
+    - Database: modules/data/game_monitor/igdb_cache.sqlite
 
 Example:
     >>> from modules.utils.igdb import IGDBClient
@@ -73,12 +73,12 @@ class IGDBClient:
             client_id: IGDB API client ID.
             access_token: IGDB API access token (OAuth).
             cache_db: SQLite database filename (default: "igdb_cache.sqlite").
-                     Stored in modules/data/game_agent/ directory.
+                     Stored in modules/data/game_monitor/ directory.
         """
         self.client_id = client_id
         self.access_token = access_token
         base_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "data", "game_agent")
+            os.path.join(os.path.dirname(__file__), "..", "..", "data", "game_monitor")
         )
         os.makedirs(base_dir, exist_ok=True)
         self.cache_db = os.path.join(base_dir, cache_db)
@@ -155,7 +155,7 @@ class IGDBClient:
 
         Args:
             url: Image URL to download.
-            folder: Subfolder within game_agent data directory ("covers" or "artworks").
+            folder: Subfolder within game_monitor data directory ("covers" or "artworks").
             filename: Filename to save as (e.g., "game_name.png").
 
         Returns:
@@ -168,13 +168,13 @@ class IGDBClient:
             ...     "Elden Ring.png"
             ... )
             >>> print(path)
-            '/home/user/.../modules/data/game_agent/covers/Elden Ring.png'
+            '/home/user/.../modules/data/game_monitor/covers/Elden Ring.png'
         """
         if not url:
             return None
 
         base_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "data", "game_agent")
+            os.path.join(os.path.dirname(__file__), "..", "data", "game_monitor")
         )
 
         full_folder_path = os.path.join(base_dir, folder)
