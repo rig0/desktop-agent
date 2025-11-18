@@ -394,7 +394,7 @@ def main():
     4. Connects to MQTT broker with retry logic
     5. Starts MQTT client loop
     6. Creates core infrastructure (MessageBroker, DiscoveryManager)
-    7. Starts monitoring threads (desktop, game, media as configured)
+    7. Starts monitoring threads (system, game, media as configured)
     8. Starts optional features (API, updates as configured)
     9. Enters main event loop until shutdown signal received
 
@@ -467,15 +467,15 @@ def main():
     client.message_callback_add(f"{base_topic}/run", on_mqtt_message)
 
     # Start system monitor
-    desktop_collector = SystemInfoCollector()
+    system_collector = SystemInfoCollector()
     system_monitor = SystemMonitor(
-        desktop_collector, broker, discovery, device_id, base_topic, PUBLISH_INT
+        system_collector, broker, discovery, device_id, base_topic, PUBLISH_INT
     )
-    desktop_stop_event = threading.Event()
-    stop_events.append(desktop_stop_event)
+    system_stop_event = threading.Event()
+    stop_events.append(system_stop_event)
     system_thread = threading.Thread(
         target=system_monitor.start,
-        args=(desktop_stop_event,),
+        args=(system_stop_event,),
         name="SystemMonitor",
         daemon=True,
     )
@@ -567,7 +567,7 @@ def main():
         notify_pipeline("Build Successful")
 
     # Keep main thread alive
-    logger.info("Agent running. Press Ctrl+C to exit.")
+    logger.info("Desktop Agent running. Press Ctrl+C to exit.")
     try:
         while not exit_flag.is_set():
             time.sleep(1)

@@ -213,12 +213,12 @@ def start_media_monitor(client: mqtt.Client, stop_event):
             topic = f"{discovery_prefix}/camera/{device_id}_media/config"
             client.publish(topic, json.dumps(camera_payload), retain=True)
             logger.debug("Published discovery for media camera")
-            logger.info("Published discovery for media agent entities")
+            logger.info("Published discovery for media monitor entities")
         except Exception as e:
-            logger.error(f"Error publishing media agent discovery: {e}", exc_info=True)
+            logger.error(f"Error publishing media monitor discovery: {e}", exc_info=True)
 
     publish_discovery()
-    threading.Thread(target=media_poller, name="MediaAgent-Poller", daemon=True).start()
+    threading.Thread(target=media_poller, name="MediaMonitor-Poller", daemon=True).start()
 
 
 def on_connect(client, userdata, flags, rc):
@@ -242,7 +242,7 @@ if __name__ == "__main__":
 
     def signal_handler(sig, frame):
         """Handle shutdown signals gracefully."""
-        logger.info("Shutdown signal received, stopping media agent...")
+        logger.info("Shutdown signal received, stopping media monitor...")
         stop_event.set()
         time.sleep(1)
         client.disconnect()
