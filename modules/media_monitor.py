@@ -216,7 +216,7 @@ if __name__ == "__main__":
     # Configure logging for standalone execution
     logging.basicConfig(
         level=logging.INFO,
-        format="[%(asctime)s] (%(levelname)s) %(module)s: %(message)s",
+        format="%(asctime)s [%(levelname)s] %(module)s: %(message)s",
         datefmt="%H:%M:%S",
     )
 
