@@ -9,40 +9,25 @@ from pathlib import Path
 
 # Third-party imports
 import paho.mqtt.client as mqtt
+
+# Local imports
+from core.config import (
+    DEVICE_NAME,
+    MQTT_BROKER,
+    MQTT_PASS,
+    MQTT_PORT,
+    MQTT_USER,
+    base_topic,
+    device_id,
+    device_info,
+    discovery_prefix,
+)
 from winsdk.windows.media.control import (
     GlobalSystemMediaTransportControlsSessionManager as MediaManager,
 )
 
 # Configure logger
 logger = logging.getLogger(__name__)
-
-# Local imports
-# Attempt relative import for use as a module within a package structure
-try:
-    from .config import (  # PUBLISH_INT,
-        DEVICE_NAME,
-        MQTT_BROKER,
-        MQTT_PASS,
-        MQTT_PORT,
-        MQTT_USER,
-        base_topic,
-        device_id,
-        device_info,
-        discovery_prefix,
-    )
-# Fall back to direct import which assumes the script is being ran standalone
-except ImportError:
-    from config import (  # PUBLISH_INT,
-        DEVICE_NAME,
-        MQTT_BROKER,
-        MQTT_PASS,
-        MQTT_PORT,
-        MQTT_USER,
-        base_topic,
-        device_id,
-        device_info,
-        discovery_prefix,
-    )
 
 
 # ----------------------------
