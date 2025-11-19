@@ -1,0 +1,27 @@
+# Testing Dependencies for Desktop Agent
+# Install with: pip install -r requirements/test.txt
+# Updated: 2025-11-18
+
+# Core testing framework
+pytest>=7.4.0
+
+# Test coverage reporting
+pytest-cov>=4.1.0
+
+# Timeout support for tests (prevent hanging)
+pytest-timeout>=2.2.0
+
+# Mock objects and patching
+pytest-mock>=3.12.0
+
+# Async test support (if needed in future)
+pytest-asyncio>=0.21.0
+
+# Test fixtures and factories
+factory-boy>=3.3.0
+
+# HTTP request mocking
+responses>=0.24.0
+
+# Freezing time for deterministic tests
+freezegun>=1.4.0

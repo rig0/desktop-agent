@@ -3,3 +3,14 @@ __pycache__/
 .legacy/
 .claude/
 data/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+*.pyc
+*.pyo
+*.pyd
+
+# Pre-commit
+.pre-commit-hooks/__pycache__/
