@@ -330,7 +330,7 @@ class SystemMonitor:
             )
 
             self._publish_sensor_with_json(
-                "memory_total_gb",
+                "memory_total",
                 "Memory Total",
                 "memory_total_gb",
                 unit="GB",
@@ -339,7 +339,7 @@ class SystemMonitor:
             )
 
             self._publish_sensor_with_json(
-                "memory_used_gb",
+                "memory_used",
                 "Memory Used",
                 "memory_used_gb",
                 unit="GB",
@@ -360,7 +360,7 @@ class SystemMonitor:
             )
 
             self._publish_sensor_with_json(
-                "disk_total_gb",
+                "disk_total",
                 "Disk Total",
                 "disk_total_gb",
                 unit="GB",
@@ -369,7 +369,7 @@ class SystemMonitor:
             )
 
             self._publish_sensor_with_json(
-                "disk_used_gb",
+                "disk_used",
                 "Disk Used",
                 "disk_used_gb",
                 unit="GB",
