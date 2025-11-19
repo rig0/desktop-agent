@@ -5,7 +5,8 @@ Autonomously installs Python dependencies for Desktop Agent.
 No user interaction required - this is just a dependency installer.
 
 Usage:
-    python install.py
+    python install.py              # Install runtime dependencies
+    python install.py --with-tests # Install runtime + test dependencies
 
 Requirements:
     - Python 3.10 or higher
@@ -20,6 +21,7 @@ Note:
 """
 
 # Standard library imports
+import argparse
 import platform
 import subprocess
 import sys
@@ -29,10 +31,11 @@ from pathlib import Path
 class Installer:
     """Autonomous installer for Desktop Agent Python dependencies."""
 
-    def __init__(self):
+    def __init__(self, with_tests=False):
         self.base_dir = Path(__file__).parent
         self.requirements_dir = self.base_dir / "requirements"
         self.platform = self._detect_platform()
+        self.with_tests = with_tests
 
     def _detect_platform(self) -> str:
         """Detect operating system."""
@@ -167,13 +170,30 @@ class Installer:
         try:
             print("[Installer] Desktop Agent Installer")
             print(f"[Installer] Platform: {self.platform}")
+            if self.with_tests:
+                print("[Installer] Mode: Runtime + Test dependencies")
+            else:
+                print("[Installer] Mode: Runtime dependencies only")
 
             self._check_python_version()
             self._check_pip()
             self._upgrade_pip_tools()
 
+            # Install runtime requirements
             req_file = self._get_requirements_file()
             self._install_requirements(req_file)
+
+            # Install test requirements if requested
+            if self.with_tests:
+                test_req_file = self.requirements_dir / "test.txt"
+                if test_req_file.exists():
+                    print("\n[Installer] Installing test dependencies...")
+                    self._install_requirements(test_req_file)
+                else:
+                    print(
+                        f"\n[Installer] Warning: Test requirements file not found: {test_req_file}"
+                    )
+                    print("[Installer] Skipping test dependencies")
 
             self._print_next_steps()
             return 0
@@ -184,8 +204,27 @@ class Installer:
 
 
 def main():
-    """Entry point - no arguments needed."""
-    installer = Installer()
+    """Entry point with optional test dependencies flag."""
+    parser = argparse.ArgumentParser(
+        description="Desktop Agent dependency installer",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python install.py              # Install runtime dependencies only
+  python install.py --with-tests # Install runtime + test dependencies
+
+For more information, visit:
+  https://github.com/rig0/desktop-agent/wiki/Installation
+        """,
+    )
+    parser.add_argument(
+        "--with-tests",
+        action="store_true",
+        help="Install test dependencies (pytest, coverage tools, etc.)",
+    )
+
+    args = parser.parse_args()
+    installer = Installer(with_tests=args.with_tests)
     sys.exit(installer.install())
 
 
