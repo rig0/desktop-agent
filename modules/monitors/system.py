@@ -82,6 +82,99 @@ class SystemMonitor:
         self.interval = interval
         logger.debug(f"SystemMonitor initialized with interval={interval}s")
 
+    def _publish_sensor_with_json(
+        self,
+        entity_id: str,
+        name: str,
+        json_key: str,
+        unit: Optional[str] = None,
+        icon: Optional[str] = None,
+        device_class: Optional[str] = None,
+        entity_category: Optional[str] = None,
+        state_class: Optional[str] = None,
+    ) -> None:
+        """Publish sensor discovery that extracts value from JSON status topic.
+
+        This publishes a Home Assistant MQTT sensor discovery config that uses
+        a value_template to extract a specific field from the JSON status message.
+
+        Args:
+            entity_id: Entity ID suffix (e.g., "cpu_usage")
+            name: Friendly name for the sensor
+            json_key: Key to extract from JSON (e.g., "cpu_usage")
+            unit: Unit of measurement (e.g., "%", "GB")
+            icon: MDI icon (e.g., "mdi:chip")
+            device_class: HA device class
+            entity_category: Entity category (typically "diagnostic")
+            state_class: State class ("measurement", "total_increasing", etc.)
+        """
+        unique_id = f"{self.device_id}_{entity_id}"
+
+        config = {
+            "name": name,
+            "state_topic": f"{self.base_topic}/status",
+            "value_template": f"{{{{ value_json.{json_key} }}}}",
+            "unique_id": unique_id,
+            "object_id": f"{self.device_id}_{entity_id}",
+            "device": self.discovery.device_info,
+            "availability_topic": f"{self.base_topic}/availability",
+        }
+
+        if unit:
+            config["unit_of_measurement"] = unit
+        if icon:
+            config["icon"] = icon
+        if device_class:
+            config["device_class"] = device_class
+        if entity_category:
+            config["entity_category"] = entity_category
+        if state_class:
+            config["state_class"] = state_class
+
+        # Publish discovery with nested topic structure
+        topic = f"{self.discovery.broker.discovery_prefix}/sensor/{self.device_id}/{entity_id}/config"
+        payload = json.dumps(config)
+        self.discovery.broker.client.publish(topic, payload=payload, qos=0, retain=True)
+        logger.debug(f"Published JSON-based sensor discovery: {name} ({unique_id})")
+
+    def _cleanup_old_discovery(self) -> None:
+        """Remove old discovery configurations that used individual state topics.
+
+        This publishes empty retained messages to old discovery topics to clean up
+        entities that were created with the previous individual-topic approach.
+        Call this once during startup before publishing new discovery configs.
+        """
+        old_sensors = [
+            "hostname",
+            "uptime_seconds",
+            "os",
+            "os_version",
+            "cpu_model",
+            "cpu_usage",
+            "cpu_cores",
+            "cpu_frequency_mhz",
+            "memory_usage",
+            "memory_total_gb",
+            "memory_used_gb",
+            "disk_usage",
+            "disk_total_gb",
+            "disk_used_gb",
+            "network_sent_bytes",
+            "network_recv_bytes",
+        ]
+
+        for sensor in old_sensors:
+            # Old discovery topic patterns (try multiple possible old formats)
+            old_topic_1 = f"{self.discovery.broker.discovery_prefix}/sensor/{self.device_id}_{sensor}/config"
+            old_topic_2 = f"{self.discovery.broker.discovery_prefix}/sensor/{self.device_id}_{sensor}/state/config"
+
+            # Publish empty payload to delete
+            self.discovery.broker.client.publish(old_topic_1, payload="", retain=True)
+            self.discovery.broker.client.publish(old_topic_2, payload="", retain=True)
+            logger.debug(f"Cleaned up old discovery: {sensor}")
+
+        logger.info("Cleaned up old discovery configurations")
+
     def start(self, stop_event: threading.Event) -> None:
         """Start the monitoring loop.
 
@@ -104,6 +197,9 @@ class SystemMonitor:
         logger.info("System monitor started")
 
         try:
+            # Clean up old discovery configurations
+            self._cleanup_old_discovery()
+
             # Publish discovery configuration once at startup
             self._publish_discovery()
 
@@ -151,60 +247,71 @@ class SystemMonitor:
         """
         try:
             # Host info sensors
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "hostname",
                 "Hostname",
+                "hostname",
                 icon="mdi:information",
                 entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "uptime_seconds",
                 "Uptime",
+                "uptime_seconds",
                 unit="s",
                 icon="mdi:clock-outline",
                 entity_category="diagnostic",
                 state_class="total_increasing",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "os",
                 "Operating System",
+                "os",
                 icon="mdi:desktop-classic",
                 entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "os_version",
                 "OS Version",
+                "os_version",
                 icon="mdi:information",
                 entity_category="diagnostic",
             )
 
             # CPU sensors
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "cpu_model",
                 "CPU Model",
+                "cpu_model",
                 icon="mdi:cpu-64-bit",
                 entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "cpu_usage",
                 "CPU Usage",
+                "cpu_usage",
                 unit="%",
                 icon="mdi:chip",
                 entity_category="diagnostic",
                 state_class="measurement",
             )
 
-            self.discovery.publish_sensor(
-                "cpu_cores", "CPU Cores", icon="mdi:chip", entity_category="diagnostic"
+            self._publish_sensor_with_json(
+                "cpu_cores",
+                "CPU Cores",
+                "cpu_cores",
+                icon="mdi:chip",
+                entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "cpu_frequency_mhz",
                 "CPU Frequency",
+                "cpu_frequency_mhz",
                 unit="MHz",
                 icon="mdi:chip",
                 entity_category="diagnostic",
@@ -212,26 +319,29 @@ class SystemMonitor:
             )
 
             # Memory sensors
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "memory_usage",
                 "Memory Usage",
+                "memory_usage",
                 unit="%",
                 icon="mdi:memory",
                 entity_category="diagnostic",
                 state_class="measurement",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "memory_total_gb",
                 "Memory Total",
+                "memory_total_gb",
                 unit="GB",
                 icon="mdi:memory",
                 entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "memory_used_gb",
                 "Memory Used",
+                "memory_used_gb",
                 unit="GB",
                 icon="mdi:memory",
                 entity_category="diagnostic",
@@ -239,26 +349,29 @@ class SystemMonitor:
             )
 
             # Disk sensors
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "disk_usage",
                 "Disk Usage",
+                "disk_usage",
                 unit="%",
                 icon="mdi:harddisk",
                 entity_category="diagnostic",
                 state_class="measurement",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "disk_total_gb",
                 "Disk Total",
+                "disk_total_gb",
                 unit="GB",
                 icon="mdi:harddisk",
                 entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "disk_used_gb",
                 "Disk Used",
+                "disk_used_gb",
                 unit="GB",
                 icon="mdi:harddisk",
                 entity_category="diagnostic",
@@ -266,16 +379,18 @@ class SystemMonitor:
             )
 
             # Network sensors
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "network_sent_bytes",
                 "Network Sent",
+                "network_sent_bytes",
                 icon="mdi:upload-network",
                 entity_category="diagnostic",
             )
 
-            self.discovery.publish_sensor(
+            self._publish_sensor_with_json(
                 "network_recv_bytes",
                 "Network Received",
+                "network_recv_bytes",
                 icon="mdi:download-network",
                 entity_category="diagnostic",
             )
@@ -320,9 +435,9 @@ class SystemMonitor:
         """Collect current system metrics and publish to MQTT.
 
         This method collects all available system metrics using the collector
-        and publishes them to MQTT. The data is published both as individual
-        state topics and as a combined JSON status message for compatibility
-        with the existing implementation.
+        and publishes them as a combined JSON status message. All sensors
+        extract their values from this JSON using value_template in their
+        discovery configurations.
 
         The method handles dynamic discovery of GPU and temperature sensors,
         publishing their discovery configurations on first detection.
@@ -336,13 +451,14 @@ class SystemMonitor:
                 key: self._clean_value(value) for key, value in raw_data.items()
             }
 
-            # Publish combined status message (for compatibility with existing setup)
+            # Publish combined JSON status message
             status_payload = json.dumps(cleaned_data)
             self.broker.client.publish(
                 f"{self.base_topic}/status", payload=status_payload, qos=1, retain=True
             )
 
-            # Also publish individual state topics for each metric
+            # Handle dynamic sensor discovery (GPU and temperature sensors)
+            # Note: We don't publish individual states - sensors use value_json templates
             for key, value in cleaned_data.items():
                 if value is not None:
                     # Check if this is a new dynamic sensor (GPU or temperature)
@@ -371,9 +487,6 @@ class SystemMonitor:
                         # This is a dynamic sensor, publish discovery if not already done
                         self._publish_dynamic_sensor_discovery(key, value)
 
-                    # Publish state
-                    self.broker.publish_state(key, str(value))
-
             # Update availability
             self.broker.publish_availability("online")
 
@@ -394,69 +507,50 @@ class SystemMonitor:
             value: Sensor value (used to determine sensor type).
         """
         try:
-            # Determine sensor properties based on key
+            unique_id = f"{self.device_id}_{key}"
+
+            config = {
+                "name": key.replace("_", " ").title(),
+                "state_topic": f"{self.base_topic}/status",
+                "value_template": f"{{{{ value_json.{key} }}}}",
+                "unique_id": unique_id,
+                "object_id": f"{self.device_id}_{key}",
+                "device": self.discovery.device_info,
+                "availability_topic": f"{self.base_topic}/availability",
+            }
+
+            # Add type-specific configuration based on sensor key
             if key.startswith("gpu"):
-                # GPU sensor
                 if "name" in key:
-                    self.discovery.publish_sensor(
-                        key,
-                        key.replace("_", " ").title(),
-                        icon="mdi:expansion-card",
-                        entity_category="diagnostic",
-                    )
+                    config["icon"] = "mdi:expansion-card"
+                    config["entity_category"] = "diagnostic"
                 elif "load_percent" in key or "usage" in key:
-                    self.discovery.publish_sensor(
-                        key,
-                        key.replace("_", " ").title(),
-                        unit="%",
-                        icon="mdi:expansion-card",
-                        entity_category="diagnostic",
-                        state_class="measurement",
-                    )
+                    config["unit_of_measurement"] = "%"
+                    config["icon"] = "mdi:expansion-card"
+                    config["entity_category"] = "diagnostic"
+                    config["state_class"] = "measurement"
                 elif "temperature" in key:
-                    self.discovery.publish_sensor(
-                        key,
-                        key.replace("_", " ").title(),
-                        unit="°C",
-                        icon="mdi:thermometer",
-                        entity_category="diagnostic",
-                        state_class="measurement"
-                        # Disabled to prevent auto conversion to F
-                        # device_class="temperature"
-                    )
+                    config["unit_of_measurement"] = "°C"
+                    config["icon"] = "mdi:thermometer"
+                    config["entity_category"] = "diagnostic"
+                    config["state_class"] = "measurement"
                 elif "memory" in key:
-                    self.discovery.publish_sensor(
-                        key,
-                        key.replace("_", " ").title(),
-                        unit="GB",
-                        icon="mdi:expansion-card",
-                        entity_category="diagnostic",
-                        state_class="measurement",
-                    )
+                    config["unit_of_measurement"] = "GB"
+                    config["icon"] = "mdi:expansion-card"
+                    config["entity_category"] = "diagnostic"
+                    config["state_class"] = "measurement"
             elif "temperature" in key or key.endswith("_c"):
-                # Temperature sensor
-                self.discovery.publish_sensor(
-                    key,
-                    key.replace("_", " ").title(),
-                    unit="°C",
-                    icon="mdi:thermometer",
-                    entity_category="diagnostic",
-                    state_class="measurement"
-                    # Disabled to prevent auto conversion to F
-                    # device_class="temperature",
-                )
-            else:
-                # Generic sensor
-                logger.debug("Skipping generic temperature sensors")
-                # These sensors are not very descriptive and produce a lot of empty sensors.
-                # self.discovery.publish_sensor(
-                #     key,
-                #     key.replace("_", " ").title(),
-                #     unit="°C",
-                #     device_class="temperature",
-                #     icon="mdi:thermometer",
-                #     entity_category="diagnostic"
-                # )
+                config["unit_of_measurement"] = "°C"
+                config["icon"] = "mdi:thermometer"
+                config["entity_category"] = "diagnostic"
+                config["state_class"] = "measurement"
+
+            # Publish discovery with nested topic structure
+            topic = f"{self.discovery.broker.discovery_prefix}/sensor/{self.device_id}/{key}/config"
+            payload = json.dumps(config)
+            self.discovery.broker.client.publish(
+                topic, payload=payload, qos=0, retain=True
+            )
 
             logger.debug(f"Published dynamic sensor discovery: {key}")
 
