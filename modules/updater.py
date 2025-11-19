@@ -678,6 +678,7 @@ class UpdateManager:
             "command_topic": self.install_topic,
             "payload_install": "INSTALL",
             "unique_id": f"{self.device_id}_update",
+            "object_id": f"{self.device_id}_update",
             "device": self.device_info,
             "availability_topic": f"{self.base_topic}/availability",
             "entity_category": "diagnostic",
