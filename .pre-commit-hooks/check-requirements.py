@@ -220,22 +220,22 @@ STDLIB_MODULES = {
 
 
 def detect_local_modules(base_dir: Path) -> Set[str]:
-    """Detect all top-level local modules and packages in the project."""
+    """Detect all local modules and submodules inside the project."""
     local = set()
 
-    # Detect any top-level package in the repo
+    # Detect top-level packages
     for path in base_dir.iterdir():
         if path.is_dir() and (path / "__init__.py").exists():
             local.add(path.name)
 
-    # Detect local modules/packages inside modules/*
+    # Detect ANYTHING inside modules/*
     modules_dir = base_dir / "modules"
     if modules_dir.exists():
-        for item in modules_dir.iterdir():
-            if item.is_dir() and (item / "__init__.py").exists():
-                local.add(item.name)
-            elif item.is_file() and item.suffix == ".py":
-                local.add(item.stem)
+        for py_file in modules_dir.rglob("*.py"):
+            # Example: modules/media/playtime/utils.py → "media"
+            rel = py_file.relative_to(modules_dir)
+            top = rel.parts[0]
+            local.add(top)
 
     return local
 
