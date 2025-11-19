@@ -115,7 +115,13 @@ def start_media_monitor(client: mqtt.Client, stop_event):
                             "status": state,
                         }
 
+                        # Debug logging
+                        logger.debug(
+                            f"Media info: state={state}, title='{info['title']}', artist='{info['artist']}'"
+                        )
+
                         client.publish(f"{base_topic}/media/state", state, retain=True)
+                        logger.debug(f"Published state: {state}")
 
                         if attrs != last_attrs:
                             client.publish(
@@ -124,6 +130,11 @@ def start_media_monitor(client: mqtt.Client, stop_event):
                                 retain=True,
                             )
                             last_attrs = attrs
+                            logger.info(
+                                f"Published updated media: {attrs['title']} - {attrs['artist']}"
+                            )
+                        else:
+                            logger.debug("Media attributes unchanged, skipping publish")
 
                         # Thumbnail or placeholder
                         thumbnail_bytes = info.get("thumbnail_bytes")
@@ -154,6 +165,13 @@ def start_media_monitor(client: mqtt.Client, stop_event):
                                 retain=True,
                             )
                             last_image = thumbnail_bytes
+                            logger.debug(
+                                f"Published thumbnail ({len(thumbnail_bytes)} bytes)"
+                            )
+                        elif thumbnail_bytes:
+                            logger.debug("Thumbnail unchanged, skipping publish")
+                    else:
+                        logger.debug("No media info detected")
 
                 except Exception as e:
                     logger.error(f"Error in media poller: {e}", exc_info=True)
