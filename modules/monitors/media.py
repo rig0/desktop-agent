@@ -210,6 +210,18 @@ class MediaMonitor:
 
         return None
 
+    def _cleanup_old_camera_discovery(self) -> None:
+        """
+        Remove old camera discovery configurations with invalid nested topics.
+
+        This publishes empty retained messages to old camera discovery topics
+        that used slashes in the object_id segment (which is invalid).
+        """
+        # Old broken discovery topic with slashes in object_id
+        old_topic = f"{discovery_prefix}/camera/{device_id}/media/thumbnail/config"
+        self.broker.client.publish(old_topic, payload="", retain=True)
+        logger.debug("Cleaned up old media camera discovery topic")
+
     def _publish_discovery(self) -> None:
         """
         Publish Home Assistant MQTT discovery configs.
@@ -219,6 +231,8 @@ class MediaMonitor:
         - Media thumbnail camera entity
         """
         try:
+            # Clean up old broken camera discovery
+            self._cleanup_old_camera_discovery()
             # Media status sensor
             sensor_config = {
                 "name": "Media Status",
@@ -236,16 +250,16 @@ class MediaMonitor:
 
             # Media thumbnail camera
             camera_config = {
-                "platform": "mqtt",
                 "name": f"{DEVICE_NAME} Media",
-                "unique_id": f"{device_id}_media",
+                "unique_id": f"{device_id}_media_thumbnail",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/media/thumbnail",
                 "icon": "mdi:music",
             }
 
-            topic = f"{discovery_prefix}/camera/{device_id}_media/config"
+            # Discovery topic - object_id cannot contain slashes
+            topic = f"{discovery_prefix}/camera/{device_id}/media_thumbnail/config"
             self.broker.client.publish(topic, json.dumps(camera_config), retain=True)
             logger.debug("Published discovery for media camera")
 

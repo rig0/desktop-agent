@@ -190,6 +190,21 @@ class GameMonitor:
                 self.last_artwork = None
                 self.last_known_game_name = None
 
+    def _cleanup_old_camera_discovery(self) -> None:
+        """
+        Remove old camera discovery configurations with invalid nested topics.
+
+        This publishes empty retained messages to old camera discovery topics
+        that used slashes in the object_id segment (which is invalid).
+        """
+        # Old broken discovery topics with slashes in object_id
+        old_cover_topic = f"{discovery_prefix}/camera/{device_id}/game/cover/config"
+        old_artwork_topic = f"{discovery_prefix}/camera/{device_id}/game/artwork/config"
+
+        self.broker.client.publish(old_cover_topic, payload="", retain=True)
+        self.broker.client.publish(old_artwork_topic, payload="", retain=True)
+        logger.debug("Cleaned up old game camera discovery topics")
+
     def _publish_discovery(self) -> None:
         """
         Publish Home Assistant MQTT discovery configs.
@@ -200,6 +215,8 @@ class GameMonitor:
         - Game artwork camera entity
         """
         try:
+            # Clean up old broken camera discovery
+            self._cleanup_old_camera_discovery()
             # Game status sensor
             sensor_config = {
                 "name": f"{DEVICE_NAME} Game Status",
@@ -217,7 +234,6 @@ class GameMonitor:
 
             # Game cover camera
             cover_config = {
-                "platform": "mqtt",
                 "name": f"{DEVICE_NAME} Game Cover",
                 "unique_id": f"{device_id}_game_cover",
                 "device": device_info,
@@ -226,13 +242,13 @@ class GameMonitor:
                 "icon": "mdi:gamepad-variant",
             }
 
-            topic = f"{discovery_prefix}/camera/{device_id}_game_cover/config"
+            # Discovery topic - object_id cannot contain slashes
+            topic = f"{discovery_prefix}/camera/{device_id}/game_cover/config"
             self.broker.client.publish(topic, json.dumps(cover_config), retain=True)
             logger.debug("Published discovery for game cover camera")
 
             # Game artwork camera
             artwork_config = {
-                "platform": "mqtt",
                 "name": f"{DEVICE_NAME} Game Art",
                 "unique_id": f"{device_id}_game_artwork",
                 "device": device_info,
@@ -241,7 +257,8 @@ class GameMonitor:
                 "icon": "mdi:gamepad-variant",
             }
 
-            topic = f"{discovery_prefix}/camera/{device_id}_game_artwork/config"
+            # Discovery topic - object_id cannot contain slashes
+            topic = f"{discovery_prefix}/camera/{device_id}/game_artwork/config"
             self.broker.client.publish(topic, json.dumps(artwork_config), retain=True)
             logger.debug("Published discovery for game artwork camera")
 
