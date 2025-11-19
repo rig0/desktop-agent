@@ -19,9 +19,7 @@ from pathlib import Path
 from typing import Set
 
 # Standard library modules to exclude from requirement checks
-# These are built-in to Python and don't need to be in requirements.txt
 STDLIB_MODULES = {
-    # Built-in modules
     "abc",
     "argparse",
     "array",
@@ -80,7 +78,6 @@ STDLIB_MODULES = {
     "getpass",
     "gettext",
     "glob",
-    "graphlib",
     "grp",
     "gzip",
     "hashlib",
@@ -216,33 +213,35 @@ STDLIB_MODULES = {
     "zipfile",
     "zipimport",
     "zlib",
-    # Python 3.9+ additions
     "graphlib",
     "zoneinfo",
-    # Python 3.10+ additions
     "tomllib",
 }
 
-# Local project modules to exclude
-LOCAL_MODULES = {
-    "modules",
-    "helpers",
-}
+
+def detect_local_modules(base_dir: Path) -> Set[str]:
+    """Detect all top-level local modules and packages in the project."""
+    local = set()
+
+    # Detect any top-level package in the repo
+    for path in base_dir.iterdir():
+        if path.is_dir() and (path / "__init__.py").exists():
+            local.add(path.name)
+
+    # Detect local modules/packages inside modules/*
+    modules_dir = base_dir / "modules"
+    if modules_dir.exists():
+        for item in modules_dir.iterdir():
+            if item.is_dir() and (item / "__init__.py").exists():
+                local.add(item.name)
+            elif item.is_file() and item.suffix == ".py":
+                local.add(item.stem)
+
+    return local
 
 
 def get_imports_from_file(filepath: Path) -> Set[str]:
-    """Extract all import statements from a Python file.
-
-    Args:
-        filepath: Path to Python file
-
-    Returns:
-        Set of top-level package names imported
-
-    Example:
-        >>> get_imports_from_file(Path("test.py"))
-        {'flask', 'pytest', 'requests'}
-    """
+    """Extract all import statements from a Python file."""
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             tree = ast.parse(f.read(), filename=str(filepath))
@@ -253,68 +252,39 @@ def get_imports_from_file(filepath: Path) -> Set[str]:
     imports = set()
 
     for node in ast.walk(tree):
-        # Handle "import module" and "import module.submodule"
+        # import foo / import foo.bar
         if isinstance(node, ast.Import):
             for alias in node.names:
-                # Extract top-level package name
-                package = alias.name.split(".")[0]
-                imports.add(package)
+                imports.add(alias.name.split(".")[0])
 
-        # Handle "from module import something"
+        # from foo import bar
         elif isinstance(node, ast.ImportFrom):
             if node.module:
-                # Extract top-level package name
-                package = node.module.split(".")[0]
-                imports.add(package)
+                imports.add(node.module.split(".")[0])
 
     return imports
 
 
 def get_all_project_imports(base_dir: Path) -> Set[str]:
-    """Get all third-party imports used in the project.
-
-    Args:
-        base_dir: Project root directory
-
-    Returns:
-        Set of third-party package names
-
-    Example:
-        >>> get_all_project_imports(Path("."))
-        {'flask', 'pytest', 'requests', 'psutil'}
-    """
+    """Get all imported top-level module names in the project."""
     all_imports = set()
 
-    # Scan main.py
+    # main.py
     main_file = base_dir / "main.py"
     if main_file.exists():
         all_imports.update(get_imports_from_file(main_file))
 
-    # Scan modules directory
+    # modules/*
     modules_dir = base_dir / "modules"
     if modules_dir.exists():
         for py_file in modules_dir.rglob("*.py"):
             all_imports.update(get_imports_from_file(py_file))
 
-    # Filter out standard library and local modules
-    third_party = all_imports - STDLIB_MODULES - LOCAL_MODULES
-
-    return third_party
+    return all_imports
 
 
 def get_requirements_packages(requirements_dir: Path) -> Set[str]:
-    """Parse all requirements files to get declared packages.
-
-    Args:
-        requirements_dir: Directory containing requirements files
-
-    Returns:
-        Set of package names from requirements
-
-    Example:
-        >>> get_requirements_packages(Path("requirements"))
-        {'flask', 'pytest', 'requests'}
-    """
+    """Get package names declared in all requirements/*.txt files."""
     packages = set()
 
     if not requirements_dir.exists():
@@ -324,24 +294,18 @@ def get_requirements_packages(requirements_dir: Path) -> Set[str]:
         )
         return packages
 
-    # Read all .txt files in requirements directory
     for req_file in requirements_dir.glob("*.txt"):
         try:
             with open(req_file, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-
-                    # Skip empty lines and comments
                     if not line or line.startswith("#"):
                         continue
-
-                    # Skip -r includes (those are handled by reading all files)
                     if line.startswith("-r "):
                         continue
 
-                    # Extract package name (before version specifiers)
-                    # Handle: package>=1.0.0, package==1.0.0, package, package[extra]>=1.0
-                    package = (
+                    # Extract package name before version specifiers
+                    pkg = (
                         line.split(">=")[0]
                         .split("==")[0]
                         .split("<")[0]
@@ -350,11 +314,8 @@ def get_requirements_packages(requirements_dir: Path) -> Set[str]:
                         .strip()
                     )
 
-                    if package:
-                        # Convert package name to lowercase for comparison
-                        # (pip is case-insensitive for package names)
-                        packages.add(package.lower())
-
+                    if pkg:
+                        packages.add(pkg.lower())
         except (OSError, UnicodeDecodeError) as e:
             print(f"Warning: Could not read {req_file}: {e}", file=sys.stderr)
 
@@ -362,74 +323,56 @@ def get_requirements_packages(requirements_dir: Path) -> Set[str]:
 
 
 def normalize_package_name(name: str) -> str:
-    """Normalize package name for comparison.
-
-    PyPI package names often differ from import names:
-    - paho-mqtt (package) -> paho.mqtt (import)
-    - scikit-learn (package) -> sklearn (import)
-    - Pillow (package) -> PIL (import)
-
-    Args:
-        name: Package or import name
-
-    Returns:
-        Normalized name for comparison
-    """
-    # Common mappings from import name to package name
-    import_to_package = {
+    """Normalize import names to their PyPI package names."""
+    mappings = {
         "PIL": "pillow",
         "cv2": "opencv-python",
         "sklearn": "scikit-learn",
         "yaml": "pyyaml",
     }
 
-    # Check if it's a known mapping
-    if name in import_to_package:
-        return import_to_package[name].lower()
+    if name in mappings:
+        return mappings[name].lower()
 
-    # Default: just lowercase it
     return name.lower()
 
 
 def main() -> int:
-    """Main function to check for missing requirements.
-
-    Returns:
-        0 if all requirements are satisfied, 1 otherwise
-    """
     base_dir = Path.cwd()
     requirements_dir = base_dir / "requirements"
 
     print("Checking for missing requirements...")
 
-    # Get all third-party imports used in code
-    project_imports = get_all_project_imports(base_dir)
+    # Local modules detected dynamically
+    local_modules = detect_local_modules(base_dir)
 
-    # Get all packages declared in requirements
-    requirements_packages = get_requirements_packages(requirements_dir)
+    # All imports detected from project
+    all_imports = get_all_project_imports(base_dir)
 
-    # Normalize both sets for comparison
-    normalized_imports = {normalize_package_name(pkg) for pkg in project_imports}
-    normalized_requirements = {
-        normalize_package_name(pkg) for pkg in requirements_packages
+    # Third-party = all imports minus stdlib and local modules
+    third_party_imports = {
+        pkg
+        for pkg in all_imports
+        if pkg not in STDLIB_MODULES and pkg not in local_modules
     }
 
-    # Find missing packages
-    missing = normalized_imports - normalized_requirements
+    # Requirements from files
+    declared_packages = {
+        normalize_package_name(pkg) for pkg in get_requirements_packages(requirements_dir)
+    }
+
+    normalized_imports = {normalize_package_name(pkg) for pkg in third_party_imports}
+
+    missing = normalized_imports - declared_packages
 
     if missing:
-        print(
-            "\n❌ FAILED: The following packages are imported but not in requirements files:"
-        )
-        for package in sorted(missing):
-            print(f"  - {package}")
-        print("\nPlease add these packages to the appropriate requirements file:")
-        print("  - Base dependencies: requirements/base.txt")
-        print("  - Platform-specific: requirements/linux.txt or requirements/windows.txt")
-        print("  - Development/testing: requirements/test.txt")
+        print("\n❌ FAILED: The following packages are imported but NOT in requirements:")
+        for pkg in sorted(missing):
+            print(f"  - {pkg}")
+        print("\nAdd missing packages to the appropriate requirements/*.txt file.")
         return 1
 
-    print("✅ PASSED: All imports are accounted for in requirements files")
+    print("✅ PASSED: All imports are accounted for.")
     return 0
 
 
