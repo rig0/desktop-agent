@@ -24,13 +24,7 @@ import threading
 
 # Local imports
 from modules.collectors.game import GameCollector
-from modules.core.config import (
-    DEVICE_NAME,
-    base_topic,
-    device_id,
-    device_info,
-    discovery_prefix,
-)
+from modules.core.config import base_topic, device_id, device_info, discovery_prefix
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 
@@ -219,11 +213,12 @@ class GameMonitor:
             self._cleanup_old_camera_discovery()
             # Game status sensor
             sensor_config = {
-                "name": f"{DEVICE_NAME} Game Status",
+                "name": "Game Status",
                 "state_topic": f"{base_topic}/game/state",
                 "json_attributes_topic": f"{base_topic}/game/attrs",
                 "icon": "mdi:gamepad-variant",
                 "unique_id": f"{device_id}_game_status",
+                "object_id": f"{device_id}_game_status",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
             }
@@ -234,8 +229,9 @@ class GameMonitor:
 
             # Game cover camera
             cover_config = {
-                "name": f"{DEVICE_NAME} Game Cover",
+                "name": "Game Cover",
                 "unique_id": f"{device_id}_game_cover",
+                "object_id": f"{device_id}_game_cover",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/game/cover",
@@ -249,8 +245,9 @@ class GameMonitor:
 
             # Game artwork camera
             artwork_config = {
-                "name": f"{DEVICE_NAME} Game Art",
+                "name": "Game Artwork",
                 "unique_id": f"{device_id}_game_artwork",
+                "object_id": f"{device_id}_game_artwork",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/game/artwork",

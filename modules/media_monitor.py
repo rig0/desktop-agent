@@ -12,7 +12,6 @@ import paho.mqtt.client as mqtt
 
 # Local imports
 from core.config import (
-    DEVICE_NAME,
     MQTT_BROKER,
     MQTT_PASS,
     MQTT_PORT,
@@ -193,6 +192,7 @@ def start_media_monitor(client: mqtt.Client, stop_event):
                 "state_topic": f"{base_topic}/media/state",
                 "icon": "mdi:multimedia",
                 "unique_id": f"{device_id}_media_status",
+                "object_id": f"{device_id}_media_status",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "json_attributes_topic": f"{base_topic}/media/attrs",
@@ -204,8 +204,9 @@ def start_media_monitor(client: mqtt.Client, stop_event):
 
             # Media thumbnail camera
             camera_payload = {
-                "name": f"{DEVICE_NAME} Media",
+                "name": "Media Thumbnail",
                 "unique_id": f"{device_id}_media_thumbnail",
+                "object_id": f"{device_id}_media_thumbnail",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/media/thumbnail",

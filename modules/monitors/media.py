@@ -28,13 +28,7 @@ from typing import Optional
 
 # Local imports
 from modules.collectors.media import MediaCollector
-from modules.core.config import (
-    DEVICE_NAME,
-    base_topic,
-    device_id,
-    device_info,
-    discovery_prefix,
-)
+from modules.core.config import base_topic, device_id, device_info, discovery_prefix
 from modules.core.discovery import DiscoveryManager
 from modules.core.messaging import MessageBroker
 
@@ -239,6 +233,7 @@ class MediaMonitor:
                 "state_topic": f"{base_topic}/media/state",
                 "icon": "mdi:multimedia",
                 "unique_id": f"{device_id}_media_status",
+                "object_id": f"{device_id}_media_status",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "json_attributes_topic": f"{base_topic}/media/attrs",
@@ -250,8 +245,9 @@ class MediaMonitor:
 
             # Media thumbnail camera
             camera_config = {
-                "name": f"{DEVICE_NAME} Media",
+                "name": "Media Thumbnail",
                 "unique_id": f"{device_id}_media_thumbnail",
+                "object_id": f"{device_id}_media_thumbnail",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/media/thumbnail",
