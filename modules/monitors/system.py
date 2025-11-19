@@ -256,7 +256,7 @@ class SystemMonitor:
             )
 
             self._publish_sensor_with_json(
-                "uptime_seconds",
+                "uptime",
                 "Uptime",
                 "uptime_seconds",
                 unit="s",
@@ -380,7 +380,7 @@ class SystemMonitor:
 
             # Network sensors
             self._publish_sensor_with_json(
-                "network_sent_bytes",
+                "network_sent",
                 "Network Sent",
                 "network_sent_bytes",
                 icon="mdi:upload-network",
@@ -388,7 +388,7 @@ class SystemMonitor:
             )
 
             self._publish_sensor_with_json(
-                "network_recv_bytes",
+                "network_received",
                 "Network Received",
                 "network_recv_bytes",
                 icon="mdi:download-network",
