@@ -168,8 +168,25 @@ def start_media_monitor(client: mqtt.Client, stop_event):
         finally:
             logger.info("Media Monitor poller thread stopped")
 
+    def cleanup_old_camera_discovery():
+        """Remove old camera discovery configurations with invalid nested topics."""
+        try:
+            # Old broken discovery topics
+            old_topics = [
+                f"{discovery_prefix}/camera/{device_id}/media/thumbnail/config",  # Old nested with slashes
+                f"{discovery_prefix}/camera/{device_id}_media/config",  # Old flat structure
+            ]
+            for old_topic in old_topics:
+                client.publish(old_topic, payload="", retain=True)
+            logger.debug("Cleaned up old media camera discovery topics")
+        except Exception as e:
+            logger.error(f"Error cleaning up old discovery: {e}", exc_info=True)
+
     def publish_discovery():
         try:
+            # Clean up old broken camera discovery first
+            cleanup_old_camera_discovery()
+
             # Simple media state sensor
             sensor_payload = {
                 "name": "Media Status",
@@ -185,17 +202,17 @@ def start_media_monitor(client: mqtt.Client, stop_event):
             client.publish(topic, json.dumps(sensor_payload), retain=True)
             logger.debug("Published discovery for media status")
 
-            # Camera-style media thumbnail
+            # Media thumbnail camera
             camera_payload = {
-                "platform": "mqtt",
                 "name": f"{DEVICE_NAME} Media",
-                "unique_id": f"{device_id}_media",
+                "unique_id": f"{device_id}_media_thumbnail",
                 "device": device_info,
                 "availability_topic": f"{base_topic}/availability",
                 "topic": f"{base_topic}/media/thumbnail",
                 "icon": "mdi:music",
             }
-            topic = f"{discovery_prefix}/camera/{device_id}_media/config"
+            # Discovery topic - object_id cannot contain slashes
+            topic = f"{discovery_prefix}/camera/{device_id}/media_thumbnail/config"
             client.publish(topic, json.dumps(camera_payload), retain=True)
             logger.debug("Published discovery for media camera")
             logger.info("Published discovery for media monitor entities")
