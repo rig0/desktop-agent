@@ -77,11 +77,11 @@ class IGDBClient:
         """
         self.client_id = client_id
         self.access_token = access_token
-        base_dir = os.path.abspath(
+        self.data_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "data", "game_monitor")
         )
-        os.makedirs(base_dir, exist_ok=True)
-        self.cache_db = os.path.join(base_dir, cache_db)
+        os.makedirs(self.data_dir, exist_ok=True)
+        self.cache_db = os.path.join(self.data_dir, cache_db)
         self._init_cache()
 
     def _init_cache(self):
@@ -173,11 +173,7 @@ class IGDBClient:
         if not url:
             return None
 
-        base_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "data", "game_monitor")
-        )
-
-        full_folder_path = os.path.join(base_dir, folder)
+        full_folder_path = os.path.join(self.data_dir, folder)
 
         os.makedirs(full_folder_path, exist_ok=True)
 
