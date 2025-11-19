@@ -218,24 +218,50 @@ STDLIB_MODULES = {
     "tomllib",
 }
 
+# Directories to ignore when scanning the repo
+EXCLUDED_DIRS = {
+    ".git",
+    ".hg",
+    ".svn",
+    ".mypy_cache",
+    ".pytest_cache",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "env",
+    ".env",
+    ".idea",
+    ".vscode",
+    ".pre-commit-hooks",  # avoid treating the hook itself as project code
+}
+
+
+def is_in_excluded_dir(path: Path) -> bool:
+    """Return True if the path is inside an excluded directory."""
+    return any(part in EXCLUDED_DIRS for part in path.parts)
+
 
 def detect_local_modules(base_dir: Path) -> Set[str]:
-    """Detect all local modules and submodules inside the project."""
-    local = set()
+    """Detect all local modules/packages in the project.
 
-    # Detect top-level packages
-    for path in base_dir.iterdir():
-        if path.is_dir() and (path / "__init__.py").exists():
-            local.add(path.name)
+    We consider:
+      - Any directory with __init__.py → its directory name is a package.
+      - Any .py file → its stem is a module name.
 
-    # Detect ANYTHING inside modules/*
-    modules_dir = base_dir / "modules"
-    if modules_dir.exists():
-        for py_file in modules_dir.rglob("*.py"):
-            # Example: modules/media/playtime/utils.py → "media"
-            rel = py_file.relative_to(modules_dir)
-            top = rel.parts[0]
-            local.add(top)
+    This is intentionally generous so anything actually living in your repo
+    is treated as local, not third-party.
+    """
+    local: Set[str] = set()
+
+    for py_file in base_dir.rglob("*.py"):
+        if is_in_excluded_dir(py_file):
+            continue
+
+        if py_file.name == "__init__.py":
+            # Directory name is the package name
+            local.add(py_file.parent.name)
+        else:
+            local.add(py_file.stem)
 
     return local
 
@@ -249,7 +275,7 @@ def get_imports_from_file(filepath: Path) -> Set[str]:
         print(f"Warning: Could not parse {filepath}: {e}", file=sys.stderr)
         return set()
 
-    imports = set()
+    imports: Set[str] = set()
 
     for node in ast.walk(tree):
         # import foo / import foo.bar
@@ -257,35 +283,34 @@ def get_imports_from_file(filepath: Path) -> Set[str]:
             for alias in node.names:
                 imports.add(alias.name.split(".")[0])
 
-        # from foo import bar
+        # from foo import bar / from .foo import bar
         elif isinstance(node, ast.ImportFrom):
             if node.module:
+                # from foo.bar import baz -> "foo"
                 imports.add(node.module.split(".")[0])
+            else:
+                # from . import foo, bar  -> treat each as top-level name
+                for alias in node.names:
+                    imports.add(alias.name.split(".")[0])
 
     return imports
 
 
 def get_all_project_imports(base_dir: Path) -> Set[str]:
     """Get all imported top-level module names in the project."""
-    all_imports = set()
+    all_imports: Set[str] = set()
 
-    # main.py
-    main_file = base_dir / "main.py"
-    if main_file.exists():
-        all_imports.update(get_imports_from_file(main_file))
-
-    # modules/*
-    modules_dir = base_dir / "modules"
-    if modules_dir.exists():
-        for py_file in modules_dir.rglob("*.py"):
-            all_imports.update(get_imports_from_file(py_file))
+    for py_file in base_dir.rglob("*.py"):
+        if is_in_excluded_dir(py_file):
+            continue
+        all_imports.update(get_imports_from_file(py_file))
 
     return all_imports
 
 
 def get_requirements_packages(requirements_dir: Path) -> Set[str]:
     """Get package names declared in all requirements/*.txt files."""
-    packages = set()
+    packages: Set[str] = set()
 
     if not requirements_dir.exists():
         print(
@@ -329,8 +354,10 @@ def normalize_package_name(name: str) -> str:
         "cv2": "opencv-python",
         "sklearn": "scikit-learn",
         "yaml": "pyyaml",
+        "paho": "paho-mqtt",  # paho.mqtt.client
     }
 
+    # Handle exact mappings first
     if name in mappings:
         return mappings[name].lower()
 
@@ -343,7 +370,7 @@ def main() -> int:
 
     print("Checking for missing requirements...")
 
-    # Local modules detected dynamically
+    # Local modules detected dynamically from the whole repo
     local_modules = detect_local_modules(base_dir)
 
     # All imports detected from project
