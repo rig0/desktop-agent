@@ -240,6 +240,7 @@ def pytest_configure(config):
     os.environ["DA_MQTT_USER"] = "test_user"
     os.environ["DA_MQTT_PASS"] = "test_pass"
     os.environ["DA_DEVICE_NAME"] = "test_device"
+    os.environ["DA_API_AUTH_TOKEN"] = "test_token_12345"  # For API module validation
 
     # Add custom markers (already defined in pytest.ini, but can add more here)
     pass
