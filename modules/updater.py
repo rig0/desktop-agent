@@ -692,6 +692,7 @@ class UpdateManager:
             "command_topic": self.install_topic,
             "payload_press": "INSTALL",
             "unique_id": f"{self.device_id}_install_update",
+            "object_id": f"{self.device_id}_install_update",
             "device": self.device_info,
             "availability_topic": f"{self.base_topic}/availability",
             "entity_category": "config",
