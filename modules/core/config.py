@@ -64,6 +64,7 @@ Example:
 # Standard library imports
 import configparser
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict
@@ -481,7 +482,10 @@ MQTT_CONNECTION_TIMEOUT = config.getint("mqtt", "connection_timeout", fallback=3
 
 API_MOD = config.getboolean("modules", "api", fallback=False)
 API_PORT = config.getint("api", "port", fallback=5555)
-API_AUTH_TOKEN = config.get("api", "auth_token", fallback="").strip()
+# Support environment variable override for testing/CI environments
+API_AUTH_TOKEN = config.get(
+    "api", "auth_token", fallback=os.getenv("DA_API_AUTH_TOKEN", "")
+).strip()
 
 # Enforce API authentication requirement
 if API_MOD and not API_AUTH_TOKEN:
