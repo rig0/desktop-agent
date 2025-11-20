@@ -483,9 +483,10 @@ MQTT_CONNECTION_TIMEOUT = config.getint("mqtt", "connection_timeout", fallback=3
 API_MOD = config.getboolean("modules", "api", fallback=False)
 API_PORT = config.getint("api", "port", fallback=5555)
 # Support environment variable override for testing/CI environments
-API_AUTH_TOKEN = config.get(
-    "api", "auth_token", fallback=os.getenv("DA_API_AUTH_TOKEN", "")
-).strip()
+# Check config first, then fall back to env var if empty
+API_AUTH_TOKEN = config.get("api", "auth_token", fallback="").strip()
+if not API_AUTH_TOKEN:
+    API_AUTH_TOKEN = os.getenv("DA_API_AUTH_TOKEN", "")
 
 # Enforce API authentication requirement
 if API_MOD and not API_AUTH_TOKEN:
