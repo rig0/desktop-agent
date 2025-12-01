@@ -12,7 +12,7 @@
 ![Flask API](https://img.shields.io/badge/Flask%20API-6eb6da?logo=flask&logoColor=white)
 ![MQTT](https://img.shields.io/badge/MQTT-9447cf?logo=mqtt)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-12baf5?logo=homeassistant&logoColor=white)
-[![Documentation](https://img.shields.io/badge/Documentation-hotpink?logo=github)](https://github.com/rig0/desktop-agent/wiki)
+[![Documentation](https://img.shields.io/badge/Docs-hotpink?logo=github)](https://github.com/rig0/desktop-agent/wiki)
 
 </div>
 
