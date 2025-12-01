@@ -4,12 +4,14 @@
 
 # Desktop Agent
 
-![Stability](https://img.shields.io/badge/stability-stable-green.svg)
-![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)
-![GitHub last commit](https://img.shields.io/github/last-commit/rig0/desktop-agent)
-![Python Version](https://img.shields.io/badge/Python-3.8+-blue?logo=python)
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-compatible-41BDF5?logo=homeassistant)
-[![Documentation](https://img.shields.io/badge/docs-wiki-pink)](https://github.com/rig0/desktop-agent/wiki)
+![Stability](https://img.shields.io/badge/stability-stable-80ff63?labelColor=373737)
+![Maintained](https://img.shields.io/badge/maintained-yes-80ff63?labelColor=373737)
+![GitHub last commit](https://img.shields.io/github/last-commit/rig0/desktop-agent?labelColor=373737&color=80ff63)
+
+![Python Version](https://img.shields.io/badge/Python%203.8+-3978b5?logo=python&logoColor=white)
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-12baf5?logo=homeassistant&logoColor=white)
+![MQTT](https://img.shields.io/badge/MQTT-9447cf?logo=mqtt)
+[![Documentation](https://img.shields.io/badge/Documentation-hotpink?logo=github)](https://github.com/rig0/desktop-agent/wiki)
 
 </div>
 
@@ -104,4 +106,4 @@ Desktop Agent is a lightweight, modular system monitoring tool designed for seam
 
 ## Support the Project
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/rig0)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee&labelColor=373737)](https://buymeacoffee.com/rig0)
