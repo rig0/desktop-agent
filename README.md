@@ -7,7 +7,7 @@
 ![Stability](https://img.shields.io/badge/stability-stable-green.svg)
 ![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/rig0/desktop-agent)
-![Python Version](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Python Version](https://img.shields.io/badge/Python-3.8+-blue?logo=python)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-compatible-41BDF5?logo=homeassistant)
 [![Documentation](https://img.shields.io/badge/docs-wiki-pink)](https://github.com/rig0/desktop-agent/wiki)
 
