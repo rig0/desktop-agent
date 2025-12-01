@@ -1,4 +1,17 @@
+<div align="center">
+
+<img src="https://i.imgur.com/JytgFnp.png" alt="Desktop-Agent" width="200"/>
+
 # Desktop Agent
+
+![Stability](https://img.shields.io/badge/stability-stable-green.svg)
+![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)
+![GitHub last commit](https://img.shields.io/github/last-commit/rig0/desktop-agent)
+![Python Version](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-compatible-41BDF5?logo=homeassistant)
+[![Documentation](https://img.shields.io/badge/docs-wiki-pink)](https://github.com/rig0/desktop-agent/wiki)
+
+</div>
 
 ## About
 
@@ -88,3 +101,7 @@ Desktop Agent is a lightweight, modular system monitoring tool designed for seam
 - [**Table of Contents**](https://github.com/rig0/desktop-agent/Table-of-Contents) - Complete documentation index
 
 **Quick troubleshooting tip**: Most issues are related to MQTT connectivity. If Desktop Agent is not appearing in Home Assistant, verify your broker settings in `config.ini` and check the logs in the `data/` directory.
+
+## Support the Project
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/rig0)
