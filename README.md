@@ -10,6 +10,7 @@
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-12baf5?logo=homeassistant&logoColor=white)
 [![Documentation](https://img.shields.io/badge/Docs-hotpink?logo=github)](https://github.com/rig0/desktop-agent/wiki)
 
+![Latest Tag](https://img.shields.io/github/v/tag/rig0/desktop-agent?labelColor=222&color=80ff63&label=latest)
 ![Stability](https://img.shields.io/badge/stability-stable-80ff63?labelColor=222)
 ![Maintained](https://img.shields.io/badge/maintained-yes-80ff63?labelColor=222)
 ![GitHub last commit](https://img.shields.io/github/last-commit/rig0/desktop-agent?labelColor=222&color=80ff63)
