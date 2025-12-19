@@ -275,6 +275,12 @@ class GameCollector:
             playtime_str = f"{playtime} hrs" if playtime is not None else "Unknown"
 
             # Build attributes dictionary
+            # Handle total_rating which may be None even when key exists in dict
+            total_rating = game_info.get("total_rating")
+            total_rating_value = (
+                round(total_rating, 2) if total_rating is not None else 0.0
+            )
+
             attrs = {
                 "name": game_info.get("name", "Unknown"),
                 "title": game_info.get("name", "Unknown"),
@@ -283,7 +289,7 @@ class GameCollector:
                 "genres": ", ".join(game_info.get("genres", [])),
                 "developers": ", ".join(game_info.get("developers", [])),
                 "platforms": ", ".join(game_info.get("platforms", [])),
-                "total_rating": round(game_info.get("total_rating", 0), 2),
+                "total_rating": total_rating_value,
                 "cover_url": cover_full_url or "Cover image not available",
                 "artwork_url": artwork_full_url or "Artwork not available",
                 "color": dominant_color or "Color not available",
