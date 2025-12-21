@@ -77,6 +77,7 @@ class GameMonitor:
         self.last_known_game_name = None
         self.last_cover = None
         self.last_artwork = None
+        self.last_state = "idle"  # Track last published state
 
     def start(self, stop_event: threading.Event) -> None:
         """
@@ -145,6 +146,7 @@ class GameMonitor:
             # Publish state
             state = "playing"
             self.broker.publish_state("game", state)
+            self.last_state = state
             logger.debug(f"Published game state: {state}")
 
             # Publish attributes if changed
@@ -172,17 +174,31 @@ class GameMonitor:
             self.last_known_game_name = game_name
 
         elif not game_name:
-            # Game stopped - publish idle state if we had a game before
-            if self.last_known_game_name is not None:
-                logger.info("Game stopped")
+            # Game stopped - publish idle state if not already idle
+            if self.last_state != "idle":
+                logger.info("Game stopped, transitioning to idle state")
                 self.broker.publish_state("game", "idle")
+                self.last_state = "idle"
                 logger.debug("Published idle state")
 
+                # Clear attributes by publishing empty/idle attributes
+                idle_attrs = {
+                    "name": "",
+                    "summary": "",
+                    "release_date": "",
+                    "genres": "",
+                    "status": "idle",
+                }
+                self.broker.publish_attributes("game", idle_attrs)
+
                 # Reset tracking variables
-                self.last_attrs = None
+                self.last_attrs = idle_attrs
                 self.last_cover = None
                 self.last_artwork = None
                 self.last_known_game_name = None
+                logger.debug("Cleared game attributes")
+            else:
+                logger.debug("Already in idle state, no game detected")
 
     def _cleanup_old_camera_discovery(self) -> None:
         """
@@ -207,6 +223,10 @@ class GameMonitor:
         - Game status sensor (with attributes)
         - Game cover camera entity
         - Game artwork camera entity
+
+        Note: The availability_topic ensures the sensor shows as unavailable
+        when the device goes offline. On reconnection, the monitor will
+        publish the current state (likely "idle" if no game is running).
         """
         try:
             # Clean up old broken camera discovery

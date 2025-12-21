@@ -92,9 +92,15 @@ def start_media_monitor(client: mqtt.Client, stop_event):
         logger.info("Media Monitor poller thread started")
         last_attrs = None
         last_image = None
+        last_state = None  # Track last published state for idle detection
         BASE_DIR = Path(__file__).parent.parent
         placeholder_path = BASE_DIR / "resources" / "media_thumb.png"
         placeholder_path_custom = BASE_DIR / "data" / "media_monitor" / "media_thumb.png"
+
+        # Publish initial idle state
+        client.publish(f"{base_topic}/media/state", "idle", retain=True)
+        last_state = "idle"
+        logger.info("Published initial idle state")
 
         try:
             while not stop_event.is_set():
@@ -120,7 +126,9 @@ def start_media_monitor(client: mqtt.Client, stop_event):
                             f"Media info: state={state}, title='{info['title']}', artist='{info['artist']}'"
                         )
 
+                        # Publish state (always publish to ensure retained message is correct)
                         client.publish(f"{base_topic}/media/state", state, retain=True)
+                        last_state = state
                         logger.debug(f"Published state: {state}")
 
                         if attrs != last_attrs:
@@ -170,8 +178,32 @@ def start_media_monitor(client: mqtt.Client, stop_event):
                             )
                         elif thumbnail_bytes:
                             logger.debug("Thumbnail unchanged, skipping publish")
+
                     else:
-                        logger.debug("No media info detected")
+                        # No media session detected - publish idle state if not already idle
+                        if last_state != "idle":
+                            logger.info("No media detected, transitioning to idle state")
+                            client.publish(
+                                f"{base_topic}/media/state", "idle", retain=True
+                            )
+                            last_state = "idle"
+
+                            # Clear attributes by publishing empty/idle attributes
+                            idle_attrs = {
+                                "title": "",
+                                "artist": "",
+                                "album": "",
+                                "status": "idle",
+                            }
+                            client.publish(
+                                f"{base_topic}/media/attrs",
+                                json.dumps(idle_attrs),
+                                retain=True,
+                            )
+                            last_attrs = idle_attrs
+                            logger.debug("Published idle state and cleared attributes")
+                        else:
+                            logger.debug("Already in idle state, no media detected")
 
                 except Exception as e:
                     logger.error(f"Error in media poller: {e}", exc_info=True)
@@ -265,7 +297,6 @@ if __name__ == "__main__":
         """Handle shutdown signals gracefully."""
         logger.info("Shutdown signal received, stopping media monitor...")
         stop_event.set()
-        time.sleep(1)
         client.disconnect()
         sys.exit(0)
 
@@ -299,7 +330,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received, shutting down...")
         stop_event.set()
-        time.sleep(1)
         client.loop_stop()
         client.disconnect()
         sys.exit(0)

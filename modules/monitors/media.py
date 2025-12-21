@@ -74,6 +74,7 @@ class MediaMonitor:
         # Track last known state to avoid redundant publishing
         self.last_attrs = None
         self.last_image = None
+        self.last_state = None  # Track last published state for idle detection
 
         # Placeholder image paths
         base_dir = Path(__file__).parent.parent.parent
@@ -103,6 +104,11 @@ class MediaMonitor:
         try:
             # Publish discovery configs on startup
             self._publish_discovery()
+
+            # Publish initial idle state
+            self.broker.publish_state("media", "idle")
+            self.last_state = "idle"
+            logger.debug("Published initial idle state")
 
             # Main polling loop
             while not stop_event.is_set():
@@ -153,8 +159,9 @@ class MediaMonitor:
                 "status": state,
             }
 
-            # Publish state
+            # Publish state (always publish to ensure retained message is correct)
             self.broker.publish_state("media", state)
+            self.last_state = state
             logger.debug(f"Published media state: {state}")
 
             # Publish attributes if changed
@@ -176,6 +183,24 @@ class MediaMonitor:
                 self.broker.client.publish(topic, thumbnail_bytes, retain=True)
                 self.last_image = thumbnail_bytes
                 logger.debug("Published media thumbnail")
+
+        else:
+            # No media session detected - publish idle state if not already idle
+            if self.last_state != "idle":
+                logger.info("No media detected, transitioning to idle state")
+                self.broker.publish_state("media", "idle")
+                self.last_state = "idle"
+
+                # Clear attributes by publishing empty/idle attributes
+                idle_attrs = {
+                    "title": "",
+                    "artist": "",
+                    "album": "",
+                    "status": "idle",
+                }
+                self.broker.publish_attributes("media", idle_attrs)
+                self.last_attrs = idle_attrs
+                logger.debug("Published idle state and cleared attributes")
 
     def _load_placeholder(self) -> Optional[bytes]:
         """
@@ -223,6 +248,10 @@ class MediaMonitor:
         Publishes discovery for:
         - Media status sensor (with attributes)
         - Media thumbnail camera entity
+
+        Note: The availability_topic ensures the sensor shows as unavailable
+        when the device goes offline. On reconnection, the monitor will
+        publish the current state (likely "idle" if no media is playing).
         """
         try:
             # Clean up old broken camera discovery
