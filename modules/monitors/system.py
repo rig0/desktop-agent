@@ -137,44 +137,6 @@ class SystemMonitor:
         self.discovery.broker.client.publish(topic, payload=payload, qos=0, retain=True)
         logger.debug(f"Published JSON-based sensor discovery: {name} ({unique_id})")
 
-    def _cleanup_old_discovery(self) -> None:
-        """Remove old discovery configurations that used individual state topics.
-
-        This publishes empty retained messages to old discovery topics to clean up
-        entities that were created with the previous individual-topic approach.
-        Call this once during startup before publishing new discovery configs.
-        """
-        old_sensors = [
-            "hostname",
-            "uptime_seconds",
-            "os",
-            "os_version",
-            "cpu_model",
-            "cpu_usage",
-            "cpu_cores",
-            "cpu_frequency_mhz",
-            "memory_usage",
-            "memory_total_gb",
-            "memory_used_gb",
-            "disk_usage",
-            "disk_total_gb",
-            "disk_used_gb",
-            "network_sent_bytes",
-            "network_recv_bytes",
-        ]
-
-        for sensor in old_sensors:
-            # Old discovery topic patterns (try multiple possible old formats)
-            old_topic_1 = f"{self.discovery.broker.discovery_prefix}/sensor/{self.device_id}_{sensor}/config"
-            old_topic_2 = f"{self.discovery.broker.discovery_prefix}/sensor/{self.device_id}_{sensor}/state/config"
-
-            # Publish empty payload to delete
-            self.discovery.broker.client.publish(old_topic_1, payload="", retain=True)
-            self.discovery.broker.client.publish(old_topic_2, payload="", retain=True)
-            logger.debug(f"Cleaned up old discovery: {sensor}")
-
-        logger.info("Cleaned up old discovery configurations")
-
     def start(self, stop_event: threading.Event) -> None:
         """Start the monitoring loop.
 
@@ -197,9 +159,6 @@ class SystemMonitor:
         logger.info("System monitor started")
 
         try:
-            # Clean up old discovery configurations
-            self._cleanup_old_discovery()
-
             # Publish discovery configuration once at startup
             self._publish_discovery()
 
