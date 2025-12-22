@@ -158,12 +158,6 @@ def main():
     try:
         logger.info(f"Connecting to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}...")
         client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-        logger.info("=" * 50)
-        logger.info("Windows Media Monitor running. Press Ctrl+C to exit...")
-        logger.info(f"Device: {device_id}")
-        logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
-        logger.info(f"Base Topic: {base_topic}")
-        logger.info("=" * 50)
     except Exception as e:
         logger.error(f"Failed to connect to MQTT broker: {e}", exc_info=True)
         logger.error("Exiting...")
@@ -172,6 +166,12 @@ def main():
     # Start MQTT network loop in background
     client.loop_start()
     logger.info("MQTT client loop started")
+    logger.info("=" * 50)
+    logger.info("Windows Media Monitor running. Press Ctrl+C to exit...")
+    logger.info(f"Device: {device_id}")
+    logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
+    logger.info(f"Base Topic: {base_topic}")
+    logger.info("=" * 50)
 
     # Create messaging and discovery infrastructure
     broker = MessageBroker(client, base_topic, discovery_prefix)
