@@ -37,6 +37,7 @@ import logging
 import signal
 import sys
 import threading
+import warnings
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -144,6 +145,9 @@ def main():
     # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    # Ignore deprecated mqtt callback version
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     # Initialize MQTT client
     client = mqtt.Client()
