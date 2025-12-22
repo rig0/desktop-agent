@@ -567,12 +567,12 @@ def main():
         notify_pipeline("Build Successful")
 
     # Keep main thread alive
-    logger.info("=" * 40)
+    logger.info("=" * 50)
     logger.info("Desktop Agent running. Press Ctrl+C to exit...")
     logger.info(f"Device: {device_id}")
     logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
     logger.info(f"Base Topic: {base_topic}")
-    logger.info("=" * 40)
+    logger.info("=" * 50)
     try:
         while not exit_flag.is_set():
             time.sleep(1)
