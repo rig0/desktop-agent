@@ -66,6 +66,12 @@ from modules.monitors.media import MediaMonitor  # noqa: E402
 # Logging Configuration
 # ----------------------------
 
+# Setup log directory and file path
+BASE_DIR = Path(__file__).parent.parent
+LOG_DIR = BASE_DIR / "data" / "media_monitor"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOG_FILE = LOG_DIR / "media_monitor.log"
+
 # Create logger
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -83,7 +89,7 @@ logger.addHandler(console_handler)
 
 # Rotating file handler
 file_handler = RotatingFileHandler(
-    "data/windows_media_monitor.log",
+    LOG_FILE,
     maxBytes=5 * 1024 * 1024,  # 5MB per file
     backupCount=3,  # Keep 3 backups
 )
