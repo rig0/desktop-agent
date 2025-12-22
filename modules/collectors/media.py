@@ -75,9 +75,9 @@ class MediaCollector:
         """
         try:
             if self.platform == "windows":
-                logger.warning("Windows media_monitor must be ran in standalone")
-                # return self._get_media_info_windows()
-                return None
+                # logger.warning("Windows media_monitor must be ran in standalone")
+                return self._get_media_info_windows()
+                # return None
             elif self.platform == "linux":
                 return self._get_media_info_linux()
             else:
