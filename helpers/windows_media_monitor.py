@@ -37,6 +37,7 @@ import logging
 import signal
 import sys
 import threading
+import time
 import warnings
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -127,12 +128,7 @@ def on_disconnect(client, userdata, rc):
 
 def main():
     """Main entry point for Windows media monitor."""
-    logger.info("=" * 40)
-    logger.info("Windows Media Monitor starting...")
-    logger.info(f"Device: {device_id}")
-    logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
-    logger.info(f"Base Topic: {base_topic}")
-    logger.info("=" * 40)
+    logger.info("Starting Windows Media Monitor...")
 
     # Create stop event for graceful shutdown
     stop_event = threading.Event()
@@ -162,6 +158,12 @@ def main():
     try:
         logger.info(f"Connecting to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}...")
         client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
+        logger.info("=" * 50)
+        logger.info("Windows Media Monitor running. Press Ctrl+C to exit...")
+        logger.info(f"Device: {device_id}")
+        logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
+        logger.info(f"Base Topic: {base_topic}")
+        logger.info("=" * 50)
     except Exception as e:
         logger.error(f"Failed to connect to MQTT broker: {e}", exc_info=True)
         logger.error("Exiting...")
@@ -183,22 +185,23 @@ def main():
 
     # Start monitoring in a separate thread
     monitor_thread = threading.Thread(
-        target=monitor.start, args=(stop_event,), name="MediaMonitor", daemon=False
+        target=monitor.start, args=(stop_event,), name="MediaMonitor", daemon=True
     )
     monitor_thread.start()
     logger.info("Media monitor thread started")
 
-    # Keep main thread alive until stop_event is set
+    # Keep main thread alive
     try:
-        monitor_thread.join()
+        while not stop_event.is_set():
+            time.sleep(1)
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received, shutting down...")
         stop_event.set()
-        monitor_thread.join(timeout=5)
 
     # Cleanup: Publish offline availability
     logger.info("Publishing offline availability...")
     client.publish(f"{base_topic}/availability", "offline", qos=1, retain=True)
+    time.sleep(0.5)  # Brief delay to ensure message is sent
 
     # Stop MQTT loop and disconnect
     client.loop_stop()
