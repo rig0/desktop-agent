@@ -128,7 +128,7 @@ def on_disconnect(client, userdata, rc):
 
 def main():
     """Main entry point for Windows media monitor."""
-    logger.info("Starting Windows Media Monitor...")
+    logger.info("Starting Media Monitor...")
 
     # Create stop event for graceful shutdown
     stop_event = threading.Event()
@@ -184,7 +184,7 @@ def main():
     monitor_thread.start()
     logger.info("Media monitor thread started")
     logger.info("=" * 50)
-    logger.info("Windows Media Monitor running. Press Ctrl+C to exit...")
+    logger.info("Media Monitor running. Press Ctrl+C to exit...")
     logger.info(f"Device: {device_id}")
     logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
     logger.info(f"Base Topic: {base_topic}")
