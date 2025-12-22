@@ -38,13 +38,17 @@ import signal
 import sys
 import threading
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Third-party imports
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as mqtt  # noqa: E402
 
 # Local imports - reuse existing infrastructure
-from modules.collectors.media import MediaCollector
-from modules.core.config import (
+from modules.collectors.media import MediaCollector  # noqa: E402
+from modules.core.config import (  # noqa: E402
     MQTT_BROKER,
     MQTT_PASS,
     MQTT_PORT,
@@ -54,9 +58,9 @@ from modules.core.config import (
     device_info,
     discovery_prefix,
 )
-from modules.core.discovery import DiscoveryManager
-from modules.core.messaging import MessageBroker
-from modules.monitors.media import MediaMonitor
+from modules.core.discovery import DiscoveryManager  # noqa: E402
+from modules.core.messaging import MessageBroker  # noqa: E402
+from modules.monitors.media import MediaMonitor  # noqa: E402
 
 # ----------------------------
 # Logging Configuration
