@@ -166,12 +166,6 @@ def main():
     # Start MQTT network loop in background
     client.loop_start()
     logger.info("MQTT client loop started")
-    logger.info("=" * 50)
-    logger.info("Windows Media Monitor running. Press Ctrl+C to exit...")
-    logger.info(f"Device: {device_id}")
-    logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
-    logger.info(f"Base Topic: {base_topic}")
-    logger.info("=" * 50)
 
     # Create messaging and discovery infrastructure
     broker = MessageBroker(client, base_topic, discovery_prefix)
@@ -189,6 +183,12 @@ def main():
     )
     monitor_thread.start()
     logger.info("Media monitor thread started")
+    logger.info("=" * 50)
+    logger.info("Windows Media Monitor running. Press Ctrl+C to exit...")
+    logger.info(f"Device: {device_id}")
+    logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
+    logger.info(f"Base Topic: {base_topic}")
+    logger.info("=" * 50)
 
     # Keep main thread alive
     try:
